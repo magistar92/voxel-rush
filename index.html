@@ -1,0 +1,3876 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#b8e8ff" />
+<title>Voxel Rush 3D</title>
+<style>
+  :root {
+    --ink: #202446;
+    --ink-soft: #50567f;
+    --paper: #fffdf5;
+    --yellow: #ffd447;
+    --orange: #ff9f1c;
+    --red: #ff4d5e;
+    --mint: #43e6bd;
+    --blue: #5a6be8;
+    --shadow: rgba(32, 36, 70, .22);
+    --card-border: rgba(32, 36, 70, .13);
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    background: linear-gradient(180deg, #73caff 0%, #b8e8ff 48%, #eefcff 100%);
+    color: var(--ink);
+    font-family: "Trebuchet MS", "Segoe UI", Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: none;
+  }
+
+  body::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 4;
+    background:
+      radial-gradient(circle at 50% 48%, transparent 38%, rgba(24, 33, 80, .13) 100%),
+      linear-gradient(180deg, rgba(255,255,255,.10), transparent 20%, transparent 80%, rgba(20, 30, 70, .12));
+  }
+
+  #scene {
+    position: fixed;
+    inset: 0;
+    display: block;
+    width: 100%;
+    height: 100%;
+    outline: none;
+  }
+
+  #ui {
+    position: fixed;
+    inset: 0;
+    z-index: 10;
+    pointer-events: none;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: max(16px, env(safe-area-inset-top)) max(18px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom)) max(18px, env(safe-area-inset-left));
+  }
+
+  .topbar {
+    display: grid;
+    grid-template-columns: minmax(185px, 1fr) minmax(180px, 290px) 1fr;
+    gap: 14px;
+    align-items: start;
+  }
+
+  .card {
+    background: rgba(255, 253, 245, .92);
+    border: 2px solid var(--card-border);
+    box-shadow: 0 8px 0 rgba(32, 36, 70, .10), 0 16px 30px rgba(32, 36, 70, .12);
+    backdrop-filter: blur(9px);
+    -webkit-backdrop-filter: blur(9px);
+    border-radius: 18px;
+  }
+
+  .level-card {
+    justify-self: start;
+    width: min(340px, 100%);
+    padding: 11px 15px 12px;
+    border-left: 7px solid var(--yellow);
+  }
+
+  .eyebrow {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 10px;
+    font-weight: 900;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+  }
+
+  .eyebrow .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--mint);
+    box-shadow: 0 0 0 3px rgba(67, 230, 189, .20);
+  }
+
+  .level-name {
+    margin-top: 3px;
+    font-size: clamp(18px, 2vw, 24px);
+    line-height: 1.05;
+    font-weight: 900;
+    letter-spacing: -.03em;
+  }
+
+  .progress-track {
+    height: 6px;
+    margin-top: 9px;
+    border-radius: 999px;
+    background: rgba(32, 36, 70, .10);
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    width: 0%;
+    height: 100%;
+    border-radius: inherit;
+    background: linear-gradient(90deg, var(--mint), #2bb8ff);
+    transition: width .15s linear;
+  }
+
+  .damage-card {
+    padding: 10px 14px 12px;
+    align-self: start;
+  }
+
+  .damage-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 10px;
+    font-weight: 900;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+  }
+
+  #damageText {
+    color: var(--ink);
+    font-size: 12px;
+    letter-spacing: 0;
+  }
+
+  .damage-track {
+    height: 9px;
+    margin-top: 7px;
+    border-radius: 999px;
+    background: rgba(32, 36, 70, .12);
+    overflow: hidden;
+  }
+
+  #damageFill {
+    width: 100%;
+    height: 100%;
+    border-radius: inherit;
+    background: linear-gradient(90deg, #43e6bd, #79f29d);
+    transition: width .18s ease, background .18s ease;
+  }
+
+  #damageFill.warn { background: linear-gradient(90deg, #ffd447, #ff9f1c); }
+  #damageFill.critical {
+    background: linear-gradient(90deg, #ff7a45, #ff4d5e);
+    animation: damagePulse .55s ease-in-out infinite alternate;
+  }
+
+  @keyframes damagePulse {
+    from { filter: brightness(1); }
+    to { filter: brightness(1.35); }
+  }
+
+  .top-actions {
+    justify-self: end;
+    display: flex;
+    gap: 9px;
+    pointer-events: auto;
+  }
+
+  .icon-btn {
+    width: 58px;
+    height: 58px;
+    border: 0;
+    border-radius: 18px;
+    background: var(--paper);
+    color: var(--ink);
+    box-shadow: 0 6px 0 rgba(32, 36, 70, .18), 0 12px 24px rgba(32, 36, 70, .14);
+    display: grid;
+    place-items: center;
+    cursor: pointer;
+    transition: transform .12s ease, box-shadow .12s ease, background .12s ease;
+    font: inherit;
+    position: relative;
+  }
+
+  .icon-btn:hover { transform: translateY(-2px); background: #ffffff; }
+  .icon-btn:active { transform: translateY(3px); box-shadow: 0 2px 0 rgba(32, 36, 70, .18); }
+  .icon-btn .icon { font-size: 27px; line-height: 1; font-weight: 900; transform: translateY(-1px); }
+  .icon-btn .key {
+    position: absolute;
+    right: -5px;
+    bottom: -5px;
+    width: 21px;
+    height: 21px;
+    display: grid;
+    place-items: center;
+    border-radius: 7px;
+    background: var(--ink);
+    color: #fff;
+    font-size: 10px;
+    font-weight: 900;
+    box-shadow: 0 2px 0 rgba(0,0,0,.2);
+  }
+
+  .bottom-hud {
+    display: flex;
+    align-items: end;
+    justify-content: space-between;
+    gap: 16px;
+  }
+
+  .controls-card {
+    width: min(380px, 100%);
+    padding: 10px 13px 11px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px 15px;
+    align-items: center;
+    border-bottom: 5px solid rgba(90, 107, 232, .18);
+  }
+
+  .control-item {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 11px;
+    font-weight: 800;
+    color: var(--ink-soft);
+    white-space: nowrap;
+  }
+
+  kbd {
+    display: inline-grid;
+    place-items: center;
+    min-width: 24px;
+    height: 24px;
+    padding: 0 6px;
+    border-radius: 7px;
+    background: #ffffff;
+    border: 1.5px solid rgba(32, 36, 70, .16);
+    box-shadow: 0 2px 0 rgba(32, 36, 70, .13);
+    color: var(--ink);
+    font-family: inherit;
+    font-size: 11px;
+    font-weight: 900;
+    line-height: 1;
+  }
+
+  .right-hud {
+    display: flex;
+    align-items: end;
+    gap: 10px;
+  }
+
+  .time-card, .speed-card {
+    padding: 9px 14px 10px;
+    min-width: 104px;
+  }
+
+  .hud-label {
+    display: block;
+    font-size: 9px;
+    line-height: 1;
+    font-weight: 900;
+    letter-spacing: .14em;
+    color: var(--ink-soft);
+    text-transform: uppercase;
+  }
+
+  #timeText {
+    display: block;
+    margin-top: 5px;
+    font-size: 19px;
+    line-height: 1;
+    font-weight: 900;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -.02em;
+  }
+
+  .speed-card {
+    min-width: 128px;
+    border-bottom: 5px solid var(--yellow);
+  }
+
+  .speed-line {
+    display: flex;
+    align-items: baseline;
+    gap: 5px;
+    margin-top: 2px;
+  }
+
+  #speedText {
+    font-size: 30px;
+    line-height: .95;
+    font-weight: 900;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -.05em;
+  }
+
+  .speed-unit {
+    font-size: 10px;
+    font-weight: 900;
+    letter-spacing: .08em;
+    color: var(--ink-soft);
+  }
+
+  #toasts {
+    position: fixed;
+    top: 96px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 20;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 7px;
+    pointer-events: none;
+    width: min(90vw, 520px);
+  }
+
+  .toast {
+    padding: 9px 16px;
+    border-radius: 999px;
+    background: var(--ink);
+    color: #fff;
+    font-size: 12px;
+    font-weight: 900;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    box-shadow: 0 8px 20px rgba(20, 25, 60, .22);
+    animation: toastIn .24s cubic-bezier(.2,.8,.2,1) both, toastOut .3s ease 1.25s both;
+  }
+
+  .toast.good { background: #18b98b; }
+  .toast.bad { background: var(--red); }
+  .toast.warn { background: var(--orange); color: #3c2400; }
+
+  @keyframes toastIn {
+    from { opacity: 0; transform: translateY(-12px) scale(.92); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+  }
+  @keyframes toastOut {
+    to { opacity: 0; transform: translateY(-8px) scale(.96); }
+  }
+
+  .overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 30;
+    display: grid;
+    place-items: center;
+    padding: 22px;
+    background: rgba(19, 25, 57, .38);
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity .25s ease, visibility .25s ease;
+  }
+
+  .overlay.show {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  .result-card {
+    width: min(510px, 100%);
+    padding: 27px 28px 24px;
+    text-align: center;
+    background: var(--paper);
+    border: 3px solid var(--ink);
+    border-radius: 26px;
+    box-shadow: 10px 10px 0 var(--ink), 0 28px 70px rgba(16, 22, 55, .32);
+    transform: translateY(18px) rotate(-1deg) scale(.94);
+    opacity: 0;
+    transition: transform .3s cubic-bezier(.2, .9, .2, 1.15), opacity .25s ease;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .result-card::before {
+    content: "";
+    position: absolute;
+    width: 180px;
+    height: 180px;
+    top: -105px;
+    right: -60px;
+    border-radius: 50%;
+    background: var(--yellow);
+    opacity: .32;
+  }
+
+  .overlay.show .result-card {
+    transform: translateY(0) rotate(-1deg) scale(1);
+    opacity: 1;
+  }
+
+  .result-card.win { border-color: #139e78; box-shadow: 10px 10px 0 #139e78, 0 28px 70px rgba(16, 22, 55, .32); }
+  .result-card.lose { border-color: #d72c45; box-shadow: 10px 10px 0 #d72c45, 0 28px 70px rgba(16, 22, 55, .32); }
+  .result-card.pause { border-color: #5a6be8; box-shadow: 10px 10px 0 #5a6be8, 0 28px 70px rgba(16, 22, 55, .32); }
+
+  .result-sticker {
+    width: 70px;
+    height: 70px;
+    margin: 0 auto 10px;
+    display: grid;
+    place-items: center;
+    border-radius: 22px;
+    background: var(--yellow);
+    border: 3px solid var(--ink);
+    box-shadow: 0 5px 0 rgba(32,36,70,.18);
+    font-size: 34px;
+    transform: rotate(-5deg);
+  }
+
+  .result-card.lose .result-sticker { background: #ff6b7d; }
+
+  .result-kicker {
+    font-size: 10px;
+    font-weight: 900;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+  }
+
+  .result-title {
+    margin: 4px 0 7px;
+    font-family: "Arial Black", "Trebuchet MS", sans-serif;
+    font-size: clamp(35px, 6vw, 54px);
+    line-height: .94;
+    letter-spacing: -.06em;
+    text-transform: uppercase;
+  }
+
+  .result-text {
+    margin: 0 auto;
+    max-width: 390px;
+    font-size: 14px;
+    line-height: 1.35;
+    font-weight: 700;
+    color: var(--ink-soft);
+  }
+
+  .result-stats {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 17px 0 19px;
+  }
+
+  .stat-chip {
+    min-width: 100px;
+    padding: 8px 13px 9px;
+    border-radius: 12px;
+    background: rgba(90, 107, 232, .09);
+    border: 1.5px solid rgba(90, 107, 232, .14);
+  }
+
+  .stat-chip span {
+    display: block;
+    font-size: 9px;
+    font-weight: 900;
+    letter-spacing: .11em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+  }
+
+  .stat-chip b {
+    display: block;
+    margin-top: 3px;
+    font-size: 17px;
+    font-weight: 900;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .result-actions {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .btn {
+    pointer-events: auto;
+    min-height: 48px;
+    padding: 0 22px;
+    border: 2px solid var(--ink);
+    border-radius: 14px;
+    font: inherit;
+    font-size: 14px;
+    font-weight: 900;
+    letter-spacing: .02em;
+    cursor: pointer;
+    transition: transform .12s ease, box-shadow .12s ease, filter .12s ease;
+    box-shadow: 0 5px 0 var(--ink);
+  }
+
+  .btn:hover { filter: brightness(1.04); transform: translateY(-1px); }
+  .btn:active { transform: translateY(4px); box-shadow: 0 1px 0 var(--ink); }
+  .btn.primary { background: var(--yellow); color: var(--ink); }
+  .btn.secondary { background: #ffffff; color: var(--ink); }
+  .btn.hidden { display: none; }
+
+  .result-hint {
+    margin-top: 16px;
+    font-size: 11px;
+    font-weight: 800;
+    color: var(--ink-soft);
+  }
+
+  .loading {
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    display: grid;
+    place-items: center;
+    padding: 20px;
+    background:
+      radial-gradient(circle at 50% 30%, rgba(255, 255, 255, .9), transparent 35%),
+      linear-gradient(180deg, #69c6ff 0%, #c4efff 55%, #f7feff 100%);
+    transition: opacity .45s ease, visibility .45s ease;
+  }
+
+  .loading.hide { opacity: 0; visibility: hidden; }
+
+  .loader-card {
+    text-align: center;
+    width: min(400px, 100%);
+  }
+
+  .logo-mark {
+    width: 80px;
+    height: 80px;
+    margin: 0 auto 13px;
+    display: grid;
+    place-items: center;
+    border-radius: 24px;
+    background: var(--yellow);
+    border: 3px solid var(--ink);
+    box-shadow: 7px 7px 0 var(--ink);
+    font-family: "Arial Black", sans-serif;
+    font-size: 27px;
+    font-weight: 900;
+    transform: rotate(-6deg);
+    animation: floatMark 2.2s ease-in-out infinite;
+  }
+
+  @keyframes floatMark {
+    0%, 100% { transform: rotate(-6deg) translateY(0); }
+    50% { transform: rotate(-3deg) translateY(-6px); }
+  }
+
+  .loader-card h1 {
+    margin: 0;
+    font-family: "Arial Black", "Trebuchet MS", sans-serif;
+    font-size: clamp(35px, 7vw, 58px);
+    line-height: .9;
+    letter-spacing: -.07em;
+    text-transform: uppercase;
+    color: var(--ink);
+    text-shadow: 0 4px 0 rgba(255,255,255,.45);
+  }
+
+  .loader-card h1 span { color: var(--red); }
+
+  #loadingMsg {
+    margin: 14px 0 18px;
+    font-size: 13px;
+    font-weight: 800;
+    color: var(--ink-soft);
+  }
+
+  .spinner {
+    width: 34px;
+    height: 34px;
+    margin: 0 auto;
+    border: 4px solid rgba(32, 36, 70, .16);
+    border-top-color: var(--ink);
+    border-radius: 50%;
+    animation: spin .8s linear infinite;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .touch-controls {
+    display: none;
+    position: fixed;
+    z-index: 15;
+    inset: auto 0 max(14px, env(safe-area-inset-bottom)) 0;
+    justify-content: space-between;
+    padding: 0 max(15px, env(safe-area-inset-left)) 0 max(15px, env(safe-area-inset-right));
+    pointer-events: none;
+  }
+
+  .touch-cluster { display: flex; gap: 9px; pointer-events: none; }
+  .touch-btn {
+    pointer-events: auto;
+    width: 66px;
+    height: 66px;
+    border: 2px solid rgba(32,36,70,.22);
+    border-radius: 20px;
+    background: rgba(255, 253, 245, .86);
+    color: var(--ink);
+    box-shadow: 0 5px 0 rgba(32,36,70,.18);
+    font: inherit;
+    font-size: 22px;
+    font-weight: 900;
+    display: grid;
+    place-items: center;
+    line-height: 1;
+    backdrop-filter: blur(7px);
+    -webkit-backdrop-filter: blur(7px);
+    touch-action: none;
+  }
+
+  .touch-btn small {
+    display: block;
+    font-size: 8px;
+    letter-spacing: .04em;
+    margin-top: 2px;
+    color: var(--ink-soft);
+    text-transform: uppercase;
+  }
+
+  .touch-btn.active {
+    transform: translateY(4px);
+    box-shadow: 0 1px 0 rgba(32,36,70,.18);
+    background: var(--yellow);
+  }
+
+  .fatal {
+    color: #b61f38;
+    font-weight: 900;
+  }
+
+  @media (max-width: 780px) {
+    #ui { padding: 11px 12px max(11px, env(safe-area-inset-bottom)); }
+    .topbar { grid-template-columns: 1fr auto; gap: 9px; }
+    .damage-card { display: none; }
+    .level-card { padding: 8px 12px 9px; border-left-width: 5px; border-radius: 14px; }
+    .level-name { font-size: 17px; }
+    .icon-btn { width: 50px; height: 50px; border-radius: 15px; }
+    .controls-card { display: none; }
+    .time-card { min-width: 84px; padding: 7px 11px 8px; }
+    #timeText { font-size: 16px; }
+    .speed-card { min-width: 100px; padding: 7px 11px 8px; }
+    #speedText { font-size: 25px; }
+    #toasts { top: 82px; }
+  }
+
+  @media (max-width: 540px) {
+    .time-card { display: none; }
+    .right-hud { gap: 7px; }
+    .bottom-hud { align-items: end; }
+    .result-card { padding: 22px 18px 20px; border-radius: 22px; box-shadow: 7px 7px 0 var(--ink); }
+    .result-sticker { width: 58px; height: 58px; font-size: 28px; border-radius: 18px; }
+    .result-title { font-size: 38px; }
+    .btn { min-height: 45px; padding: 0 17px; font-size: 13px; }
+    .result-hint { margin-top: 12px; }
+  }
+
+  @media (pointer: coarse) {
+    .touch-controls { display: flex; }
+    .controls-card { display: none; }
+    .bottom-hud { padding-bottom: 76px; }
+  }
+
+  @media (max-height: 500px) {
+    .topbar { grid-template-columns: 1fr auto; }
+    .damage-card { display: none; }
+    .level-card { padding: 7px 11px; }
+    .level-name { font-size: 16px; }
+    .progress-track { margin-top: 5px; }
+    #toasts { top: 64px; }
+  }
+</style>
+</head>
+<body>
+<canvas id="scene" aria-label="3D-игра Voxel Rush"></canvas>
+
+<div id="ui">
+  <div class="topbar">
+    <div class="card level-card">
+      <div class="eyebrow"><span class="dot"></span>Уровень <b id="levelNum">1</b> / <span id="levelTotal">3</span></div>
+      <div class="level-name" id="levelName">Разминка</div>
+      <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+    </div>
+
+    <div class="card damage-card">
+      <div class="damage-row"><span>Прочность</span><b id="damageText">100%</b></div>
+      <div class="damage-track"><div id="damageFill"></div></div>
+    </div>
+
+    <div class="top-actions">
+      <button class="icon-btn" id="pauseBtn" type="button" title="Пауза (Esc)" aria-label="Пауза">
+        <span class="icon">⏸</span><span class="key">Esc</span>
+      </button>
+      <button class="icon-btn" id="restartBtn" type="button" title="Перезапустить уровень (R)" aria-label="Перезапустить уровень">
+        <span class="icon">↻</span><span class="key">R</span>
+      </button>
+    </div>
+  </div>
+
+  <div class="bottom-hud">
+    <div class="card controls-card">
+      <div class="control-item"><kbd>←</kbd><kbd>→</kbd><kbd>A</kbd><kbd>D</kbd><span>тормоз / газ</span></div>
+      <div class="control-item"><kbd>↑</kbd><kbd>↓</kbd><kbd>W</kbd><kbd>S</kbd><span>наклон</span></div>
+      <div class="control-item"><kbd>R</kbd><span>заново</span></div>
+    </div>
+
+    <div class="right-hud">
+      <div class="card time-card">
+        <span class="hud-label">Время</span>
+        <b id="timeText">00:00.0</b>
+      </div>
+      <div class="card speed-card">
+        <span class="hud-label">Скорость</span>
+        <div class="speed-line"><b id="speedText">0</b><span class="speed-unit">км/ч</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toasts" aria-live="polite"></div>
+
+<div class="overlay" id="overlay" aria-hidden="true">
+  <div class="result-card" id="resultCard">
+    <div class="result-sticker" id="resultSticker">🏁</div>
+    <div class="result-kicker" id="resultKicker">Уровень пройден</div>
+    <h1 class="result-title" id="resultTitle">Финиш!</h1>
+    <p class="result-text" id="resultText"></p>
+    <div class="result-stats" id="resultStats"></div>
+    <div class="result-actions">
+      <button class="btn primary" id="primaryBtn" type="button">Дальше →</button>
+      <button class="btn secondary" id="secondaryBtn" type="button">Заново</button>
+    </div>
+    <div class="result-hint" id="resultHint">Нажми <kbd>R</kbd>, чтобы начать заново</div>
+  </div>
+</div>
+
+<div class="loading" id="loading">
+  <div class="loader-card">
+    <div class="logo-mark">DM</div>
+    <h1>Voxel Rush <span>3D</span></h1>
+    <p id="loadingMsg">Собираем машинку и трассу…</p>
+    <div class="spinner"></div>
+  </div>
+</div>
+
+<div class="touch-controls" id="touchControls">
+  <div class="touch-cluster">
+    <button class="touch-btn" type="button" data-action="tiltUp" aria-label="Наклон назад">↥<small>назад</small></button>
+    <button class="touch-btn" type="button" data-action="tiltDown" aria-label="Наклон вперёд">↧<small>вперёд</small></button>
+  </div>
+  <div class="touch-cluster">
+    <button class="touch-btn" type="button" data-action="backward" aria-label="Тормоз и реверс">◀<small>тормоз</small></button>
+    <button class="touch-btn" type="button" data-action="forward" aria-label="Газ">▶<small>газ</small></button>
+  </div>
+</div>
+
+<script>
+  (function () {
+    function showFatal(message) {
+      var msg = document.getElementById('loadingMsg');
+      var spinner = document.querySelector('.spinner');
+      if (msg) {
+        msg.textContent = message;
+        msg.className = 'fatal';
+      }
+      if (spinner) spinner.style.display = 'none';
+    }
+    window.addEventListener('error', function (event) {
+      var text = event && event.message ? event.message : 'Неизвестная ошибка';
+      showFatal('Не удалось запустить игру: ' + text);
+    }, true);
+    window.addEventListener('unhandledrejection', function () {
+      showFatal('Не удалось загрузить 3D-библиотеки. Проверьте подключение к интернету.');
+    });
+  })();
+</script>
+
+<script type="module">
+import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
+import * as CANNON from 'https://cdn.jsdelivr.net/npm/cannon-es@0.20.0/dist/cannon-es.js';
+
+/* =========================================================
+   DRIVE MAD 3D — VOXEL RUSH
+   Three.js + cannon-es, everything generated in code.
+   ========================================================= */
+
+const $ = (selector) => document.querySelector(selector);
+const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
+const lerp = (a, b, t) => a + (b - a) * t;
+const damp = (a, b, lambda, dt) => lerp(a, b, 1 - Math.exp(-lambda * dt));
+const rand = (min, max) => min + Math.random() * (max - min);
+const pick = (array) => array[(Math.random() * array.length) | 0];
+const nowMs = () => performance.now();
+
+function mulberry32(seed) {
+  let a = seed >>> 0;
+  return function () {
+    a |= 0;
+    a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+function formatTime(seconds) {
+  const safe = Math.max(0, seconds || 0);
+  const minutes = Math.floor(safe / 60);
+  const secs = (safe % 60).toFixed(1).padStart(4, '0');
+  return String(minutes).padStart(2, '0') + ':' + secs;
+}
+
+/* ---------- DOM ---------- */
+const dom = {
+  canvas: $('#scene'),
+  levelNum: $('#levelNum'),
+  levelTotal: $('#levelTotal'),
+  levelName: $('#levelName'),
+  progressFill: $('#progressFill'),
+  damageText: $('#damageText'),
+  damageFill: $('#damageFill'),
+  speedText: $('#speedText'),
+  timeText: $('#timeText'),
+  restartBtn: $('#restartBtn'),
+  pauseBtn: $('#pauseBtn'),
+  overlay: $('#overlay'),
+  resultCard: $('#resultCard'),
+  resultSticker: $('#resultSticker'),
+  resultKicker: $('#resultKicker'),
+  resultTitle: $('#resultTitle'),
+  resultText: $('#resultText'),
+  resultStats: $('#resultStats'),
+  primaryBtn: $('#primaryBtn'),
+  secondaryBtn: $('#secondaryBtn'),
+  resultHint: $('#resultHint'),
+  loading: $('#loading'),
+  loadingMsg: $('#loadingMsg'),
+  toasts: $('#toasts'),
+  touchControls: $('#touchControls')
+};
+
+/* ---------- Global state ---------- */
+const GAME = {
+  phase: 'loading',
+  levelIndex: 0,
+  elapsed: 0,
+  shake: 0,
+  pendingFail: null,
+  dustTimer: 0,
+  flipTimer: 0,
+  toastTimer: null,
+  primaryAction: null,
+  secondaryAction: null,
+  paused: false,
+  input: {
+    forward: false,
+    backward: false,
+    tiltUp: false,
+    tiltDown: false
+  }
+};
+
+let car = null;
+let levelDef = null;
+let levelGroup = null;
+let sceneryGroup = null;
+let particleGroup = null;
+let debrisGroup = null;
+let sky = null;
+let sun = null;
+let clouds = [];
+let particles = [];
+let debris = [];
+const heldKeys = new Set();
+const touchHeld = new Set();
+
+/* ---------- Renderer, scene, camera ---------- */
+const renderer = new THREE.WebGLRenderer({
+  canvas: dom.canvas,
+  antialias: true,
+  powerPreference: 'high-performance',
+  alpha: false
+});
+renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.08;
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(52, window.innerWidth / window.innerHeight, 0.1, 240);
+camera.position.set(-9, 6, 16);
+
+const skyCanvas = document.createElement('canvas');
+skyCanvas.width = 32;
+skyCanvas.height = 512;
+{
+  const ctx = skyCanvas.getContext('2d');
+  const grad = ctx.createLinearGradient(0, 0, 0, skyCanvas.height);
+  grad.addColorStop(0, '#5fc2ff');
+  grad.addColorStop(0.34, '#91dcff');
+  grad.addColorStop(0.70, '#d8f5ff');
+  grad.addColorStop(1, '#fff4dc');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, skyCanvas.width, skyCanvas.height);
+}
+const skyTexture = new THREE.CanvasTexture(skyCanvas);
+skyTexture.colorSpace = THREE.SRGBColorSpace;
+scene.background = skyTexture;
+scene.fog = new THREE.Fog(0xdff6ff, 58, 145);
+
+/* ---------- Lights ---------- */
+const hemi = new THREE.HemisphereLight(0xe1f7ff, 0x7a6547, 1.45);
+scene.add(hemi);
+
+sun = new THREE.DirectionalLight(0xfff0cf, 2.55);
+sun.position.set(-18, 34, 20);
+sun.castShadow = true;
+sun.shadow.mapSize.set(2048, 2048);
+sun.shadow.camera.left = -34;
+sun.shadow.camera.right = 34;
+sun.shadow.camera.top = 30;
+sun.shadow.camera.bottom = -30;
+sun.shadow.camera.near = 1;
+sun.shadow.camera.far = 95;
+sun.shadow.bias = -0.0006;
+sun.shadow.normalBias = 0.025;
+scene.add(sun);
+scene.add(sun.target);
+
+const fillLight = new THREE.DirectionalLight(0xb6d8ff, 0.72);
+fillLight.position.set(18, 12, 14);
+scene.add(fillLight);
+
+const rimLight = new THREE.DirectionalLight(0xffd3a6, 0.45);
+rimLight.position.set(-10, 8, -14);
+scene.add(rimLight);
+
+/* ---------- Physics world ---------- */
+const world = new CANNON.World({
+  gravity: new CANNON.Vec3(0, -22.5, 0),
+  allowSleep: true
+});
+world.broadphase = new CANNON.SAPBroadphase(world);
+world.solver.iterations = 18;
+world.solver.tolerance = 0.001;
+world.defaultContactMaterial.friction = 0.45;
+world.defaultContactMaterial.restitution = 0.01;
+
+const PHYS = {
+  ground: new CANNON.Material('ground'),
+  wheel: new CANNON.Material('wheel'),
+  car: new CANNON.Material('car'),
+  prop: new CANNON.Material('prop')
+};
+
+function addContact(a, b, friction, restitution) {
+  world.addContactMaterial(new CANNON.ContactMaterial(a, b, {
+    friction,
+    restitution,
+    contactEquationStiffness: 2.6e6,
+    contactEquationRelaxation: 7,
+    frictionEquationStiffness: 2.2e6,
+    frictionEquationRelaxation: 7
+  }));
+}
+addContact(PHYS.wheel, PHYS.ground, 0.92, 0.0);
+addContact(PHYS.car, PHYS.ground, 0.42, 0.01);
+addContact(PHYS.wheel, PHYS.prop, 0.32, 0.01);
+addContact(PHYS.car, PHYS.prop, 0.22, 0.01);
+addContact(PHYS.prop, PHYS.ground, 0.55, 0.03);
+addContact(PHYS.wheel, PHYS.wheel, 0.35, 0.02);
+addContact(PHYS.car, PHYS.car, 0.4, 0.01);
+addContact(PHYS.prop, PHYS.prop, 0.45, 0.03);
+
+/* ---------- Shared materials ---------- */
+function std(color, extra) {
+  return new THREE.MeshStandardMaterial(Object.assign({
+    color,
+    roughness: 0.88,
+    metalness: 0.0,
+    flatShading: true
+  }, extra || {}));
+}
+
+const MAT = {
+  trackTopA: std(0x5b6ee8),
+  trackTopB: std(0x6f7ef2),
+  trackSide: std(0x35418f),
+  trackBottom: std(0x252b61),
+  trackTrim: std(0x42e2c0, { emissive: 0x0d5e50, emissiveIntensity: 0.32 }),
+  lane: std(0xfff0b0, { emissive: 0x5f4b10, emissiveIntensity: 0.18 }),
+  support: std(0x3d4a9c),
+  supportDark: std(0x29336e),
+  finishDark: std(0x1f2444),
+  finishLight: std(0xfffdf2),
+  tire: std(0x222639),
+  tireTread: std(0x30364f),
+  rim: std(0xffcf3f, { emissive: 0x493200, emissiveIntensity: 0.18 }),
+  hub: std(0xfff3c4),
+  carBody: std(0xff5667),
+  carBodyDark: std(0xd83a4d),
+  carCream: std(0xfff3d1),
+  carDark: std(0x272b47),
+  carGlass: std(0x85e8ff, { roughness: 0.18, metalness: 0.18, emissive: 0x0c4b5e, emissiveIntensity: 0.22 }),
+  headlight: std(0xffef9e, { emissive: 0xffc21a, emissiveIntensity: 0.9 }),
+  taillight: std(0xff3155, { emissive: 0x8e0020, emissiveIntensity: 0.7 }),
+  crateOrange: std(0xff9f1c),
+  crateMint: std(0x2ec4b6),
+  cratePink: std(0xff6b9a),
+  crateYellow: std(0xffd447),
+  crateTape: std(0xfff3d1),
+  platformTop: std(0x45d6a4, { emissive: 0x0b5b43, emissiveIntensity: 0.28 }),
+  platformSide: std(0x277c68),
+  platformBottom: std(0x1c4f47),
+  rope: std(0x2b3155),
+  debris: std(0x606a91),
+  mountainA: std(0x7899d4),
+  mountainB: std(0x9b83d8),
+  mountainC: std(0x69b9c9),
+  mountainSnow: std(0xf5fbff),
+  treeTrunk: std(0x8a5a3b),
+  treeLeafA: std(0x36b87a),
+  treeLeafB: std(0x5bcf72),
+  treeLeafC: std(0x1f9d78),
+  cloud: std(0xffffff, { roughness: 1, emissive: 0xbfe6ff, emissiveIntensity: 0.08 }),
+  outline: new THREE.LineBasicMaterial({ color: 0x22264a, transparent: true, opacity: 0.28 }),
+  dust: new THREE.MeshBasicMaterial({ color: 0xe9ddc0, transparent: true, opacity: 0.55, depthWrite: false })
+};
+
+/* ---------- Level definitions ---------- */
+const LEVELS = [
+  {
+    name: 'Разминка',
+    kicker: 'Первый прыжок',
+    startX: -8,
+    startY: 0,
+    finishX: 53,
+    seed: 12,
+    sections: [
+      { type: 'flat', x1: -16, x2: 10, y: 0 },
+      { type: 'ramp', x1: 10, x2: 16, y1: 0, y2: 1.6 },
+      { type: 'flat', x1: 16, x2: 22, y: 1.6 },
+      { type: 'flat', x1: 25.6, x2: 62, y: 0 }
+    ],
+    crates: [
+      { x: 2.4, z: 1.5, size: 0.82, count: 1, color: 'crateOrange' },
+      { x: 35.5, z: 0, size: 0.84, count: 2, color: 'crateMint' }
+    ],
+    signs: [
+      { x: 10.5, z: -4.9, y: 2.8, text: 'ПРЫЖОК →', color: '#ffd447' }
+    ]
+  },
+  {
+    name: 'Двойной трамплин',
+    kicker: 'Держи баланс',
+    startX: -8,
+    startY: 0,
+    finishX: 74,
+    seed: 37,
+    sections: [
+      { type: 'flat', x1: -16, x2: 8, y: 0 },
+      { type: 'ramp', x1: 8, x2: 14, y1: 0, y2: 2.2 },
+      { type: 'flat', x1: 14, x2: 18, y: 2.2 },
+      { type: 'flat', x1: 23, x2: 36, y: 0 },
+      { type: 'ramp', x1: 36, x2: 42, y1: 0, y2: 1.6 },
+      { type: 'flat', x1: 46.5, x2: 84, y: 0 }
+    ],
+    crates: [
+      { x: 29.5, z: 0, size: 0.92, count: 2, color: 'cratePink' },
+      { x: 54.5, z: 0, size: 0.86, count: 1, color: 'crateYellow' },
+      { x: 64.5, z: 0, size: 0.9, count: 3, color: 'crateMint' }
+    ],
+    signs: [
+      { x: 9, z: -4.9, y: 3.0, text: 'ГАЗ! →', color: '#ff9f1c' },
+      { x: 36.5, z: -4.9, y: 2.6, text: 'ЕЩЁ РАЗ!', color: '#ff6b9a' }
+    ]
+  },
+  {
+    name: 'Хаос',
+    kicker: 'Третий заезд',
+    startX: -8,
+    startY: 0,
+    finishX: 76,
+    seed: 83,
+    sections: [
+      { type: 'flat', x1: -16, x2: 6, y: 0 },
+      { type: 'ramp', x1: 6, x2: 11, y1: 0, y2: 1.8 },
+      { type: 'flat', x1: 11, x2: 15, y: 1.8 },
+      { type: 'flat', x1: 19.5, x2: 32, y: 0 },
+      { type: 'ramp', x1: 32, x2: 37, y1: 0, y2: 1.8 },
+      { type: 'flat', x1: 37, x2: 41, y: 1.8 },
+      { type: 'flat', x1: 45.5, x2: 86, y: 0 }
+    ],
+    crates: [
+      { x: 23.5, z: 0, size: 0.92, count: 2, color: 'crateYellow' },
+      { x: 50, z: 0, size: 0.9, count: 3, color: 'crateOrange' },
+      { x: 61, z: 0, size: 0.84, count: 1, color: 'cratePink' },
+      { x: 69, z: 0, size: 0.9, count: 2, color: 'crateMint' }
+    ],
+    signs: [
+      { x: 7, z: -4.9, y: 2.8, text: 'ОСТОРОЖНО!', color: '#ff6b9a' },
+      { x: 32.5, z: -4.9, y: 2.8, text: 'ПОСЛЕДНИЙ РЫВОК', color: '#43e6bd' }
+    ]
+  },
+  {
+    name: 'Узкий мост',
+    kicker: 'Не сорвись',
+    startX: -8,
+    startY: 0,
+    finishX: 62,
+    seed: 104,
+    sections: [
+      { type: 'flat', x1: -16, x2: 12, y: 0 },
+      { type: 'ramp', x1: 12, x2: 17, y1: 0, y2: 0.9 },
+      { type: 'flat', x1: 17, x2: 35, y: 0.9, width: 3.2 },
+      { type: 'ramp', x1: 35, x2: 40, y1: 0.9, y2: 0 },
+      { type: 'flat', x1: 40, x2: 72, y: 0 }
+    ],
+    crates: [
+      { x: 48.5, z: 0, size: 0.86, count: 2, color: 'crateMint' }
+    ],
+    signs: [
+      { x: 12.5, z: -4.9, y: 2.5, text: 'УЗКИЙ МОСТ', color: '#ffd447' },
+      { x: 40.5, z: -4.9, y: 2.4, text: 'СНОВА ШИРОКО', color: '#43e6bd' }
+    ]
+  },
+  {
+    name: 'Висячие платформы',
+    kicker: 'Прыжок по островкам',
+    startX: -8,
+    startY: 0,
+    finishX: 68,
+    seed: 141,
+    sections: [
+      { type: 'flat', x1: -16, x2: 8, y: 0 },
+      { type: 'ramp', x1: 8, x2: 12, y1: 0, y2: 0.9 },
+      { type: 'flat', x1: 37.4, x2: 78, y: 0 }
+    ],
+    platforms: [
+      { x: 17.6, y: 0.55, width: 6.0, depth: 4.4, ropeTop: 8.2 },
+      { x: 26.2, y: 0.25, width: 6.0, depth: 4.4, ropeTop: 7.6 },
+      { x: 34.8, y: 0.0, width: 6.0, depth: 4.4, ropeTop: 7.2 }
+    ],
+    crates: [
+      { x: 46, z: 0, size: 0.88, count: 2, color: 'cratePink' },
+      { x: 57, z: 0, size: 0.86, count: 1, color: 'crateYellow' }
+    ],
+    signs: [
+      { x: 12.5, z: -4.9, y: 2.7, text: 'ПО ПЛАТФОРМАМ', color: '#ff9f1c' },
+      { x: 37.8, z: -4.9, y: 2.5, text: 'ТВЁРДАЯ ЗЕМЛЯ', color: '#43e6bd' }
+    ]
+  },
+  {
+    name: 'Горки',
+    kicker: 'Вверх и вниз',
+    startX: -8,
+    startY: 0,
+    finishX: 72,
+    seed: 188,
+    sections: [
+      { type: 'flat', x1: -16, x2: 6, y: 0 },
+      { type: 'ramp', x1: 6, x2: 12, y1: 0, y2: 2.2 },
+      { type: 'flat', x1: 12, x2: 16, y: 2.2 },
+      { type: 'ramp', x1: 16, x2: 22, y1: 2.2, y2: 0 },
+      { type: 'flat', x1: 22, x2: 28, y: 0 },
+      { type: 'ramp', x1: 28, x2: 34, y1: 0, y2: 2.6 },
+      { type: 'flat', x1: 34, x2: 38, y: 2.6 },
+      { type: 'ramp', x1: 38, x2: 44, y1: 2.6, y2: 0 },
+      { type: 'flat', x1: 44, x2: 82, y: 0 }
+    ],
+    crates: [
+      { x: 24.5, z: 0, size: 0.9, count: 2, color: 'crateYellow' },
+      { x: 50, z: 0, size: 0.88, count: 2, color: 'crateMint' },
+      { x: 61, z: 0, size: 0.84, count: 1, color: 'crateOrange' }
+    ],
+    signs: [
+      { x: 6.5, z: -4.9, y: 2.8, text: 'ВВЕРХ!', color: '#ffd447' },
+      { x: 28.5, z: -4.9, y: 3.0, text: 'ЕЩЁ ВЫШЕ', color: '#ff6b9a' }
+    ]
+  },
+  {
+    name: 'Пропасти',
+    kicker: 'Три прыжка',
+    startX: -8,
+    startY: 0,
+    finishX: 84,
+    seed: 233,
+    sections: [
+      { type: 'flat', x1: -16, x2: 8, y: 0 },
+      { type: 'ramp', x1: 8, x2: 13, y1: 0, y2: 1.8 },
+      { type: 'flat', x1: 13, x2: 18, y: 1.8 },
+      { type: 'flat', x1: 21.5, x2: 30, y: 0 },
+      { type: 'ramp', x1: 30, x2: 34, y1: 0, y2: 1.2 },
+      { type: 'flat', x1: 38.5, x2: 46, y: 0 },
+      { type: 'ramp', x1: 46, x2: 51, y1: 0, y2: 2.2 },
+      { type: 'flat', x1: 55.5, x2: 94, y: 0 }
+    ],
+    crates: [
+      { x: 26.5, z: 0, size: 0.86, count: 1, color: 'cratePink' },
+      { x: 42.5, z: 0, size: 0.9, count: 2, color: 'crateMint' },
+      { x: 64, z: 0, size: 0.84, count: 1, color: 'crateYellow' }
+    ],
+    signs: [
+      { x: 8.5, z: -4.9, y: 2.8, text: 'ПРЫЖОК', color: '#ffd447' },
+      { x: 30.5, z: -4.9, y: 2.7, text: 'ЕЩЁ', color: '#ff9f1c' },
+      { x: 46.5, z: -4.9, y: 3.0, text: 'ДАЛЬШЕ!', color: '#ff6b9a' }
+    ]
+  },
+  {
+    name: 'Подвесной путь',
+    kicker: 'Четыре островка',
+    startX: -8,
+    startY: 0,
+    finishX: 74,
+    seed: 287,
+    sections: [
+      { type: 'flat', x1: -16, x2: 8, y: 0 },
+      { type: 'ramp', x1: 8, x2: 12, y1: 0, y2: 1.0 },
+      { type: 'flat', x1: 45.5, x2: 84, y: 0 }
+    ],
+    platforms: [
+      { x: 17.5, y: 0.7, width: 6.2, depth: 4.2, ropeTop: 8.4 },
+      { x: 25.0, y: 0.35, width: 6.2, depth: 4.2, ropeTop: 7.8 },
+      { x: 32.5, y: 0.65, width: 6.2, depth: 4.2, ropeTop: 8.1 },
+      { x: 40.0, y: 0.15, width: 6.2, depth: 4.2, ropeTop: 7.4 }
+    ],
+    crates: [
+      { x: 52, z: 0, size: 0.88, count: 2, color: 'crateOrange' },
+      { x: 63, z: 0, size: 0.86, count: 1, color: 'cratePink' }
+    ],
+    signs: [
+      { x: 12.5, z: -4.9, y: 2.8, text: 'ДЕРЖИ РИТМ', color: '#ffd447' },
+      { x: 45.8, z: -4.9, y: 2.5, text: 'ПОЧТИ ДОМА', color: '#43e6bd' }
+    ]
+  },
+  {
+    name: 'Каскад',
+    kicker: 'Мост и пропасти',
+    startX: -8,
+    startY: 0,
+    finishX: 86,
+    seed: 341,
+    sections: [
+      { type: 'flat', x1: -16, x2: 6, y: 0 },
+      { type: 'ramp', x1: 6, x2: 11, y1: 0, y2: 1.6 },
+      { type: 'flat', x1: 16, x2: 24, y: 0 },
+      { type: 'ramp', x1: 24, x2: 29, y1: 0, y2: 2.0 },
+      { type: 'flat', x1: 34, x2: 42, y: 0 },
+      { type: 'ramp', x1: 42, x2: 46, y1: 0, y2: 0.8 },
+      { type: 'flat', x1: 46, x2: 64, y: 0.8, width: 3.2 },
+      { type: 'ramp', x1: 64, x2: 68, y1: 0.8, y2: 0 },
+      { type: 'flat', x1: 69.5, x2: 96, y: 0 }
+    ],
+    crates: [
+      { x: 18.5, z: 0, size: 0.86, count: 1, color: 'crateYellow' },
+      { x: 37.5, z: 0, size: 0.9, count: 2, color: 'crateMint' },
+      { x: 76, z: 0, size: 0.84, count: 1, color: 'crateOrange' }
+    ],
+    signs: [
+      { x: 6.5, z: -4.9, y: 2.8, text: 'ПРЫЖОК', color: '#ffd447' },
+      { x: 24.5, z: -4.9, y: 2.9, text: 'ВЫШЕ', color: '#ff9f1c' },
+      { x: 42.5, z: -4.9, y: 2.7, text: 'МОСТ', color: '#43e6bd' }
+    ]
+  },
+  {
+    name: 'Финал',
+    kicker: 'Последний рывок',
+    startX: -8,
+    startY: 0,
+    finishX: 116,
+    seed: 409,
+    sections: [
+      { type: 'flat', x1: -16, x2: 6, y: 0 },
+      { type: 'ramp', x1: 6, x2: 12, y1: 0, y2: 2.4 },
+      { type: 'flat', x1: 12, x2: 16, y: 2.4 },
+      { type: 'flat', x1: 20.5, x2: 28, y: 0 },
+      { type: 'ramp', x1: 28, x2: 33, y1: 0, y2: 1.6 },
+      { type: 'flat', x1: 37.5, x2: 44, y: 0 },
+      { type: 'ramp', x1: 44, x2: 49, y1: 0, y2: 0.9 },
+      { type: 'flat', x1: 58.0, x2: 72, y: 0 },
+      { type: 'ramp', x1: 72, x2: 76, y1: 0, y2: 0.8 },
+      { type: 'flat', x1: 76, x2: 90, y: 0.8, width: 3.2 },
+      { type: 'ramp', x1: 90, x2: 94, y1: 0.8, y2: 0 },
+      { type: 'flat', x1: 96.0, x2: 126, y: 0 }
+    ],
+    platforms: [
+      { x: 53.5, y: 0.9, width: 5.5, depth: 4.4, ropeTop: 8.6 }
+    ],
+    crates: [
+      { x: 23, z: 0, size: 0.86, count: 1, color: 'cratePink' },
+      { x: 40, z: 0, size: 0.9, count: 2, color: 'crateMint' },
+      { x: 64, z: 0, size: 0.84, count: 1, color: 'crateYellow' },
+      { x: 80, z: 0, size: 0.7, count: 1, color: 'crateOrange' },
+      { x: 104, z: 0, size: 0.88, count: 2, color: 'crateYellow' }
+    ],
+    signs: [
+      { x: 6.5, z: -4.9, y: 3.1, text: 'ФИНАЛ', color: '#ff6b9a' },
+      { x: 38.8, z: -4.9, y: 2.8, text: 'ПЛАТФОРМА', color: '#ffd447' },
+      { x: 72.5, z: -4.9, y: 2.8, text: 'УЗКИЙ МОСТ', color: '#ff9f1c' },
+      { x: 90.5, z: -4.9, y: 2.8, text: 'ПОСЛЕДНИЙ РЫВОК', color: '#43e6bd' }
+    ]
+  },
+  {
+    name: 'Высотный подъём',
+    kicker: 'Взлёт',
+    startX: -8,
+    startY: 0,
+    finishX: 86,
+    seed: 451,
+    sections: [
+      { type: 'flat', x1: -16, x2: 8, y: 0 },
+      { type: 'ramp', x1: 8, x2: 15, y1: 0, y2: 3.2 },
+      { type: 'flat', x1: 15, x2: 22, y: 3.2 },
+      { type: 'ramp', x1: 22, x2: 29, y1: 3.2, y2: 5.4 },
+      { type: 'flat', x1: 29, x2: 36, y: 5.4 },
+      { type: 'ramp', x1: 36, x2: 46, y1: 5.4, y2: 0 },
+      { type: 'flat', x1: 46, x2: 96, y: 0 }
+    ],
+    crates: [
+      { x: 20, z: 0, size: 0.86, count: 2, color: 'crateMint' },
+      { x: 55, z: 0, size: 0.9, count: 3, color: 'crateOrange' }
+    ],
+    signs: [
+      { x: 8.5, z: -4.9, y: 3.6, text: 'ВВЕРХ!', color: '#ffd447' },
+      { x: 36.5, z: -4.9, y: 6.2, text: 'ВЫСОКО', color: '#ff9f1c' }
+    ]
+  },
+  {
+    name: 'Дальний прыжок',
+    kicker: 'Разгон',
+    startX: -8,
+    startY: 0,
+    finishX: 78,
+    seed: 512,
+    sections: [
+      { type: 'flat', x1: -16, x2: 10, y: 0 },
+      { type: 'ramp', x1: 10, x2: 17, y1: 0, y2: 2.8 },
+      { type: 'flat', x1: 34, x2: 88, y: 0 }
+    ],
+    platforms: [
+      { x: 24, y: 1.4, width: 7.0, depth: 5.0, ropeTop: 9.5 }
+    ],
+    crates: [
+      { x: 45, z: 0, size: 0.88, count: 2, color: 'cratePink' },
+      { x: 62, z: 0, size: 0.84, count: 1, color: 'crateYellow' }
+    ],
+    signs: [
+      { x: 10.5, z: -4.9, y: 3.4, text: 'РАЗГОН!', color: '#ff9f1c' },
+      { x: 34.5, z: -4.9, y: 2.5, text: 'ПРИЗЕМЛЕНИЕ', color: '#43e6bd' }
+    ]
+  },
+  {
+    name: 'Серпантин холмов',
+    kicker: 'Волны',
+    startX: -8,
+    startY: 0,
+    finishX: 92,
+    seed: 573,
+    sections: [
+      { type: 'flat', x1: -16, x2: 6, y: 0 },
+      { type: 'ramp', x1: 6, x2: 11, y1: 0, y2: 1.9 },
+      { type: 'flat', x1: 11, x2: 14, y: 1.9 },
+      { type: 'ramp', x1: 14, x2: 19, y1: 1.9, y2: 0 },
+      { type: 'flat', x1: 19, x2: 24, y: 0 },
+      { type: 'ramp', x1: 24, x2: 29, y1: 0, y2: 2.3 },
+      { type: 'flat', x1: 29, x2: 33, y: 2.3 },
+      { type: 'ramp', x1: 33, x2: 38, y1: 2.3, y2: 0 },
+      { type: 'flat', x1: 38, x2: 43, y: 0 },
+      { type: 'ramp', x1: 43, x2: 48, y1: 0, y2: 2.7 },
+      { type: 'flat', x1: 48, x2: 52, y: 2.7 },
+      { type: 'ramp', x1: 52, x2: 57, y1: 2.7, y2: 0 },
+      { type: 'flat', x1: 57, x2: 102, y: 0 }
+    ],
+    crates: [
+      { x: 21, z: 0, size: 0.84, count: 1, color: 'crateYellow' },
+      { x: 40, z: 0, size: 0.9, count: 2, color: 'crateMint' },
+      { x: 68, z: 0, size: 0.86, count: 2, color: 'crateOrange' }
+    ],
+    signs: [
+      { x: 6.5, z: -4.9, y: 2.8, text: 'ВОЛНА 1', color: '#ffd447' },
+      { x: 24.5, z: -4.9, y: 3.0, text: 'ВОЛНА 2', color: '#ff9f1c' },
+      { x: 43.5, z: -4.9, y: 3.3, text: 'ВОЛНА 3', color: '#ff6b9a' }
+    ]
+  },
+  {
+    name: 'Узкий зигзаг',
+    kicker: 'Точный ход',
+    startX: -8,
+    startY: 0,
+    finishX: 90,
+    seed: 634,
+    sections: [
+      { type: 'flat', x1: -16, x2: 8, y: 0 },
+      { type: 'ramp', x1: 8, x2: 13, y1: 0, y2: 1.5 },
+      { type: 'flat', x1: 13, x2: 28, y: 1.5, width: 3.0 },
+      { type: 'ramp', x1: 28, x2: 33, y1: 1.5, y2: 0 },
+      { type: 'flat', x1: 33, x2: 40, y: 0 },
+      { type: 'ramp', x1: 40, x2: 45, y1: 0, y2: 0.9 },
+      { type: 'flat', x1: 45, x2: 62, y: 0.9, width: 3.0 },
+      { type: 'ramp', x1: 62, x2: 67, y1: 0.9, y2: 0 },
+      { type: 'flat', x1: 67, x2: 100, y: 0 }
+    ],
+    crates: [
+      { x: 36, z: 0, size: 0.86, count: 2, color: 'crateMint' },
+      { x: 75, z: 0, size: 0.84, count: 1, color: 'cratePink' }
+    ],
+    signs: [
+      { x: 8.5, z: -4.9, y: 2.6, text: 'УЗКО', color: '#ffd447' },
+      { x: 40.5, z: -4.9, y: 2.5, text: 'СНОВА УЗКО', color: '#ff9f1c' }
+    ]
+  },
+  {
+    name: 'Подвесная цепочка',
+    kicker: 'Пять островков',
+    startX: -8,
+    startY: 0,
+    finishX: 80,
+    seed: 695,
+    sections: [
+      { type: 'flat', x1: -16, x2: 8, y: 0 },
+      { type: 'ramp', x1: 8, x2: 12, y1: 0, y2: 1.0 },
+      { type: 'flat', x1: 50, x2: 90, y: 0 }
+    ],
+    platforms: [
+      { x: 16, y: 0.8, width: 5.6, depth: 4.0, ropeTop: 8.5 },
+      { x: 23, y: 0.3, width: 5.6, depth: 4.0, ropeTop: 7.8 },
+      { x: 30, y: 0.9, width: 5.6, depth: 4.0, ropeTop: 8.6 },
+      { x: 37, y: 0.2, width: 5.6, depth: 4.0, ropeTop: 7.6 },
+      { x: 44, y: 0.7, width: 5.6, depth: 4.0, ropeTop: 8.2 }
+    ],
+    crates: [
+      { x: 58, z: 0, size: 0.88, count: 2, color: 'crateYellow' },
+      { x: 70, z: 0, size: 0.84, count: 1, color: 'crateOrange' }
+    ],
+    signs: [
+      { x: 12.5, z: -4.9, y: 2.6, text: 'ДЕРЖИ РИТМ', color: '#ffd447' },
+      { x: 50.5, z: -4.9, y: 2.5, text: 'ЗЕМЛЯ', color: '#43e6bd' }
+    ]
+  },
+  {
+    name: 'Глубокие провалы',
+    kicker: 'Три бездны',
+    startX: -8,
+    startY: 0,
+    finishX: 92,
+    seed: 756,
+    sections: [
+      { type: 'flat', x1: -16, x2: 8, y: 0 },
+      { type: 'ramp', x1: 8, x2: 13, y1: 0, y2: 2.1 },
+      { type: 'flat', x1: 13, x2: 18, y: 2.1 },
+      { type: 'ramp', x1: 30, x2: 35, y1: 0, y2: 1.6 },
+      { type: 'flat', x1: 35, x2: 41, y: 1.6 },
+      { type: 'ramp', x1: 52, x2: 57, y1: 0, y2: 2.4 },
+      { type: 'flat', x1: 57, x2: 63, y: 2.4 },
+      { type: 'flat', x1: 70, x2: 102, y: 0 }
+    ],
+    platforms: [
+      { x: 23, y: 0.9, width: 6.0, depth: 4.4, ropeTop: 8.4 },
+      { x: 46, y: 0.6, width: 6.0, depth: 4.4, ropeTop: 8.0 }
+    ],
+    crates: [
+      { x: 15, z: 0, size: 0.86, count: 1, color: 'cratePink' },
+      { x: 38, z: 0, size: 0.9, count: 2, color: 'crateMint' },
+      { x: 78, z: 0, size: 0.84, count: 2, color: 'crateOrange' }
+    ],
+    signs: [
+      { x: 8.5, z: -4.9, y: 2.9, text: 'ПРЫЖОК 1', color: '#ffd447' },
+      { x: 30.5, z: -4.9, y: 2.7, text: 'ПРЫЖОК 2', color: '#ff9f1c' },
+      { x: 52.5, z: -4.9, y: 3.1, text: 'ПРЫЖОК 3', color: '#ff6b9a' }
+    ]
+  },
+  {
+    name: 'Каскад платформ',
+    kicker: 'Смешанный',
+    startX: -8,
+    startY: 0,
+    finishX: 88,
+    seed: 817,
+    sections: [
+      { type: 'flat', x1: -16, x2: 6, y: 0 },
+      { type: 'ramp', x1: 6, x2: 11, y1: 0, y2: 1.7 },
+      { type: 'flat', x1: 11, x2: 16, y: 1.7 },
+      { type: 'flat', x1: 22, x2: 30, y: 0 },
+      { type: 'ramp', x1: 30, x2: 34, y1: 0, y2: 0.8 },
+      { type: 'flat', x1: 34, x2: 52, y: 0.8, width: 3.2 },
+      { type: 'ramp', x1: 52, x2: 56, y1: 0.8, y2: 0 },
+      { type: 'flat', x1: 60, x2: 98, y: 0 }
+    ],
+    platforms: [
+      { x: 19, y: 0.6, width: 5.0, depth: 4.0, ropeTop: 8.0 }
+    ],
+    crates: [
+      { x: 25, z: 0, size: 0.86, count: 2, color: 'crateYellow' },
+      { x: 42, z: 0, size: 0.84, count: 1, color: 'crateMint' },
+      { x: 72, z: 0, size: 0.9, count: 3, color: 'crateOrange' }
+    ],
+    signs: [
+      { x: 6.5, z: -4.9, y: 2.7, text: 'ПРЫЖОК', color: '#ffd447' },
+      { x: 30.5, z: -4.9, y: 2.6, text: 'МОСТ', color: '#43e6bd' },
+      { x: 60.5, z: -4.9, y: 2.5, text: 'ФИНИШ БЛИЗКО', color: '#ff9f1c' }
+    ]
+  },
+  {
+    name: 'Форсаж',
+    kicker: 'Скорость',
+    startX: -8,
+    startY: 0,
+    finishX: 110,
+    seed: 878,
+    sections: [
+      { type: 'flat', x1: -16, x2: 6, y: 0 },
+      { type: 'ramp', x1: 6, x2: 12, y1: 0, y2: 1.2 },
+      { type: 'flat', x1: 12, x2: 18, y: 1.2 },
+      { type: 'ramp', x1: 18, x2: 24, y1: 1.2, y2: 0 },
+      { type: 'flat', x1: 24, x2: 120, y: 0 }
+    ],
+    crates: [
+      { x: 35, z: 0, size: 0.9, count: 3, color: 'crateMint' },
+      { x: 55, z: 0, size: 0.88, count: 2, color: 'cratePink' },
+      { x: 75, z: 0, size: 0.86, count: 2, color: 'crateYellow' },
+      { x: 95, z: 0, size: 0.84, count: 1, color: 'crateOrange' }
+    ],
+    signs: [
+      { x: 6.5, z: -4.9, y: 2.6, text: 'ГАЗ ДО ПОЛА', color: '#ff9f1c' },
+      { x: 24.5, z: -4.9, y: 2.5, text: 'НЕ ТОРМОЗИ', color: '#ff6b9a' }
+    ]
+  },
+  {
+    name: 'Лабиринт высот',
+    kicker: 'Много уровней',
+    startX: -8,
+    startY: 0,
+    finishX: 100,
+    seed: 939,
+    sections: [
+      { type: 'flat', x1: -16, x2: 6, y: 0 },
+      { type: 'ramp', x1: 6, x2: 11, y1: 0, y2: 2.0 },
+      { type: 'flat', x1: 11, x2: 16, y: 2.0 },
+      { type: 'ramp', x1: 16, x2: 21, y1: 2.0, y2: 4.0 },
+      { type: 'flat', x1: 21, x2: 27, y: 4.0 },
+      { type: 'ramp', x1: 27, x2: 34, y1: 4.0, y2: 2.0 },
+      { type: 'flat', x1: 34, x2: 40, y: 2.0 },
+      { type: 'ramp', x1: 40, x2: 46, y1: 2.0, y2: 0 },
+      { type: 'flat', x1: 46, x2: 52, y: 0 },
+      { type: 'ramp', x1: 52, x2: 57, y1: 0, y2: 2.5 },
+      { type: 'flat', x1: 57, x2: 63, y: 2.5 },
+      { type: 'ramp', x1: 63, x2: 70, y1: 2.5, y2: 0 },
+      { type: 'flat', x1: 70, x2: 110, y: 0 }
+    ],
+    crates: [
+      { x: 13, z: 0, size: 0.84, count: 1, color: 'cratePink' },
+      { x: 24, z: 0, size: 0.86, count: 2, color: 'crateYellow' },
+      { x: 59, z: 0, size: 0.88, count: 1, color: 'crateMint' },
+      { x: 82, z: 0, size: 0.84, count: 2, color: 'crateOrange' }
+    ],
+    signs: [
+      { x: 6.5, z: -4.9, y: 2.8, text: 'ВВЕРХ', color: '#ffd447' },
+      { x: 16.5, z: -4.9, y: 4.6, text: 'ЕЩЁ ВЫШЕ', color: '#ff9f1c' },
+      { x: 40.5, z: -4.9, y: 2.8, text: 'ВНИЗ', color: '#ff6b9a' },
+      { x: 52.5, z: -4.9, y: 3.1, text: 'ФИНАЛЬНЫЙ ПРЫЖОК', color: '#43e6bd' }
+    ]
+  },
+  {
+    name: 'Абсолют',
+    kicker: 'Всё и сразу',
+    startX: -8,
+    startY: 0,
+    finishX: 120,
+    seed: 999,
+    sections: [
+      { type: 'flat', x1: -16, x2: 6, y: 0 },
+      { type: 'ramp', x1: 6, x2: 12, y1: 0, y2: 2.4 },
+      { type: 'flat', x1: 12, x2: 16, y: 2.4 },
+      { type: 'flat', x1: 20, x2: 28, y: 0 },
+      { type: 'ramp', x1: 28, x2: 33, y1: 0, y2: 1.6 },
+      { type: 'flat', x1: 37, x2: 44, y: 0 },
+      { type: 'ramp', x1: 44, x2: 49, y1: 0, y2: 0.9 },
+      { type: 'flat', x1: 58, x2: 72, y: 0 },
+      { type: 'ramp', x1: 72, x2: 76, y1: 0, y2: 0.8 },
+      { type: 'flat', x1: 76, x2: 90, y: 0.8, width: 3.2 },
+      { type: 'ramp', x1: 90, x2: 94, y1: 0.8, y2: 0 },
+      { type: 'flat', x1: 96, x2: 130, y: 0 }
+    ],
+    platforms: [
+      { x: 53, y: 0.9, width: 5.5, depth: 4.4, ropeTop: 8.6 },
+      { x: 83, y: 0.5, width: 6.0, depth: 4.2, ropeTop: 8.0 }
+    ],
+    crates: [
+      { x: 23, z: 0, size: 0.86, count: 1, color: 'cratePink' },
+      { x: 40, z: 0, size: 0.9, count: 2, color: 'crateMint' },
+      { x: 64, z: 0, size: 0.84, count: 1, color: 'crateYellow' },
+      { x: 80, z: 0, size: 0.7, count: 1, color: 'crateOrange' },
+      { x: 108, z: 0, size: 0.88, count: 2, color: 'crateYellow' }
+    ],
+    signs: [
+      { x: 6.5, z: -4.9, y: 3.1, text: 'АБСОЛЮТ', color: '#ff6b9a' },
+      { x: 38.8, z: -4.9, y: 2.8, text: 'ПЛАТФОРМА', color: '#ffd447' },
+      { x: 72.5, z: -4.9, y: 2.8, text: 'УЗКИЙ МОСТ', color: '#ff9f1c' },
+      { x: 90.5, z: -4.9, y: 2.8, text: 'ПОСЛЕДНИЙ РЫВОК', color: '#43e6bd' }
+    ]
+  }
+];
+ 
+/* ---------- Scene groups ---------- */
+levelGroup = new THREE.Group();
+sceneryGroup = new THREE.Group();
+particleGroup = new THREE.Group();
+debrisGroup = new THREE.Group();
+scene.add(sceneryGroup, levelGroup, debrisGroup, particleGroup);
+
+const TRACK_WIDTH = 7.6;
+const TRACK_HALF = TRACK_WIDTH * 0.5;
+const TRACK_THICKNESS = 1.5;
+
+const particleGeometry = new THREE.BoxGeometry(1, 1, 1);
+const tempVec = new THREE.Vector3();
+const tempVec2 = new THREE.Vector3();
+const tempQuat = new THREE.Quaternion();
+const tempEuler = new THREE.Euler();
+
+function disposeMaterial(material) {
+  if (!material) return;
+  if (material.map && material.userData && material.userData.ownMap) {
+    material.map.dispose();
+  }
+  if (material.userData && material.userData.local) {
+    material.dispose();
+  }
+}
+
+function clearGroup(group) {
+  if (!group) return;
+  group.traverse((object) => {
+    if (object.geometry) object.geometry.dispose();
+    if (object.material) {
+      if (Array.isArray(object.material)) {
+        object.material.forEach(disposeMaterial);
+      } else {
+        disposeMaterial(object.material);
+      }
+    }
+  });
+  group.clear();
+}
+
+function trackTopAt(x) {
+  if (!levelDef) return null;
+  for (const section of levelDef.sections) {
+    if (x < section.x1 || x > section.x2) continue;
+    if (section.type === 'flat') return section.y;
+    const t = (x - section.x1) / Math.max(0.0001, section.x2 - section.x1);
+    return section.y1 + (section.y2 - section.y1) * t;
+  }
+  return null;
+}
+
+function trackWidthAt(x) {
+  if (!levelDef) return TRACK_WIDTH;
+  let width = TRACK_WIDTH;
+  for (const section of levelDef.sections) {
+    if (x >= section.x1 && x <= section.x2) {
+      width = Math.min(width, section.width || TRACK_WIDTH);
+    }
+  }
+  for (const platform of levelDef.platforms || []) {
+    const platformWidth = platform.width || 5.0;
+    if (x >= platform.x - platformWidth * 0.5 && x <= platform.x + platformWidth * 0.5) {
+      width = Math.min(width, platform.depth || 4.2);
+    }
+  }
+  return width;
+}
+
+function makeTextTexture(text, bg, fg, checker) {
+  const canvas = document.createElement('canvas');
+  canvas.width = 640;
+  canvas.height = 280;
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  if (checker) {
+    const cell = 35;
+    for (let y = 0; y < canvas.height; y += cell) {
+      for (let x = 0; x < canvas.width; x += cell) {
+        ctx.fillStyle = ((x / cell + y / cell) & 1) ? '#1e2344' : '#fffdf2';
+        ctx.fillRect(x, y, cell, cell);
+      }
+    }
+  }
+
+  ctx.fillStyle = bg;
+  const inset = 16;
+  const radius = 30;
+  const w = canvas.width - inset * 2;
+  const h = canvas.height - inset * 2;
+  ctx.beginPath();
+  ctx.moveTo(inset + radius, inset);
+  ctx.lineTo(inset + w - radius, inset);
+  ctx.quadraticCurveTo(inset + w, inset, inset + w, inset + radius);
+  ctx.lineTo(inset + w, inset + h - radius);
+  ctx.quadraticCurveTo(inset + w, inset + h, inset + w - radius, inset + h);
+  ctx.lineTo(inset + radius, inset + h);
+  ctx.quadraticCurveTo(inset, inset + h, inset, inset + h - radius);
+  ctx.lineTo(inset, inset + radius);
+  ctx.quadraticCurveTo(inset, inset, inset + radius, inset);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.strokeStyle = 'rgba(28, 32, 65, .9)';
+  ctx.lineWidth = 10;
+  ctx.stroke();
+
+  ctx.fillStyle = fg;
+  ctx.font = '900 68px "Arial Black", "Trebuchet MS", sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(text, canvas.width / 2, canvas.height / 2 + 4, canvas.width - 80);
+
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  texture.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
+  return texture;
+}
+
+function makeGlowTexture() {
+  const canvas = document.createElement('canvas');
+  canvas.width = 256;
+  canvas.height = 256;
+  const ctx = canvas.getContext('2d');
+  const gradient = ctx.createRadialGradient(128, 128, 4, 128, 128, 126);
+  gradient.addColorStop(0, 'rgba(255,255,230,1)');
+  gradient.addColorStop(0.22, 'rgba(255,247,176,.98)');
+  gradient.addColorStop(0.48, 'rgba(255,228,115,.38)');
+  gradient.addColorStop(1, 'rgba(255,224,120,0)');
+  ctx.fillStyle = gradient;
+  ctx.fillRect(0, 0, 256, 256);
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  return texture;
+}
+
+/* ---------- Track construction ---------- */
+function addFlatSection(section) {
+  const span = section.x2 - section.x1;
+  const trackWidth = section.width || TRACK_WIDTH;
+  const halfWidth = trackWidth * 0.5;
+  const topY = section.y;
+  const centerX = (section.x1 + section.x2) * 0.5;
+  const centerY = topY - TRACK_THICKNESS * 0.5;
+
+  const geo = new THREE.BoxGeometry(span, TRACK_THICKNESS, trackWidth);
+  const mesh = new THREE.Mesh(geo, [
+    MAT.trackSide, MAT.trackSide, MAT.trackTopA, MAT.trackBottom, MAT.trackSide, MAT.trackSide
+  ]);
+  mesh.position.set(centerX, centerY, 0);
+  mesh.castShadow = true;
+  mesh.receiveShadow = true;
+  levelGroup.add(mesh);
+
+  const body = new CANNON.Body({
+    mass: 0,
+    material: PHYS.ground,
+    shape: new CANNON.Box(new CANNON.Vec3(span * 0.5, TRACK_THICKNESS * 0.5, halfWidth)),
+    position: new CANNON.Vec3(centerX, centerY, 0)
+  });
+  world.addBody(body);
+
+  // Bright edge strips and lane dashes.
+  for (const side of [-1, 1]) {
+    const trim = new THREE.Mesh(
+      new THREE.BoxGeometry(Math.max(0.4, span - 0.3), 0.075, 0.14),
+      MAT.trackTrim
+    );
+    trim.position.set(centerX, topY + 0.045, side * Math.max(0.32, halfWidth - 0.26));
+    trim.receiveShadow = true;
+    levelGroup.add(trim);
+  }
+
+  for (let x = section.x1 + 1.6; x < section.x2 - 0.6; x += 2.7) {
+    const dash = new THREE.Mesh(new THREE.BoxGeometry(0.82, 0.04, 0.17), MAT.lane);
+    dash.position.set(x, topY + 0.045, 0);
+    dash.receiveShadow = true;
+    levelGroup.add(dash);
+  }
+
+  // Supports below the platform.
+  const supportTop = topY - TRACK_THICKNESS;
+  const supportBottom = -8.5;
+  const supportZ = Math.min(2.75, Math.max(0.6, halfWidth - 0.55));
+  for (let x = section.x1 + 2.3; x < section.x2 - 1.3; x += 6.2) {
+    for (const side of [-1, 1]) {
+      const height = Math.max(0.2, supportTop - supportBottom);
+      const column = new THREE.Mesh(
+        new THREE.BoxGeometry(0.58, height, 0.58),
+        side > 0 ? MAT.support : MAT.supportDark
+      );
+      column.position.set(x, supportBottom + height * 0.5, side * supportZ);
+      column.castShadow = true;
+      column.receiveShadow = true;
+      levelGroup.add(column);
+    }
+    const cross = new THREE.Mesh(
+      new THREE.BoxGeometry(0.32, 0.28, Math.max(1.1, trackWidth - 1.1)),
+      MAT.supportDark
+    );
+    cross.position.set(x, supportTop - 0.42, 0);
+    cross.castShadow = true;
+    levelGroup.add(cross);
+  }
+}
+
+function addRampSection(section) {
+  const dx = section.x2 - section.x1;
+  const dy = section.y2 - section.y1;
+  const length = Math.hypot(dx, dy);
+  const trackWidth = section.width || TRACK_WIDTH;
+  const halfWidth = trackWidth * 0.5;
+  const angle = Math.atan2(dy, dx);
+  const thickness = 1.2;
+  const midX = (section.x1 + section.x2) * 0.5;
+  const midY = (section.y1 + section.y2) * 0.5;
+  const centerX = midX + Math.sin(angle) * thickness * 0.5;
+  const centerY = midY - Math.cos(angle) * thickness * 0.5;
+
+  const group = new THREE.Group();
+  group.position.set(centerX, centerY, 0);
+  group.rotation.z = angle;
+
+  const mesh = new THREE.Mesh(
+    new THREE.BoxGeometry(length, thickness, trackWidth),
+    [MAT.trackSide, MAT.trackSide, MAT.trackTopB, MAT.trackBottom, MAT.trackSide, MAT.trackSide]
+  );
+  mesh.castShadow = true;
+  mesh.receiveShadow = true;
+  group.add(mesh);
+
+  for (const side of [-1, 1]) {
+    const trim = new THREE.Mesh(
+      new THREE.BoxGeometry(Math.max(0.3, length - 0.22), 0.075, 0.14),
+      MAT.trackTrim
+    );
+    trim.position.set(0, thickness * 0.5 + 0.045, side * Math.max(0.32, halfWidth - 0.26));
+    trim.receiveShadow = true;
+    group.add(trim);
+  }
+
+  for (let localX = -length * 0.5 + 1.2; localX < length * 0.5 - 0.6; localX += 2.7) {
+    const dash = new THREE.Mesh(new THREE.BoxGeometry(0.82, 0.04, 0.17), MAT.lane);
+    dash.position.set(localX, thickness * 0.5 + 0.045, 0);
+    dash.receiveShadow = true;
+    group.add(dash);
+  }
+  levelGroup.add(group);
+
+  const quat = new CANNON.Quaternion();
+  quat.setFromAxisAngle(new CANNON.Vec3(0, 0, 1), angle);
+  const body = new CANNON.Body({
+    mass: 0,
+    material: PHYS.ground,
+    shape: new CANNON.Box(new CANNON.Vec3(length * 0.5, thickness * 0.5, halfWidth)),
+    position: new CANNON.Vec3(centerX, centerY, 0)
+  });
+  body.quaternion.copy(quat);
+  world.addBody(body);
+
+  // One support pair under the middle of the ramp.
+  const supportTop = midY - thickness * 0.7;
+  const supportBottom = -8.5;
+  const supportZ = Math.min(2.75, Math.max(0.6, halfWidth - 0.55));
+  if (supportTop > supportBottom + 0.3) {
+    for (const side of [-1, 1]) {
+      const height = supportTop - supportBottom;
+      const column = new THREE.Mesh(new THREE.BoxGeometry(0.48, height, 0.48), MAT.supportDark);
+      column.position.set(midX, supportBottom + height * 0.5, side * supportZ);
+      column.castShadow = true;
+      levelGroup.add(column);
+    }
+  }
+}
+
+function addStartLine(x, topY) {
+  const tileX = 0.68;
+  const tileZ = 0.76;
+  for (let ix = 0; ix < 2; ix++) {
+    for (let iz = 0; iz < 10; iz++) {
+      const tile = new THREE.Mesh(
+        new THREE.BoxGeometry(tileX, 0.045, tileZ),
+        (ix + iz) % 2 ? MAT.finishLight : MAT.finishDark
+      );
+      tile.position.set(x + (ix - 0.5) * tileX, topY + 0.05, (iz - 4.5) * tileZ);
+      tile.receiveShadow = true;
+      levelGroup.add(tile);
+    }
+  }
+}
+
+function addFinishGate(x, topY) {
+  const postHeight = 4.4;
+  for (const side of [-1, 1]) {
+    for (let i = 0; i < 8; i++) {
+      const block = new THREE.Mesh(
+        new THREE.BoxGeometry(0.38, postHeight / 8, 0.38),
+        i % 2 ? MAT.finishLight : MAT.finishDark
+      );
+      block.position.set(x, topY + (i + 0.5) * (postHeight / 8), side * (TRACK_HALF + 0.18));
+      block.castShadow = true;
+      levelGroup.add(block);
+    }
+  }
+
+  const topBar = new THREE.Mesh(
+    new THREE.BoxGeometry(0.38, 0.38, TRACK_WIDTH + 0.7),
+    MAT.finishDark
+  );
+  topBar.position.set(x, topY + postHeight, 0);
+  topBar.castShadow = true;
+  levelGroup.add(topBar);
+
+  const bannerTexture = makeTextTexture('ФИНИШ', '#ffd447', '#202446', true);
+  const bannerMaterial = new THREE.MeshBasicMaterial({
+    map: bannerTexture,
+    transparent: true,
+    side: THREE.DoubleSide,
+    depthWrite: false
+  });
+  bannerMaterial.userData.local = true;
+  bannerMaterial.userData.ownMap = true;
+  const banner = new THREE.Mesh(new THREE.PlaneGeometry(5.9, 1.15), bannerMaterial);
+  banner.position.set(x, topY + 3.72, 0);
+  levelGroup.add(banner);
+
+  // Checkered strip on the road.
+  const tileX = 0.62;
+  const tileZ = 0.76;
+  for (let ix = 0; ix < 2; ix++) {
+    for (let iz = 0; iz < 10; iz++) {
+      const tile = new THREE.Mesh(
+        new THREE.BoxGeometry(tileX, 0.045, tileZ),
+        (ix + iz) % 2 ? MAT.finishLight : MAT.finishDark
+      );
+      tile.position.set(x + (ix - 0.5) * tileX, topY + 0.05, (iz - 4.5) * tileZ);
+      tile.receiveShadow = true;
+      levelGroup.add(tile);
+    }
+  }
+}
+
+function addSign(sign) {
+  const ground = trackTopAt(sign.x);
+  if (ground === null) return;
+
+  const texture = makeTextTexture(sign.text, sign.color || '#ffd447', '#202446', false);
+  const material = new THREE.MeshBasicMaterial({
+    map: texture,
+    transparent: true,
+    side: THREE.DoubleSide,
+    depthWrite: false
+  });
+  material.userData.local = true;
+  material.userData.ownMap = true;
+
+  const plane = new THREE.Mesh(new THREE.PlaneGeometry(4.0, 1.75), material);
+  plane.position.set(sign.x, sign.y, sign.z);
+  plane.rotation.y = 0.08;
+  levelGroup.add(plane);
+
+  const postTop = sign.y - 0.82;
+  const postHeight = Math.max(0.7, postTop - ground);
+  for (const side of [-1, 1]) {
+    const post = new THREE.Mesh(
+      new THREE.BoxGeometry(0.14, postHeight, 0.14),
+      MAT.finishDark
+    );
+    post.position.set(sign.x + side * 1.35, ground + postHeight * 0.5, sign.z - 0.08);
+    post.castShadow = true;
+    levelGroup.add(post);
+  }
+}
+
+function addCrate(spec) {
+  const topY = trackTopAt(spec.x);
+  if (topY === null) return;
+  const size = spec.size || 0.9;
+  const material = MAT[spec.color] || MAT.crateOrange;
+  const count = spec.count || 1;
+
+  for (let i = 0; i < count; i++) {
+    const x = spec.x + (i % 2 === 0 ? 0 : (Math.random() - 0.5) * 0.08);
+    const z = spec.z + (i > 0 ? (Math.random() - 0.5) * 0.06 : 0);
+    const y = topY + size * 0.5 + i * (size + 0.025);
+
+    const body = new CANNON.Body({
+      mass: 0.22,
+      material: PHYS.prop,
+      shape: new CANNON.Box(new CANNON.Vec3(size * 0.5, size * 0.5, size * 0.5)),
+      position: new CANNON.Vec3(x, y, z),
+      allowSleep: true
+    });
+    body.linearDamping = 0.03;
+    body.angularDamping = 0.25;
+    world.addBody(body);
+
+    const group = new THREE.Group();
+    const cube = new THREE.Mesh(new THREE.BoxGeometry(size, size, size), material);
+    cube.castShadow = true;
+    cube.receiveShadow = true;
+    group.add(cube);
+
+    const tape = new THREE.Mesh(
+      new THREE.BoxGeometry(size * 1.015, size * 0.16, size * 1.015),
+      MAT.crateTape
+    );
+    tape.castShadow = true;
+    group.add(tape);
+
+    const edges = new THREE.LineSegments(
+      new THREE.EdgesGeometry(new THREE.BoxGeometry(size, size, size)),
+      MAT.outline
+    );
+    group.add(edges);
+
+    group.position.copy(body.position);
+    group.quaternion.copy(body.quaternion);
+    levelGroup.add(group);
+
+    body.userData = { visual: group, kind: 'crate', age: 0, lastKnock: 0 };
+    body.addEventListener('collide', (event) => {
+      if (GAME.phase !== 'running' || !car) return;
+      const impact = Math.abs(event.contact.getImpactVelocityAlongNormal());
+      if (impact > 9) {
+        spawnBurst(body.position, ['#ffd447', '#ff9f1c', '#fff3d1'], 4, {
+          speed: 2.4,
+          up: 2,
+          gravity: 12,
+          size: 0.08,
+          life: 0.45
+        });
+      }
+
+      // A hit crate pops out of the way instead of being dragged under the car.
+      const hitByCar = event.body === car.body ||
+        car.wheels.some((wheel) => wheel.body === event.body);
+      if (!hitByCar) return;
+      const time = nowMs();
+      if (time - body.userData.lastKnock < 260) return;
+      body.userData.lastKnock = time;
+      const speed = Math.hypot(car.body.velocity.x, car.body.velocity.y, car.body.velocity.z);
+      const direction = Math.sign(car.body.velocity.x) || 1;
+      body.wakeUp();
+      body.applyImpulse(new CANNON.Vec3(
+        direction * (1.7 + speed * 0.12),
+        0.9 + speed * 0.035,
+        (body.position.z - car.body.position.z) * 0.5 + rand(-0.35, 0.35)
+      ));
+      body.angularVelocity.set(rand(-8, 8), rand(-8, 8), rand(-8, 8));
+    });
+  }
+}
+
+/* ---------- Hanging platforms ---------- */
+const PLATFORM_THICKNESS = 0.55;
+
+function addPlatform(spec) {
+  const width = spec.width || 5.0;
+  const depth = spec.depth || 4.2;
+  const topY = spec.y === undefined ? 0 : spec.y;
+  const z = spec.z || 0;
+
+  const body = new CANNON.Body({
+    mass: 0,
+    material: PHYS.ground,
+    shape: new CANNON.Box(new CANNON.Vec3(width * 0.5, PLATFORM_THICKNESS * 0.5, depth * 0.5)),
+    position: new CANNON.Vec3(spec.x, topY - PLATFORM_THICKNESS * 0.5, z)
+  });
+  body.allowSleep = false;
+  world.addBody(body);
+
+  const group = new THREE.Group();
+  const deck = new THREE.Mesh(
+    new THREE.BoxGeometry(width, PLATFORM_THICKNESS, depth),
+    [MAT.platformSide, MAT.platformSide, MAT.platformTop, MAT.platformBottom, MAT.platformSide, MAT.platformSide]
+  );
+  deck.castShadow = true;
+  deck.receiveShadow = true;
+  group.add(deck);
+
+  for (const side of [-1, 1]) {
+    const trim = new THREE.Mesh(
+      new THREE.BoxGeometry(Math.max(0.4, width - 0.18), 0.07, 0.13),
+      MAT.trackTrim
+    );
+    trim.position.set(0, PLATFORM_THICKNESS * 0.5 + 0.04, side * Math.max(0.25, depth * 0.5 - 0.22));
+    trim.receiveShadow = true;
+    group.add(trim);
+  }
+
+  if (spec.hanging !== false) {
+    const ropeTop = spec.ropeTop || topY + 6.5;
+    const ropeLength = Math.max(0.8, ropeTop - topY);
+    const ropeX = Math.max(0.7, width * 0.36);
+    const ropeZ = Math.max(0.55, depth * 0.5 - 0.42);
+    for (const sx of [-1, 1]) {
+      for (const sz of [-1, 1]) {
+        const rope = new THREE.Mesh(
+          new THREE.CylinderGeometry(0.045, 0.045, ropeLength, 5),
+          MAT.rope
+        );
+        rope.position.set(sx * ropeX, PLATFORM_THICKNESS * 0.5 + ropeLength * 0.5, sz * ropeZ);
+        rope.castShadow = true;
+        group.add(rope);
+      }
+    }
+    const crossbar = new THREE.Mesh(
+      new THREE.BoxGeometry(ropeX * 2 + 0.4, 0.16, 0.16),
+      MAT.finishDark
+    );
+    crossbar.position.set(0, PLATFORM_THICKNESS * 0.5 + ropeLength, 0);
+    crossbar.castShadow = true;
+    group.add(crossbar);
+  }
+
+  group.position.copy(body.position);
+  group.quaternion.copy(body.quaternion);
+  levelGroup.add(group);
+
+  body.userData = { visual: group, kind: 'platform' };
+}
+
+/* ---------- Ground lawn ---------- */
+function addGround(level) {
+  const startX = level.startX - 45;
+  const endX = level.finishX + 45;
+  const span = endX - startX;
+  const centerX = (startX + endX) * 0.5;
+  const groundTop = -11;
+  const thickness = 2.2;
+  const centerY = groundTop - thickness * 0.5;
+  const width = 70;
+
+  const material = new THREE.MeshStandardMaterial({ color: 0x5fa86b, roughness: 1, flatShading: true });
+  material.userData.local = true;
+  const mesh = new THREE.Mesh(new THREE.BoxGeometry(span, thickness, width), material);
+  mesh.position.set(centerX, centerY, 0);
+  mesh.receiveShadow = true;
+  sceneryGroup.add(mesh);
+
+  const body = new CANNON.Body({
+    mass: 0,
+    material: PHYS.ground,
+    shape: new CANNON.Box(new CANNON.Vec3(span * 0.5, thickness * 0.5, width * 0.5)),
+    position: new CANNON.Vec3(centerX, centerY, 0)
+  });
+  world.addBody(body);
+}
+
+/* ---------- Scenery ---------- */
+function addMountain(group, x, z, radius, height, material, random) {
+  const geo = new THREE.ConeGeometry(radius, height, 5 + Math.floor(random() * 2), 1);
+  const mountain = new THREE.Mesh(geo, material);
+  mountain.position.set(x, -8.2 + height * 0.5, z);
+  mountain.rotation.y = random() * Math.PI;
+  mountain.receiveShadow = false;
+  mountain.castShadow = false;
+  group.add(mountain);
+
+  if (height > 20 && random() > 0.35) {
+    const cap = new THREE.Mesh(
+      new THREE.ConeGeometry(radius * 0.31, height * 0.24, 5, 1),
+      MAT.mountainSnow
+    );
+    cap.position.set(x, -8.2 + height * 0.88, z);
+    cap.rotation.y = mountain.rotation.y;
+    group.add(cap);
+  }
+}
+
+function addTree(group, x, z, scale, material, random) {
+  const trunk = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.16 * scale, 0.22 * scale, 1.15 * scale, 5),
+    MAT.treeTrunk
+  );
+  trunk.position.set(x, -8.2 + 0.58 * scale, z);
+  trunk.rotation.y = random() * Math.PI;
+  group.add(trunk);
+
+  for (let i = 0; i < 3; i++) {
+    const leaf = new THREE.Mesh(
+      new THREE.ConeGeometry((1.15 - i * 0.25) * scale, (1.7 - i * 0.28) * scale, 6),
+      material
+    );
+    leaf.position.set(x, -8.2 + (1.45 + i * 0.76) * scale, z);
+    leaf.rotation.y = random() * Math.PI;
+    group.add(leaf);
+  }
+}
+
+function addCloud(group, x, y, z, scale, random) {
+  const cloud = new THREE.Group();
+  const puffs = 3 + Math.floor(random() * 3);
+  for (let i = 0; i < puffs; i++) {
+    const radius = (0.9 + random() * 0.65) * scale;
+    const puff = new THREE.Mesh(
+      new THREE.IcosahedronGeometry(radius, 0),
+      MAT.cloud
+    );
+    puff.position.set(
+      (i - puffs * 0.5) * 0.95 * scale + random() * 0.3 * scale,
+      random() * 0.45 * scale,
+      random() * 0.5 * scale
+    );
+    puff.scale.y = 0.58 + random() * 0.22;
+    cloud.add(puff);
+  }
+  cloud.position.set(x, y, z);
+  cloud.userData.speed = 0.18 + random() * 0.22;
+  group.add(cloud);
+  clouds.push(cloud);
+}
+
+function buildScenery(level) {
+  clearGroup(sceneryGroup);
+  clouds = [];
+  const random = mulberry32(level.seed * 7307 + 11);
+
+  const sunSprite = new THREE.Sprite(new THREE.SpriteMaterial({
+    map: makeGlowTexture(),
+    transparent: true,
+    depthWrite: false,
+    blending: THREE.AdditiveBlending
+  }));
+  sunSprite.material.userData.local = true;
+  sunSprite.material.userData.ownMap = true;
+  sunSprite.scale.set(18, 18, 1);
+  sunSprite.position.set(level.finishX + 18, 29, -64);
+  sceneryGroup.add(sunSprite);
+
+  // A distant valley floor gives the trees and mountains a base.
+  const valley = new THREE.Mesh(
+    new THREE.BoxGeometry(260, 2.2, 54),
+    new THREE.MeshStandardMaterial({ color: 0x69b58b, roughness: 1, flatShading: true })
+  );
+  valley.material.userData.local = true;
+  valley.position.set(level.finishX * 0.5, -9.3, -35);
+  valley.receiveShadow = true;
+  sceneryGroup.add(valley);
+
+  const mountainMaterials = [MAT.mountainA, MAT.mountainB, MAT.mountainC];
+  for (let pass = 0; pass < 2; pass++) {
+    const zBase = pass === 0 ? -32 : -53;
+    for (let x = level.startX - 55; x < level.finishX + 75; x += 11 + random() * 12) {
+      const radius = pass === 0 ? 7 + random() * 8 : 11 + random() * 12;
+      const height = pass === 0 ? 13 + random() * 13 : 19 + random() * 18;
+      addMountain(
+        sceneryGroup,
+        x + random() * 8,
+        zBase - random() * 16,
+        radius,
+        height,
+        mountainMaterials[Math.floor(random() * mountainMaterials.length)],
+        random
+      );
+    }
+  }
+
+  for (let x = level.startX - 22; x < level.finishX + 28; x += 3.7 + random() * 4.4) {
+    const z = -11 - random() * 10;
+    const scale = 1.0 + random() * 1.7;
+    const leafMaterial = [MAT.treeLeafA, MAT.treeLeafB, MAT.treeLeafC][Math.floor(random() * 3)];
+    addTree(sceneryGroup, x, z, scale, leafMaterial, random);
+  }
+
+  for (let x = level.startX - 30; x < level.finishX + 45; x += 18 + random() * 13) {
+    addCloud(
+      sceneryGroup,
+      x,
+      13 + random() * 10,
+      -18 - random() * 28,
+      0.9 + random() * 1.2,
+      random
+    );
+  }
+}
+
+/* ---------- Car construction ---------- */
+function addBoxPart(parent, size, material, position, rotation) {
+  const mesh = new THREE.Mesh(new THREE.BoxGeometry(size[0], size[1], size[2]), material);
+  mesh.position.set(position[0], position[1], position[2]);
+  if (rotation) mesh.rotation.set(rotation[0], rotation[1], rotation[2]);
+  mesh.castShadow = true;
+  mesh.receiveShadow = true;
+  parent.add(mesh);
+  return mesh;
+}
+
+function makeWheelVisual() {
+  const group = new THREE.Group();
+
+  const tire = new THREE.Mesh(new THREE.CylinderGeometry(0.48, 0.48, 0.34, 12, 1), MAT.tire);
+  tire.rotation.x = Math.PI * 0.5;
+  tire.castShadow = true;
+  tire.receiveShadow = true;
+  group.add(tire);
+
+  for (let i = 0; i < 10; i++) {
+    const angle = (i / 10) * Math.PI * 2;
+    const tread = new THREE.Mesh(new THREE.BoxGeometry(0.115, 0.095, 0.355), MAT.tireTread);
+    tread.position.set(Math.cos(angle) * 0.445, Math.sin(angle) * 0.445, 0);
+    tread.rotation.z = angle;
+    tread.castShadow = true;
+    group.add(tread);
+  }
+
+  const rim = new THREE.Mesh(new THREE.CylinderGeometry(0.275, 0.275, 0.37, 10, 1), MAT.rim);
+  rim.rotation.x = Math.PI * 0.5;
+  rim.castShadow = true;
+  group.add(rim);
+
+  for (const side of [-1, 1]) {
+    for (let i = 0; i < 3; i++) {
+      const spoke = new THREE.Mesh(new THREE.BoxGeometry(0.065, 0.43, 0.028), MAT.hub);
+      spoke.position.z = side * 0.192;
+      spoke.rotation.z = (i / 3) * Math.PI;
+      group.add(spoke);
+    }
+  }
+
+  const hub = new THREE.Mesh(new THREE.CylinderGeometry(0.105, 0.105, 0.405, 8, 1), MAT.hub);
+  hub.rotation.x = Math.PI * 0.5;
+  hub.castShadow = true;
+  group.add(hub);
+
+  return group;
+}
+
+function createCarVisual() {
+  const root = new THREE.Group();
+  const parts = [];
+
+  // Main body, skid plate and fenders.
+  addBoxPart(root, [3.08, 0.58, 1.56], MAT.carBody, [0, 0.02, 0]);
+  addBoxPart(root, [2.78, 0.17, 1.44], MAT.carBodyDark, [0, -0.34, 0]);
+  addBoxPart(root, [1.06, 0.18, 1.48], MAT.carCream, [0.95, 0.34, 0]);
+
+  const sideStripeL = addBoxPart(root, [2.2, 0.12, 0.025], MAT.carCream, [-0.08, 0.03, 0.79]);
+  const sideStripeR = addBoxPart(root, [2.2, 0.12, 0.025], MAT.carCream, [-0.08, 0.03, -0.79]);
+
+  // Cabin with windows.
+  const cabin = new THREE.Group();
+  cabin.position.set(-0.36, 0.62, 0);
+  addBoxPart(cabin, [1.34, 0.58, 1.33], MAT.carCream, [0, 0, 0]);
+  addBoxPart(cabin, [1.19, 0.15, 1.22], MAT.carBody, [0.02, 0.35, 0]);
+  addBoxPart(cabin, [0.045, 0.33, 1.05], MAT.carGlass, [0.685, 0.05, 0]);
+  addBoxPart(cabin, [0.045, 0.29, 1.02], MAT.carGlass, [-0.685, 0.04, 0]);
+  addBoxPart(cabin, [0.84, 0.31, 0.035], MAT.carGlass, [-0.08, 0.05, 0.685]);
+  addBoxPart(cabin, [0.84, 0.31, 0.035], MAT.carGlass, [-0.08, 0.05, -0.685]);
+  root.add(cabin);
+  parts.push({
+    id: 'cabin',
+    object: cabin,
+    broken: false,
+    debrisColor: '#fff3d1',
+    debrisSize: 0.28,
+    debrisCount: 4
+  });
+
+  // Spoiler.
+  const spoiler = new THREE.Group();
+  spoiler.position.set(-1.4, 0.48, 0);
+  addBoxPart(spoiler, [0.09, 0.42, 0.09], MAT.carDark, [0, 0.15, 0.5]);
+  addBoxPart(spoiler, [0.09, 0.42, 0.09], MAT.carDark, [0, 0.15, -0.5]);
+  addBoxPart(spoiler, [0.33, 0.1, 1.52], MAT.carDark, [-0.06, 0.38, 0]);
+  root.add(spoiler);
+  parts.push({
+    id: 'spoiler',
+    object: spoiler,
+    broken: false,
+    debrisColor: '#272b47',
+    debrisSize: 0.18,
+    debrisCount: 3
+  });
+
+  // Bumpers.
+  const frontBumper = new THREE.Group();
+  addBoxPart(frontBumper, [0.27, 0.32, 1.58], MAT.carDark, [1.55, -0.17, 0]);
+  addBoxPart(frontBumper, [0.12, 0.15, 0.38], MAT.carCream, [1.71, -0.16, 0]);
+  root.add(frontBumper);
+  parts.push({
+    id: 'frontBumper',
+    object: frontBumper,
+    broken: false,
+    debrisColor: '#272b47',
+    debrisSize: 0.2,
+    debrisCount: 3
+  });
+
+  const rearBumper = new THREE.Group();
+  addBoxPart(rearBumper, [0.24, 0.3, 1.55], MAT.carDark, [-1.54, -0.18, 0]);
+  root.add(rearBumper);
+  parts.push({
+    id: 'rearBumper',
+    object: rearBumper,
+    broken: false,
+    debrisColor: '#272b47',
+    debrisSize: 0.19,
+    debrisCount: 3
+  });
+
+  // Lights and exhaust pipes.
+  addBoxPart(root, [0.08, 0.17, 0.25], MAT.headlight, [1.58, 0.13, 0.51]);
+  addBoxPart(root, [0.08, 0.17, 0.25], MAT.headlight, [1.58, 0.13, -0.51]);
+  addBoxPart(root, [0.08, 0.14, 0.23], MAT.taillight, [-1.57, 0.13, 0.51]);
+  addBoxPart(root, [0.08, 0.14, 0.23], MAT.taillight, [-1.57, 0.13, -0.51]);
+
+  for (const side of [-1, 1]) {
+    const pipe = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.085, 0.27, 7, 1), MAT.carDark);
+    pipe.rotation.z = Math.PI * 0.5;
+    pipe.position.set(-1.65, -0.31, side * 0.32);
+    pipe.castShadow = true;
+    root.add(pipe);
+  }
+
+  // A tiny driver helmet peeking through the windows.
+  const helmet = new THREE.Mesh(new THREE.IcosahedronGeometry(0.18, 1), MAT.carDark);
+  helmet.position.set(-0.25, 0.74, 0);
+  helmet.castShadow = true;
+  root.add(helmet);
+  addBoxPart(root, [0.18, 0.04, 0.22], MAT.carCream, [-0.25, 0.88, 0]);
+
+  root.traverse((object) => {
+    if (object.isMesh) {
+      object.castShadow = true;
+      object.receiveShadow = true;
+    }
+  });
+
+  // Keep the stripes referenced so linters do not complain; they are part of the body.
+  sideStripeL.userData.part = 'stripe';
+  sideStripeR.userData.part = 'stripe';
+
+  return { root, parts };
+}
+
+const CAR = {
+  mass: 13,
+  wheelMass: 1.0,
+  wheelRadius: 0.48,
+  wheelWidth: 0.34,
+  comDrop: 0.28,
+  bodyLift: 0.28,
+  wheelPivotY: 0.08,
+  motorSpeed: 28,
+  motorForce: 9.5,
+  reverseSpeed: -13,
+  reverseForce: 7.5,
+  brakeForce: 15
+};
+
+function createCar(level) {
+  const startY = level.startY + 0.73 - CAR.comDrop;
+
+  const body = new CANNON.Body({
+    mass: CAR.mass,
+    material: PHYS.car,
+    position: new CANNON.Vec3(level.startX, startY, 0),
+    allowSleep: false
+  });
+  // The body origin is the low centre of mass. The visible shell and the
+  // collision box are lifted above it, which makes the car much harder to flip.
+  body.addShape(
+    new CANNON.Box(new CANNON.Vec3(1.55, 0.32, 0.78)),
+    new CANNON.Vec3(0, CAR.bodyLift, 0)
+  );
+  body.linearDamping = 0.06;
+  body.angularDamping = 0.44;
+  body.fixedRotation = false;
+  body.velocity.setZero();
+  body.angularVelocity.setZero();
+  body.force.setZero();
+  body.torque.setZero();
+  world.addBody(body);
+
+  const { root: visual, parts } = createCarVisual();
+  scene.add(visual);
+
+  const wheelDefs = [
+    { x: 1.06, z: 1.0 },
+    { x: 1.06, z: -1.0 },
+    { x: -1.06, z: 1.0 },
+    { x: -1.06, z: -1.0 }
+  ];
+  const localWheelY = CAR.wheelPivotY;
+  const wheelRadius = CAR.wheelRadius;
+  const wheelWidth = CAR.wheelWidth;
+  const wheels = [];
+
+  wheelDefs.forEach((def, index) => {
+    const wheelBody = new CANNON.Body({
+      mass: CAR.wheelMass,
+      material: PHYS.wheel,
+      position: new CANNON.Vec3(
+        level.startX + def.x,
+        startY + localWheelY,
+        def.z
+      ),
+      allowSleep: false
+    });
+    // A sphere gives a smooth, stable tyre contact while the cylinder mesh
+    // remains a proper 3D wheel visually. The hinge still spins the whole body.
+    wheelBody.addShape(new CANNON.Sphere(wheelRadius));
+    wheelBody.linearDamping = 0.07;
+    wheelBody.angularDamping = 0.24;
+    wheelBody.velocity.setZero();
+    wheelBody.angularVelocity.setZero();
+    wheelBody.force.setZero();
+    wheelBody.torque.setZero();
+    world.addBody(wheelBody);
+
+    const wheelVisual = makeWheelVisual();
+    wheelVisual.position.copy(wheelBody.position);
+    wheelVisual.quaternion.copy(wheelBody.quaternion);
+    scene.add(wheelVisual);
+
+    const constraint = new CANNON.HingeConstraint(body, wheelBody, {
+      pivotA: new CANNON.Vec3(def.x, localWheelY, def.z),
+      axisA: new CANNON.Vec3(0, 0, 1),
+      pivotB: new CANNON.Vec3(0, 0, 0),
+      axisB: new CANNON.Vec3(0, 0, 1),
+      collideConnected: false,
+      maxForce: 1e6
+    });
+    constraint.disableMotor();
+    constraint.setMotorSpeed(0);
+    constraint.setMotorMaxForce(0);
+    world.addConstraint(constraint);
+
+    const wheel = {
+      index,
+      body: wheelBody,
+      visual: wheelVisual,
+      constraint,
+      attached: true,
+      onGround: false,
+      wasOnGround: false,
+      localX: def.x,
+      localY: localWheelY,
+      localZ: def.z
+    };
+    wheelBody.addEventListener('collide', (event) => onWheelCollide(wheel, event));
+    wheels.push(wheel);
+  });
+
+  body.addEventListener('collide', onChassisCollide);
+
+  car = {
+    body,
+    visual,
+    wheels,
+    parts,
+    damage: 0,
+    attachedWheels: wheels.length,
+    alive: true,
+    grounded: false,
+    flipTimer: 0,
+    lastHit: 0,
+    lastWheelHit: 0,
+    brokenWheel1: false,
+    brokenWheel2: false,
+    brokenPart1: false,
+    brokenPart2: false,
+    wheelieTimer: 0,
+    airTime: 0,
+    throttle: 0,
+    tiltInput: 0
+  };
+
+  syncCarVisuals();
+  return car;
+}
+
+function removeCar() {
+  if (!car) return;
+  scene.remove(car.visual);
+  clearGroup(car.visual);
+  for (const wheel of car.wheels) {
+    scene.remove(wheel.visual);
+    clearGroup(wheel.visual);
+  }
+  car = null;
+}
+
+const carVisualLocalOffset = new CANNON.Vec3(0, CAR.bodyLift, 0);
+const carVisualWorldOffset = new CANNON.Vec3();
+
+function syncCarVisuals(dt) {
+  if (!car) return;
+  car.body.quaternion.vmult(carVisualLocalOffset, carVisualWorldOffset);
+  tempVec.set(
+    car.body.position.x + carVisualWorldOffset.x,
+    car.body.position.y + carVisualWorldOffset.y,
+    car.body.position.z + carVisualWorldOffset.z
+  );
+  tempQuat.set(
+    car.body.quaternion.x,
+    car.body.quaternion.y,
+    car.body.quaternion.z,
+    car.body.quaternion.w
+  );
+
+  if (dt && dt > 0) {
+    // A small visual filter removes high-frequency contact jitter without
+    // changing the actual physics of the car.
+    const blend = 1 - Math.exp(-34 * dt);
+    car.visual.position.lerp(tempVec, blend);
+    car.visual.quaternion.slerp(tempQuat, blend);
+    const wheelBlend = 1 - Math.exp(-46 * dt);
+    for (const wheel of car.wheels) {
+      tempVec2.set(wheel.body.position.x, wheel.body.position.y, wheel.body.position.z);
+      tempQuat.set(
+        wheel.body.quaternion.x,
+        wheel.body.quaternion.y,
+        wheel.body.quaternion.z,
+        wheel.body.quaternion.w
+      );
+      wheel.visual.position.lerp(tempVec2, wheelBlend);
+      wheel.visual.quaternion.slerp(tempQuat, wheelBlend);
+    }
+  } else {
+    car.visual.position.copy(tempVec);
+    car.visual.quaternion.copy(tempQuat);
+    for (const wheel of car.wheels) {
+      wheel.visual.position.copy(wheel.body.position);
+      wheel.visual.quaternion.copy(wheel.body.quaternion);
+    }
+  }
+}
+
+/* ---------- Level lifecycle ---------- */
+function clearWorldBodies() {
+  while (world.constraints.length > 0) {
+    world.removeConstraint(world.constraints[0]);
+  }
+  while (world.bodies.length > 0) {
+    world.removeBody(world.bodies[0]);
+  }
+}
+
+function clearParticles() {
+  for (const particle of particles) {
+    particleGroup.remove(particle.mesh);
+    if (particle.mesh.material) particle.mesh.material.dispose();
+  }
+  particles = [];
+}
+
+function clearDebris() {
+  debris = [];
+  clearGroup(debrisGroup);
+}
+
+function buildLevel(index) {
+  const safeIndex = ((index % LEVELS.length) + LEVELS.length) % LEVELS.length;
+  GAME.phase = 'loading';
+  GAME.pendingFail = null;
+  GAME.primaryAction = null;
+  GAME.secondaryAction = null;
+  GAME.paused = false;
+
+  clearParticles();
+  clearDebris();
+  clearWorldBodies();
+  removeCar();
+  clearGroup(levelGroup);
+  clearGroup(sceneryGroup);
+  clouds = [];
+
+  levelDef = LEVELS[safeIndex];
+  GAME.levelIndex = safeIndex;
+  GAME.elapsed = 0;
+  GAME.shake = 0;
+  GAME.flipTimer = 0;
+  GAME.dustTimer = 0;
+  GAME.input.forward = false;
+  GAME.input.backward = false;
+  GAME.input.tiltUp = false;
+  GAME.input.tiltDown = false;
+
+  for (const section of levelDef.sections) {
+    if (section.type === 'flat') addFlatSection(section);
+    else if (section.type === 'ramp') addRampSection(section);
+  }
+
+  const startTop = trackTopAt(levelDef.startX) ?? levelDef.startY;
+  const finishTop = trackTopAt(levelDef.finishX) ?? 0;
+  addStartLine(levelDef.startX - 1.2, startTop);
+  addFinishGate(levelDef.finishX, finishTop);
+
+  for (const platform of levelDef.platforms || []) addPlatform(platform);
+  for (const crate of levelDef.crates) addCrate(crate);
+  for (const sign of levelDef.signs) addSign(sign);
+
+  buildScenery(levelDef);
+  addGround(levelDef);
+  createCar(levelDef);
+
+  dom.levelNum.textContent = String(safeIndex + 1);
+  dom.levelTotal.textContent = String(LEVELS.length);
+  dom.levelName.textContent = levelDef.name;
+  dom.progressFill.style.width = '0%';
+  dom.toasts.replaceChildren();
+  hideOverlay();
+  GAME.phase = 'running';
+  GAME.flipTimer = 0;
+  snapCamera();
+  updateHUD(true);
+}
+
+function restartLevel() {
+  if (GAME.phase === 'loading') return;
+  buildLevel(GAME.levelIndex);
+  showToast('Заново!', 'warn');
+}
+
+function nextLevel() {
+  if (GAME.phase !== 'won') return;
+  buildLevel(GAME.levelIndex + 1);
+}
+
+/* ---------- Damage, debris and particles ---------- */
+let pendingImpacts = [];
+const debrisMaterialCache = new Map();
+
+function debrisMaterial(color) {
+  if (!debrisMaterialCache.has(color)) {
+    debrisMaterialCache.set(color, std(color));
+  }
+  return debrisMaterialCache.get(color);
+}
+
+function getContactPoint(contact, body) {
+  if (contact.bi === body) {
+    return new THREE.Vector3(
+      body.position.x + contact.ri.x,
+      body.position.y + contact.ri.y,
+      body.position.z + contact.ri.z
+    );
+  }
+  return new THREE.Vector3(
+    body.position.x + contact.rj.x,
+    body.position.y + contact.rj.y,
+    body.position.z + contact.rj.z
+  );
+}
+
+function onChassisCollide(event) {
+  if (!car || !car.alive || GAME.phase !== 'running') return;
+  const impact = Math.abs(event.contact.getImpactVelocityAlongNormal());
+  if (impact < 6.6) return;
+  const time = nowMs();
+  if (time - car.lastHit < 105) return;
+  car.lastHit = time;
+
+  let amount = (impact - 5.8) * 3.2;
+  if (event.body && event.body.mass > 0) amount *= 0.82;
+  amount = clamp(amount, 0, 52);
+  const point = getContactPoint(event.contact, car.body);
+  pendingImpacts.push({
+    amount,
+    impact,
+    point,
+    kind: 'body',
+    direction: event.body ? event.body.velocity : null
+  });
+}
+
+function onWheelCollide(wheel, event) {
+  if (!car || !car.alive || GAME.phase !== 'running') return;
+  const impact = Math.abs(event.contact.getImpactVelocityAlongNormal());
+  if (impact < 11.5) return;
+  const time = nowMs();
+  if (time - car.lastWheelHit < 95) return;
+  car.lastWheelHit = time;
+
+  const point = getContactPoint(event.contact, wheel.body);
+  const amount = clamp((impact - 10.5) * 1.1, 0, 12);
+  pendingImpacts.push({ amount, impact, point, kind: 'wheel', wheel });
+}
+
+function processImpacts() {
+  if (!pendingImpacts.length) return;
+  const impacts = pendingImpacts;
+  pendingImpacts = [];
+
+  for (const impact of impacts) {
+    if (!car || !car.alive || GAME.phase !== 'running') continue;
+
+    if (impact.kind === 'body') {
+      if (impact.impact > 8.8) {
+        spawnBurst(impact.point, ['#ffd447', '#ff9f1c', '#fff3d1'], Math.min(14, 5 + impact.impact * 0.5), {
+          speed: 2.8 + impact.impact * 0.16,
+          up: 2.2,
+          gravity: 17,
+          size: 0.085,
+          life: 0.55
+        });
+      }
+      if (impact.impact > 9) {
+        GAME.shake = Math.max(GAME.shake, Math.min(0.58, impact.impact * 0.035));
+      }
+      if (impact.impact > 17.5) {
+        showToast('Жёсткий удар!', 'warn');
+      }
+      damageCar(impact.amount);
+    } else if (impact.kind === 'wheel' && impact.wheel) {
+      if (impact.impact > 13) {
+        spawnBurst(impact.point, ['#e9ddc0', '#c9bb9c'], 5, {
+          speed: 1.8,
+          up: 1.6,
+          gravity: 7,
+          size: 0.1,
+          life: 0.5
+        });
+      }
+      if (impact.amount > 0.2) damageCar(impact.amount);
+      if (impact.impact > 22 && impact.wheel.attached && Math.random() < 0.42) {
+        detachWheel(impact.wheel, false);
+      }
+    }
+  }
+}
+
+function randomAttachedWheel() {
+  if (!car) return null;
+  const attached = car.wheels.filter((wheel) => wheel.attached);
+  return attached.length ? pick(attached) : null;
+}
+
+function randomUnbrokenPart() {
+  if (!car) return null;
+  const parts = car.parts.filter((part) => !part.broken);
+  return parts.length ? pick(parts) : null;
+}
+
+function spawnDebris(position, color, size, count, baseVelocity, big) {
+  const material = debrisMaterial(color);
+  for (let i = 0; i < count; i++) {
+    const s = size * (0.65 + Math.random() * 0.8);
+    const geo = new THREE.BoxGeometry(s, s, s);
+    const mesh = new THREE.Mesh(geo, material);
+    mesh.castShadow = true;
+    mesh.receiveShadow = true;
+
+    const body = new CANNON.Body({
+      mass: big ? 0.5 : 0.25,
+      material: PHYS.prop,
+      shape: new CANNON.Box(new CANNON.Vec3(s * 0.5, s * 0.5, s * 0.5)),
+      position: new CANNON.Vec3(
+        position.x + rand(-0.35, 0.35),
+        position.y + rand(-0.2, 0.45),
+        position.z + rand(-0.45, 0.45)
+      ),
+      allowSleep: true
+    });
+    body.linearDamping = 0.08;
+    body.angularDamping = 0.22;
+    body.velocity.set(
+      baseVelocity.x + rand(-2.4, 2.4),
+      baseVelocity.y + rand(1.0, 4.2),
+      baseVelocity.z + rand(-2.4, 2.4)
+    );
+    body.angularVelocity.set(rand(-8, 8), rand(-8, 8), rand(-8, 8));
+    world.addBody(body);
+
+    mesh.position.copy(body.position);
+    mesh.quaternion.copy(body.quaternion);
+    debrisGroup.add(mesh);
+    debris.push({ body, mesh, age: 0 });
+  }
+}
+
+function breakPart(part, quiet) {
+  if (!car || !part || part.broken) return;
+  part.broken = true;
+  part.object.updateWorldMatrix(true, false);
+  const worldPosition = new THREE.Vector3();
+  part.object.getWorldPosition(worldPosition);
+  part.object.visible = false;
+
+  spawnDebris(
+    worldPosition,
+    part.debrisColor,
+    part.debrisSize,
+    part.debrisCount,
+    car.body.velocity,
+    false
+  );
+  spawnBurst(worldPosition, [part.debrisColor, '#fff3d1', '#ffd447'], 7, {
+    speed: 3.0,
+    up: 2.3,
+    gravity: 13,
+    size: 0.11,
+    life: 0.65
+  });
+  GAME.shake = Math.max(GAME.shake, 0.3);
+  if (!quiet) showToast('Кузов разбит!', 'warn');
+}
+
+function detachWheel(wheel, quiet) {
+  if (!car || !wheel || !wheel.attached) return;
+  wheel.attached = false;
+  car.attachedWheels = Math.max(0, car.attachedWheels - 1);
+  if (wheel.constraint) {
+    world.removeConstraint(wheel.constraint);
+    wheel.constraint = null;
+  }
+
+  const side = Math.sign(wheel.localZ) || 1;
+  wheel.body.wakeUp();
+  wheel.body.applyImpulse(new CANNON.Vec3(rand(-1.4, 1.4), rand(1.2, 2.9), side * rand(1.5, 3.2)));
+  wheel.body.angularVelocity.set(rand(-3, 3), rand(-3, 3), rand(-5, 5));
+  wheel.body.angularDamping = 0.18;
+
+  const position = new THREE.Vector3(wheel.body.position.x, wheel.body.position.y, wheel.body.position.z);
+  spawnBurst(position, ['#ffd447', '#ff9f1c', '#e9ddc0'], 12, {
+    speed: 3.2,
+    up: 2.4,
+    gravity: 13,
+    size: 0.1,
+    life: 0.65
+  });
+  GAME.shake = Math.max(GAME.shake, 0.48);
+  if (!quiet) showToast('Колесо оторвано!', 'bad');
+
+  if (car.attachedWheels === 0 && car.alive && GAME.phase === 'running') {
+    wreckCar('Все колёса оторваны');
+  }
+}
+
+function damageCar(amount) {
+  if (!car || !car.alive || GAME.phase !== 'running') return;
+  car.damage = clamp(car.damage + amount, 0, 100);
+  updateHUD(true);
+
+  if (car.damage >= 32 && !car.brokenWheel1) {
+    car.brokenWheel1 = true;
+    const wheel = randomAttachedWheel();
+    if (wheel) detachWheel(wheel, false);
+  }
+  if (car.damage >= 55 && !car.brokenPart1) {
+    car.brokenPart1 = true;
+    const part = randomUnbrokenPart();
+    if (part) breakPart(part, false);
+  }
+  if (car.damage >= 76 && !car.brokenWheel2) {
+    car.brokenWheel2 = true;
+    const wheel = randomAttachedWheel();
+    if (wheel) detachWheel(wheel, false);
+  }
+  if (car.damage >= 100 && car.alive) {
+    wreckCar('Машина разбита вдребезги');
+  }
+}
+
+function wreckCar(reason) {
+  if (!car || !car.alive) return;
+  car.alive = false;
+  car.damage = 100;
+  GAME.phase = 'wrecked';
+  GAME.pendingFail = { reason, time: 1.15 };
+  GAME.shake = 0.95;
+
+  for (const wheel of [...car.wheels]) {
+    if (wheel.attached) detachWheel(wheel, true);
+  }
+  for (const part of [...car.parts]) {
+    if (!part.broken) breakPart(part, true);
+  }
+
+  const bodyPosition = new THREE.Vector3(car.body.position.x, car.body.position.y, car.body.position.z);
+  spawnDebris(bodyPosition, '#ff5667', 0.25, 5, car.body.velocity, true);
+  spawnDebris(bodyPosition, '#272b47', 0.18, 5, car.body.velocity, false);
+  spawnBurst(bodyPosition, ['#ff4d5e', '#ffd447', '#ff9f1c', '#fff3d1'], 24, {
+    speed: 5.2,
+    up: 3.5,
+    gravity: 15,
+    size: 0.13,
+    life: 1.0
+  });
+
+  car.body.applyImpulse(new CANNON.Vec3(rand(-2.5, 2.5), rand(2, 4), rand(-2.5, 2.5)));
+  car.body.angularVelocity.set(rand(-4, 4), rand(-3, 3), rand(-6, 6));
+  car.body.angularDamping = 0.4;
+  updateHUD(true);
+  showToast('Машина разбита!', 'bad');
+}
+
+function spawnParticle(position, color, velocity, size, life, gravity, opacity) {
+  const material = new THREE.MeshBasicMaterial({
+    color,
+    transparent: true,
+    opacity: opacity === undefined ? 1 : opacity,
+    depthWrite: false
+  });
+  const mesh = new THREE.Mesh(particleGeometry, material);
+  mesh.position.copy(position);
+  mesh.scale.setScalar(size);
+  mesh.rotation.set(rand(0, Math.PI), rand(0, Math.PI), rand(0, Math.PI));
+  particleGroup.add(mesh);
+  particles.push({
+    mesh,
+    velocity,
+    life,
+    maxLife: life,
+    gravity: gravity === undefined ? 12 : gravity,
+    baseOpacity: opacity === undefined ? 1 : opacity,
+    spin: new THREE.Vector3(rand(-7, 7), rand(-7, 7), rand(-7, 7)),
+    baseSize: size
+  });
+  if (particles.length > 240) {
+    const oldest = particles.shift();
+    if (oldest) {
+      particleGroup.remove(oldest.mesh);
+      if (oldest.mesh.material) oldest.mesh.material.dispose();
+    }
+  }
+}
+
+function spawnBurst(position, colors, count, options) {
+  const opts = Object.assign({
+    speed: 3,
+    up: 2,
+    gravity: 12,
+    size: 0.1,
+    life: 0.65,
+    opacity: 1
+  }, options || {});
+
+  for (let i = 0; i < count; i++) {
+    const color = colors[(Math.random() * colors.length) | 0];
+    const velocity = new THREE.Vector3(
+      rand(-opts.speed, opts.speed),
+      rand(0, opts.up) + opts.speed * 0.15,
+      rand(-opts.speed, opts.speed)
+    );
+    spawnParticle(
+      position,
+      color,
+      velocity,
+      opts.size * rand(0.65, 1.35),
+      opts.life * rand(0.7, 1.2),
+      opts.gravity,
+      opts.opacity
+    );
+  }
+}
+
+function spawnDust(position, strength) {
+  spawnBurst(position, ['#e9ddc0', '#d8c8a4', '#fff3d1'], 2 + Math.floor(strength * 2), {
+    speed: 0.55 + strength * 0.45,
+    up: 0.9 + strength * 0.4,
+    gravity: -0.3,
+    size: 0.15 + strength * 0.04,
+    life: 0.55 + strength * 0.2,
+    opacity: 0.38
+  });
+}
+
+function spawnConfetti() {
+  if (!car) return;
+  const colors = ['#ffd447', '#ff4d5e', '#43e6bd', '#5a6be8', '#ff9f1c', '#fff3d1'];
+  for (let i = 0; i < 58; i++) {
+    const pos = new THREE.Vector3(
+      car.body.position.x + rand(-7, 7),
+      car.body.position.y + rand(4.5, 8.5),
+      car.body.position.z + rand(-4.5, 4.5)
+    );
+    const color = pick(colors);
+    spawnParticle(
+      pos,
+      color,
+      new THREE.Vector3(rand(-2.2, 2.2), rand(-1, 2.6), rand(-2.2, 2.2)),
+      rand(0.1, 0.2),
+      rand(2.4, 4.1),
+      5.5,
+      1
+    );
+  }
+}
+
+function updateParticles(dt) {
+  for (let i = particles.length - 1; i >= 0; i--) {
+    const particle = particles[i];
+    particle.life -= dt;
+    if (particle.life <= 0) {
+      particleGroup.remove(particle.mesh);
+      particle.mesh.material.dispose();
+      particles.splice(i, 1);
+      continue;
+    }
+    particle.velocity.y -= particle.gravity * dt;
+    particle.mesh.position.addScaledVector(particle.velocity, dt);
+    particle.mesh.rotation.x += particle.spin.x * dt;
+    particle.mesh.rotation.y += particle.spin.y * dt;
+    particle.mesh.rotation.z += particle.spin.z * dt;
+    const ratio = particle.life / particle.maxLife;
+    particle.mesh.material.opacity = particle.baseOpacity * Math.min(1, ratio * 1.7);
+    particle.mesh.scale.setScalar(particle.baseSize * (0.55 + ratio * 0.55));
+  }
+}
+
+function updateDebris(dt) {
+  for (let i = debris.length - 1; i >= 0; i--) {
+    const piece = debris[i];
+    piece.age += dt;
+    piece.mesh.position.copy(piece.body.position);
+    piece.mesh.quaternion.copy(piece.body.quaternion);
+    if (piece.age > 22 || piece.body.position.y < -18) {
+      world.removeBody(piece.body);
+      debrisGroup.remove(piece.mesh);
+      piece.mesh.geometry.dispose();
+      debris.splice(i, 1);
+    }
+  }
+}
+
+/* ---------- UI helpers ---------- */
+const hudCache = {
+  damage: -1,
+  speed: -1,
+  time: '',
+  progress: -1
+};
+
+function showToast(text, kind) {
+  const toast = document.createElement('div');
+  toast.className = 'toast' + (kind ? ' ' + kind : '');
+  toast.textContent = text;
+  dom.toasts.appendChild(toast);
+  window.setTimeout(() => {
+    if (toast.parentNode) toast.parentNode.removeChild(toast);
+  }, 1650);
+}
+
+function getBestTime(index) {
+  try {
+    const raw = window.localStorage.getItem('driveMad3D_best_' + index);
+    if (raw === null) return null;
+    const value = Number(raw);
+    return Number.isFinite(value) ? value : null;
+  } catch (error) {
+    return null;
+  }
+}
+
+function saveBestTime(index, value) {
+  try {
+    window.localStorage.setItem('driveMad3D_best_' + index, String(value));
+  } catch (error) {
+    // Local storage can be unavailable in private or sandboxed contexts.
+  }
+}
+
+function updateHUD(force) {
+  if (!car) {
+    dom.speedText.textContent = '0';
+    dom.timeText.textContent = '00:00.0';
+    dom.damageText.textContent = '100%';
+    dom.damageFill.style.width = '100%';
+    dom.damageFill.className = '';
+    dom.progressFill.style.width = '0%';
+    return;
+  }
+
+  const integrity = Math.round(clamp(100 - car.damage, 0, 100));
+  if (force || integrity !== hudCache.damage) {
+    hudCache.damage = integrity;
+    dom.damageText.textContent = integrity + '%';
+    dom.damageFill.style.width = integrity + '%';
+    dom.damageFill.className = integrity <= 32 ? 'critical' : integrity <= 62 ? 'warn' : '';
+  }
+
+  const velocity = car.body.velocity;
+  const speed = Math.round(Math.hypot(velocity.x, velocity.y, velocity.z) * 3.6);
+  if (force || speed !== hudCache.speed) {
+    hudCache.speed = speed;
+    dom.speedText.textContent = String(speed);
+  }
+
+  const timeString = formatTime(GAME.elapsed);
+  if (force || timeString !== hudCache.time) {
+    hudCache.time = timeString;
+    dom.timeText.textContent = timeString;
+  }
+
+  if (levelDef) {
+    const distance = Math.max(0, car.body.position.x - levelDef.startX);
+    const total = Math.max(1, levelDef.finishX - levelDef.startX);
+    const progress = Math.round(clamp(distance / total, 0, 1) * 1000) / 10;
+    if (force || progress !== hudCache.progress) {
+      hudCache.progress = progress;
+      dom.progressFill.style.width = progress + '%';
+    }
+  }
+}
+
+function hideOverlay() {
+  dom.overlay.classList.remove('show');
+  dom.overlay.setAttribute('aria-hidden', 'true');
+  GAME.primaryAction = null;
+  GAME.secondaryAction = null;
+}
+
+function resumeGame() {
+  if (!GAME.paused) return;
+  GAME.paused = false;
+  hideOverlay();
+  lastFrameTime = performance.now();
+}
+
+function pauseGame() {
+  if (GAME.phase !== 'running' || GAME.paused) return;
+  GAME.paused = true;
+  showOverlay({
+    kind: 'pause',
+    sticker: '⏸',
+    kicker: 'Пауза',
+    title: 'Пауза',
+    text: 'Заезд приостановлен. Нажми «Продолжить», чтобы ехать дальше.',
+    stats: [
+      { label: 'Время', value: formatTime(GAME.elapsed) },
+      { label: 'Уровень', value: (GAME.levelIndex + 1) + ' / ' + LEVELS.length }
+    ],
+    primaryText: 'Продолжить',
+    primaryAction: () => resumeGame(),
+    secondaryText: 'Заново',
+    secondaryAction: () => {
+      GAME.paused = false;
+      hideOverlay();
+      buildLevel(GAME.levelIndex);
+      showToast('Заново!', 'warn');
+    },
+    hint: 'Нажми <kbd>Esc</kbd>, чтобы продолжить'
+  });
+}
+
+function togglePause() {
+  if (GAME.paused) resumeGame();
+  else pauseGame();
+}
+
+function renderStats(stats) {
+  dom.resultStats.replaceChildren();
+  for (const stat of stats) {
+    const chip = document.createElement('div');
+    chip.className = 'stat-chip';
+    const label = document.createElement('span');
+    label.textContent = stat.label;
+    const value = document.createElement('b');
+    value.textContent = stat.value;
+    chip.appendChild(label);
+    chip.appendChild(value);
+    dom.resultStats.appendChild(chip);
+  }
+}
+
+function showOverlay(config) {
+  dom.resultCard.classList.remove('win', 'lose', 'pause');
+  dom.resultCard.classList.add(config.kind === 'win' ? 'win' : config.kind === 'pause' ? 'pause' : 'lose');
+  dom.resultSticker.textContent = config.sticker || (config.kind === 'win' ? '🏁' : config.kind === 'pause' ? '⏸' : '💥');
+  dom.resultKicker.textContent = config.kicker || '';
+  dom.resultTitle.textContent = config.title || '';
+  dom.resultText.textContent = config.text || '';
+  renderStats(config.stats || []);
+
+  dom.primaryBtn.textContent = config.primaryText || 'Дальше →';
+  dom.primaryBtn.classList.remove('hidden');
+  GAME.primaryAction = config.primaryAction || null;
+
+  if (config.secondaryText) {
+    dom.secondaryBtn.textContent = config.secondaryText;
+    dom.secondaryBtn.classList.remove('hidden');
+    GAME.secondaryAction = config.secondaryAction || null;
+  } else {
+    dom.secondaryBtn.classList.add('hidden');
+    GAME.secondaryAction = null;
+  }
+
+  dom.resultHint.innerHTML = config.hint || 'Нажми <kbd>R</kbd>, чтобы начать заново';
+  dom.overlay.classList.add('show');
+  dom.overlay.setAttribute('aria-hidden', 'false');
+}
+
+function winLevel() {
+  if (GAME.phase !== 'running' || !car) return;
+  GAME.paused = false;
+  GAME.phase = 'won';
+  GAME.input.forward = false;
+  GAME.input.backward = false;
+  GAME.input.tiltUp = false;
+  GAME.input.tiltDown = false;
+
+  const finalLevel = GAME.levelIndex === LEVELS.length - 1;
+  const time = GAME.elapsed;
+  const previousBest = getBestTime(GAME.levelIndex);
+  const isNewBest = previousBest === null || time < previousBest;
+  if (isNewBest) saveBestTime(GAME.levelIndex, time);
+  const best = isNewBest ? time : previousBest;
+  const integrity = Math.round(clamp(100 - car.damage, 0, 100));
+
+  spawnConfetti();
+  GAME.shake = Math.max(GAME.shake, 0.18);
+  updateHUD(true);
+
+  showOverlay({
+    kind: 'win',
+    sticker: finalLevel ? '🏆' : '🏁',
+    kicker: finalLevel ? 'Все уровни позади' : 'Уровень ' + (GAME.levelIndex + 1) + ' пройден',
+    title: finalLevel ? 'Игра пройдена!' : 'Финиш!',
+    text: finalLevel
+      ? 'Ты довёл воксельную малышку до конца. Ещё разок?'
+      : 'Чисто доехал до финиша. Следующий уровень уже ждёт.',
+    stats: [
+      { label: 'Время', value: formatTime(time) },
+      { label: 'Лучшее', value: formatTime(best) },
+      { label: 'Прочность', value: integrity + '%' }
+    ],
+    primaryText: finalLevel ? 'Сначала' : 'Дальше →',
+    primaryAction: () => {
+      buildLevel(finalLevel ? 0 : GAME.levelIndex + 1);
+    },
+    secondaryText: finalLevel ? 'Повторить' : 'Заново',
+    secondaryAction: () => buildLevel(GAME.levelIndex),
+    hint: finalLevel
+      ? '<kbd>Enter</kbd> — начать снова · <kbd>R</kbd> — повторить финал'
+      : '<kbd>Enter</kbd> — дальше · <kbd>R</kbd> — заново'
+  });
+}
+
+function showFailOverlay(reason, title) {
+  if (!car || GAME.phase === 'won' || GAME.phase === 'failed') return;
+  GAME.paused = false;
+  GAME.phase = 'failed';
+  GAME.pendingFail = null;
+  GAME.input.forward = false;
+  GAME.input.backward = false;
+  GAME.input.tiltUp = false;
+  GAME.input.tiltDown = false;
+  car.alive = false;
+  updateHUD(true);
+
+  showOverlay({
+    kind: 'lose',
+    sticker: '💥',
+    kicker: 'Заезд окончен',
+    title: title || 'Авария',
+    text: reason,
+    stats: [
+      { label: 'Время', value: formatTime(GAME.elapsed) },
+      { label: 'Прочность', value: Math.round(clamp(100 - car.damage, 0, 100)) + '%' }
+    ],
+    primaryText: 'Перезапустить',
+    primaryAction: () => buildLevel(GAME.levelIndex),
+    secondaryText: '',
+    hint: 'Нажми <kbd>R</kbd>, чтобы попробовать ещё раз'
+  });
+}
+
+function failLevel(reason, title) {
+  if (GAME.phase !== 'running' && GAME.phase !== 'wrecked') return;
+  showFailOverlay(reason, title || 'Авария');
+}
+
+/* ---------- Input ---------- */
+function refreshInput() {
+  GAME.input.forward =
+    heldKeys.has('ArrowRight') || heldKeys.has('KeyD') || touchHeld.has('forward');
+  GAME.input.backward =
+    heldKeys.has('ArrowLeft') || heldKeys.has('KeyA') || touchHeld.has('backward');
+  GAME.input.tiltUp =
+    heldKeys.has('ArrowUp') || heldKeys.has('KeyW') || touchHeld.has('tiltUp');
+  GAME.input.tiltDown =
+    heldKeys.has('ArrowDown') || heldKeys.has('KeyS') || touchHeld.has('tiltDown');
+}
+
+const controlledKeys = new Set([
+  'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown',
+  'KeyA', 'KeyD', 'KeyW', 'KeyS', 'Space'
+]);
+
+window.addEventListener('keydown', (event) => {
+  if (controlledKeys.has(event.code)) event.preventDefault();
+
+  if (event.code === 'KeyR' && !event.repeat) {
+    if (GAME.phase !== 'loading') {
+      event.preventDefault();
+      if (GAME.paused) GAME.paused = false;
+      hideOverlay();
+      buildLevel(GAME.levelIndex);
+      showToast('Заново!', 'warn');
+    }
+    return;
+  }
+
+  if ((event.code === 'Escape' || event.key === 'Escape' || event.key === 'Esc') && !event.repeat) {
+    event.preventDefault();
+    if (GAME.phase === 'loading') return;
+    if (GAME.paused) {
+      resumeGame();
+    } else if (GAME.phase === 'running') {
+      pauseGame();
+    }
+    return;
+  }
+
+  if (event.code === 'Enter' && !event.repeat && dom.overlay.classList.contains('show')) {
+    event.preventDefault();
+    if (typeof GAME.primaryAction === 'function') GAME.primaryAction();
+    return;
+  }
+
+  if (controlledKeys.has(event.code)) {
+    heldKeys.add(event.code);
+    refreshInput();
+  }
+});
+
+window.addEventListener('keyup', (event) => {
+  heldKeys.delete(event.code);
+  refreshInput();
+});
+
+window.addEventListener('blur', () => {
+  heldKeys.clear();
+  touchHeld.clear();
+  refreshInput();
+});
+
+dom.restartBtn.addEventListener('click', () => {
+  if (GAME.phase === 'loading') return;
+  if (GAME.paused) GAME.paused = false;
+  hideOverlay();
+  buildLevel(GAME.levelIndex);
+  showToast('Заново!', 'warn');
+});
+
+dom.pauseBtn.addEventListener('click', () => {
+  if (GAME.phase === 'loading') return;
+  if (GAME.paused) resumeGame();
+  else if (GAME.phase === 'running') pauseGame();
+});
+
+dom.primaryBtn.addEventListener('click', () => {
+  if (typeof GAME.primaryAction === 'function') GAME.primaryAction();
+});
+
+dom.secondaryBtn.addEventListener('click', () => {
+  if (typeof GAME.secondaryAction === 'function') GAME.secondaryAction();
+});
+
+dom.touchControls.querySelectorAll('.touch-btn').forEach((button) => {
+  const action = button.dataset.action;
+  const press = (event) => {
+    event.preventDefault();
+    touchHeld.add(action);
+    button.classList.add('active');
+    refreshInput();
+    try { button.setPointerCapture(event.pointerId); } catch (error) { /* no-op */ }
+  };
+  const release = (event) => {
+    if (event) event.preventDefault();
+    touchHeld.delete(action);
+    button.classList.remove('active');
+    refreshInput();
+  };
+  button.addEventListener('pointerdown', press);
+  button.addEventListener('pointerup', release);
+  button.addEventListener('pointercancel', release);
+  button.addEventListener('lostpointercapture', release);
+  button.addEventListener('contextmenu', (event) => event.preventDefault());
+});
+
+/* ---------- Driving and physics ---------- */
+function updateDriving(dt) {
+  if (!car) return;
+
+  const running = GAME.phase === 'running' && car.alive;
+  const input = GAME.input;
+  const targetThrottle = running ? (input.forward ? 1 : input.backward ? -1 : 0) : 0;
+  const speedX = car.body.velocity.x;
+
+  // Smooth pedal input instead of an instant 100% torque kick.
+  car.throttle = damp(car.throttle, targetThrottle, targetThrottle === 0 ? 9 : 4.8, dt);
+  if (Math.abs(car.throttle) < 0.012) car.throttle = 0;
+
+  for (const wheel of car.wheels) {
+    if (!wheel.attached || !wheel.constraint) continue;
+
+    if (running && car.grounded && targetThrottle !== 0 && car.throttle !== 0) {
+      const amount = Math.min(1, Math.abs(car.throttle));
+      wheel.constraint.enableMotor();
+      if (car.throttle > 0) {
+        wheel.constraint.setMotorSpeed(CAR.motorSpeed * amount);
+        wheel.constraint.setMotorMaxForce(CAR.motorForce * amount);
+      } else if (speedX > 0.9) {
+        wheel.constraint.setMotorSpeed(0);
+        wheel.constraint.setMotorMaxForce(CAR.brakeForce * amount);
+      } else {
+        wheel.constraint.setMotorSpeed(CAR.reverseSpeed * amount);
+        wheel.constraint.setMotorMaxForce(CAR.reverseForce * amount);
+      }
+    } else {
+      // No key pressed: explicitly remove all motor torque and target speed.
+      wheel.constraint.setMotorSpeed(0);
+      wheel.constraint.setMotorMaxForce(0);
+      wheel.constraint.disableMotor();
+    }
+  }
+
+  if (!running) return;
+
+  let tilt = 0;
+  if (input.tiltUp) tilt += 1;
+  if (input.tiltDown) tilt -= 1;
+
+  const tiltPressed = tilt !== 0 && tilt !== car.tiltInput;
+  car.tiltInput = tilt;
+
+  const forward = new CANNON.Vec3(1, 0, 0);
+  const up = new CANNON.Vec3(0, 1, 0);
+  car.body.quaternion.vmult(forward, forward);
+  car.body.quaternion.vmult(up, up);
+
+  // Side-scroller assist: keep the car from rolling or yawing away from the track.
+  // Pitch remains free, so flips and wheelies are still part of the game.
+  const rollK = car.grounded ? 36 : 22;
+  const rollD = car.grounded ? 9 : 6;
+  const yawK = car.grounded ? 55 : 30;
+  const yawD = car.grounded ? 11 : 7;
+  car.body.torque.x += -up.z * rollK - car.body.angularVelocity.x * rollD;
+  car.body.torque.y += forward.z * yawK - car.body.angularVelocity.y * yawD;
+
+  // Lateral damping keeps the side-scroller tracking straight. It is only a
+  // force along Z, so it never fights acceleration or pitch.
+  if (car.grounded) {
+    car.body.force.z += -car.body.velocity.z * 150 - car.body.position.z * 80;
+  } else {
+    car.body.force.z += -car.body.velocity.z * 60 - car.body.position.z * 25;
+  }
+
+  // Soft invisible side guides keep the car on the track without touching
+  // pitch. The limit follows the current section width, which makes narrow
+  // bridges and hanging platforms much safer.
+  const side = car.body.position.z;
+  const halfTrack = trackWidthAt(car.body.position.x) * 0.5;
+  const sideLimit = Math.max(0.55, halfTrack - 1.05);
+  if (Math.abs(side) > sideLimit) {
+    const excess = Math.abs(side) - sideLimit;
+    car.body.force.z -= Math.sign(side) * excess * (car.grounded ? 520 : 300);
+    const outward = Math.sign(side) * car.body.velocity.z;
+    const maxOut = car.grounded ? 1.6 : 2.2;
+    if (outward > maxOut) {
+      car.body.velocity.z = Math.sign(side) * maxOut;
+    }
+  }
+
+  // Counter the axle reaction a little, like a real engine mount / suspension.
+  if (car.grounded && car.throttle !== 0) {
+    const counterScale = tilt === 0 ? 1 : 0.35;
+    const fade = clamp(1 - Math.abs(speedX) / 19, 0.2, 1);
+    car.body.torque.z -= car.throttle * 22 * counterScale * fade;
+  }
+
+  // W/S and Up/Down apply a real angular impulse + sustained torque to the
+  // chassis. The one-shot impulse makes the response obvious even in a short
+  // airborne moment, while the torque allows holding a rotation.
+  if (tilt !== 0) {
+    car.body.wakeUp();
+    // On the ground the torque must beat the weight transfer across the
+    // wheelbase, otherwise the contact solver simply eats it. In the air the
+    // car is free, so a smaller torque is enough.
+    car.body.torque.z += tilt * (car.grounded ? 420 : 62);
+    if (tiltPressed) {
+      car.body.angularVelocity.z += tilt * (car.grounded ? 0.6 : 1.9);
+    }
+  } else if (up.y > 0.2) {
+    // Gentle self-levelling when the player is not actively tilting. It makes
+    // landings predictable while W/S still overrides it completely.
+    const pitch = Math.atan2(forward.y, forward.x);
+    const levelK = car.grounded ? 8.0 : 6.0;
+    const levelD = car.grounded ? 2.4 : 1.8;
+    car.body.torque.z += -pitch * levelK - car.body.angularVelocity.z * levelD;
+  }
+}
+
+function updateAfterStep(dt) {
+  if (!car) return;
+
+  for (const wheel of car.wheels) {
+    wheel.wasOnGround = wheel.onGround;
+    wheel.onGround = false;
+  }
+
+  world.step(1 / 60, dt, 4);
+
+  for (const contact of world.contacts) {
+    for (const wheel of car.wheels) {
+      if (contact.bi === wheel.body || contact.bj === wheel.body) {
+        wheel.onGround = true;
+        break;
+      }
+    }
+  }
+
+  car.grounded = car.wheels.some((wheel) => wheel.attached && wheel.onGround);
+  syncCarVisuals(dt);
+
+  for (const body of world.bodies) {
+    if (body.userData && body.userData.visual) {
+      body.userData.visual.position.copy(body.position);
+      body.userData.visual.quaternion.copy(body.quaternion);
+    }
+  }
+
+  processImpacts();
+  updateCarEffects(dt);
+}
+
+function updateCarEffects(dt) {
+  if (!car) return;
+
+  const velocity = car.body.velocity;
+  const speed = Math.hypot(velocity.x, velocity.y, velocity.z);
+
+  for (const wheel of car.wheels) {
+    if (wheel.onGround && !wheel.wasOnGround && speed > 4.2) {
+      const position = new THREE.Vector3(wheel.body.position.x, wheel.body.position.y - 0.38, wheel.body.position.z);
+      spawnDust(position, Math.min(1.2, speed * 0.1));
+      GAME.shake = Math.max(GAME.shake, 0.12);
+    }
+  }
+
+  if (GAME.phase === 'running' && car.grounded && speed > 3 && (GAME.input.forward || GAME.input.backward)) {
+    GAME.dustTimer -= dt;
+    if (GAME.dustTimer <= 0) {
+      GAME.dustTimer = 0.075;
+      const candidates = car.wheels.filter((wheel) => wheel.attached && wheel.onGround && wheel.localX < 0);
+      const wheel = candidates.length ? pick(candidates) : null;
+      if (wheel) {
+        const position = new THREE.Vector3(
+          wheel.body.position.x - 0.15,
+          wheel.body.position.y - 0.36,
+          wheel.body.position.z
+        );
+        spawnDust(position, Math.min(1, speed * 0.075));
+      }
+    }
+  }
+
+  if (car.damage > 52) {
+    if (car.smokeTimer === undefined) car.smokeTimer = 0;
+    car.smokeTimer -= dt;
+    if (car.smokeTimer <= 0) {
+      car.smokeTimer = car.damage > 80 ? 0.1 : 0.18;
+      const position = new THREE.Vector3(
+        car.body.position.x + rand(-0.8, 0.8),
+        car.body.position.y + rand(0.4, 0.9),
+        car.body.position.z + rand(-0.5, 0.5)
+      );
+      spawnParticle(
+        position,
+        Math.random() > 0.5 ? '#565b72' : '#7f8498',
+        new THREE.Vector3(rand(-0.4, 0.4), rand(0.8, 1.8), rand(-0.4, 0.4)),
+        rand(0.14, 0.24),
+        rand(0.7, 1.2),
+        -0.4,
+        0.36
+      );
+    }
+  }
+}
+
+function updateGameState(dt) {
+  if (!car) return;
+
+  if (GAME.phase === 'running') {
+    GAME.elapsed += dt;
+
+    if (car.body.position.y < -5) {
+      failLevel('Машина упала вниз!', 'Падение!');
+      return;
+    }
+
+    if (car.body.position.x > levelDef.finishX) {
+      winLevel();
+      return;
+    }
+
+    const up = tempVec.set(0, 1, 0).applyQuaternion(car.visual.quaternion);
+    const speed = Math.hypot(car.body.velocity.x, car.body.velocity.y, car.body.velocity.z);
+    const topHere = trackTopAt(car.body.position.x);
+    const nearGround = car.body.position.y < (topHere === null ? 0 : topHere) + 2.6;
+
+    if (up.y < 0.24 && speed < 1.8 && nearGround) {
+      GAME.flipTimer += dt;
+    } else {
+      GAME.flipTimer = Math.max(0, GAME.flipTimer - dt * 2.4);
+    }
+
+    if (GAME.flipTimer > 2.25) {
+      failLevel('Машина перевернулась. Попробуй мягче приземлиться или выровняй её в воздухе.', 'Переворот!');
+    }
+  } else if (GAME.phase === 'wrecked' && GAME.pendingFail) {
+    GAME.pendingFail.time -= dt;
+    if (GAME.pendingFail.time <= 0) {
+      showFailOverlay(GAME.pendingFail.reason, 'Авария');
+    }
+  }
+}
+
+/* ---------- Camera ---------- */
+const camDesired = new THREE.Vector3();
+const camLook = new THREE.Vector3();
+
+function snapCamera() {
+  if (!car) return;
+  const p = car.body.position;
+  const speed = Math.hypot(p.x, p.y, p.z);
+  camera.position.set(p.x - 4.4, p.y + 4.6, p.z + 13.8);
+  camLook.set(p.x + 2.2, p.y + 0.65, p.z);
+  camera.lookAt(camLook);
+  sun.position.set(p.x - 14, p.y + 32, 20);
+  sun.target.position.set(p.x + 4, p.y, 0);
+  sun.target.updateMatrixWorld();
+}
+
+function updateCamera(dt) {
+  if (!car) return;
+  const p = car.body.position;
+  const speed = Math.hypot(car.body.velocity.x, car.body.velocity.y, car.body.velocity.z);
+  const lead = clamp(speed * 0.1, 0, 1.8);
+
+  camDesired.set(p.x - 4.4 - lead * 0.35, p.y + 4.55, p.z * 0.6 + 13.8);
+  camera.position.x = damp(camera.position.x, camDesired.x, 3.3, dt);
+  camera.position.y = damp(camera.position.y, camDesired.y, 3.1, dt);
+  camera.position.z = damp(camera.position.z, camDesired.z, 3.8, dt);
+
+  camLook.x = damp(camLook.x, p.x + 2.2 + lead * 0.5, 5.2, dt);
+  camLook.y = damp(camLook.y, p.y + 0.62, 4.6, dt);
+  camLook.z = damp(camLook.z, p.z * 0.45, 4.4, dt);
+
+  if (GAME.shake > 0.001) {
+    const amount = GAME.shake;
+    camera.position.x += rand(-amount, amount);
+    camera.position.y += rand(-amount, amount) * 0.75;
+    camera.position.z += rand(-amount, amount) * 0.3;
+    GAME.shake = damp(GAME.shake, 0, 6.5, dt);
+  } else {
+    GAME.shake = 0;
+  }
+
+  camera.lookAt(camLook);
+
+  sun.position.set(p.x - 14, p.y + 32, 20);
+  sun.target.position.set(p.x + 4, p.y, 0);
+  sun.target.updateMatrixWorld();
+
+  for (const cloud of clouds) {
+    cloud.position.x += cloud.userData.speed * dt;
+  }
+}
+
+/* ---------- Main loop ---------- */
+let lastFrameTime = performance.now();
+
+function animate(time) {
+  const dt = clamp((time - lastFrameTime) / 1000, 0.001, 0.05);
+  lastFrameTime = time;
+
+  if (GAME.phase !== 'loading' && !GAME.paused) {
+    updateDriving(dt);
+    if (GAME.phase === 'running' || GAME.phase === 'wrecked') {
+      updateAfterStep(dt);
+    }
+    updateParticles(dt);
+    updateDebris(dt);
+    updateGameState(dt);
+    updateCamera(dt);
+    updateHUD(false);
+  }
+
+  renderer.render(scene, camera);
+}
+
+/* ---------- Resize ---------- */
+window.addEventListener('resize', () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+
+/* ---------- Boot ---------- */
+function boot() {
+  try {
+    buildLevel(0);
+    lastFrameTime = performance.now();
+    renderer.setAnimationLoop(animate);
+
+    window.setTimeout(() => {
+      dom.loading.classList.add('hide');
+    }, 320);
+
+    window.setTimeout(() => {
+      dom.loading.style.display = 'none';
+      showToast('D / → — газ · A / ← — тормоз', 'warn');
+    }, 1050);
+  } catch (error) {
+    console.error(error);
+    dom.loadingMsg.textContent = 'Ошибка запуска: ' + (error && error.message ? error.message : 'неизвестная ошибка');
+    dom.loadingMsg.className = 'fatal';
+    const spinner = document.querySelector('.spinner');
+    if (spinner) spinner.style.display = 'none';
+  }
+}
+
+/* Exposed only for lightweight debugging in the browser console. */
+window.__driveMad = {
+  GAME,
+  buildLevel,
+  restartLevel,
+  winLevel,
+  failLevel,
+  damageCar,
+  detachWheel,
+  world,
+  renderer,
+  updateDriving,
+  updateAfterStep,
+  updateGameState,
+  get car() { return car; },
+  get level() { return levelDef; }
+};
+
+boot();
+</script>
+</body>
+</html>
