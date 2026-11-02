@@ -618,8 +618,8 @@
   .touch-cluster { display: flex; gap: 9px; pointer-events: none; }
   .touch-btn {
     pointer-events: auto;
-    width: 66px;
-    height: 66px;
+    width: 68px;
+    height: 68px;
     border: 2px solid rgba(32,36,70,.22);
     border-radius: 20px;
     background: rgba(255, 253, 245, .86);
@@ -634,6 +634,12 @@
     backdrop-filter: blur(7px);
     -webkit-backdrop-filter: blur(7px);
     touch-action: none;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+    cursor: pointer;
+    transition: transform .08s ease, box-shadow .08s ease, background .08s ease;
+    user-select: none;
+    -webkit-user-select: none;
   }
 
   .touch-btn small {
@@ -654,6 +660,501 @@
   .fatal {
     color: #b61f38;
     font-weight: 900;
+  }
+
+  /* ---------- Main menu and level select ---------- */
+  #ui, .touch-controls {
+    transition: opacity .22s ease, visibility .22s ease;
+  }
+
+  body.in-menu #ui,
+  body.in-menu .touch-controls {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+  }
+
+  .menu-screen {
+    position: fixed;
+    inset: 0;
+    z-index: 40;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: max(18px, env(safe-area-inset-top)) max(18px, env(safe-area-inset-right)) max(18px, env(safe-area-inset-bottom)) max(18px, env(safe-area-inset-left));
+    background:
+      radial-gradient(circle at 18% 16%, rgba(255, 212, 71, .27), transparent 32%),
+      radial-gradient(circle at 84% 82%, rgba(67, 230, 189, .22), transparent 34%),
+      linear-gradient(150deg, rgba(18, 24, 60, .90), rgba(24, 31, 76, .74) 52%, rgba(14, 20, 52, .92));
+    backdrop-filter: blur(10px) saturate(1.05);
+    -webkit-backdrop-filter: blur(10px) saturate(1.05);
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity .28s ease, visibility .28s ease;
+    touch-action: pan-y;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .menu-screen::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    background-image:
+      linear-gradient(rgba(255,255,255,.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,.04) 1px, transparent 1px);
+    background-size: 46px 46px;
+    mask-image: radial-gradient(circle at 50% 45%, #000 12%, transparent 78%);
+    -webkit-mask-image: radial-gradient(circle at 50% 45%, #000 12%, transparent 78%);
+  }
+
+  .menu-screen.show {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+  }
+
+  .menu-shell {
+    position: relative;
+    z-index: 1;
+    width: min(680px, 100%);
+    min-height: 100%;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 16px 0;
+    text-align: center;
+  }
+
+  .menu-cube {
+    position: absolute;
+    z-index: 0;
+    pointer-events: none;
+    border: 3px solid var(--ink);
+    border-radius: 16px;
+    box-shadow: 0 8px 0 rgba(10, 14, 42, .34);
+    animation: menuFloat 6.8s ease-in-out infinite;
+  }
+
+  .menu-cube::after {
+    content: "";
+    position: absolute;
+    inset: 9px;
+    border-radius: 8px;
+    background: rgba(255,255,255,.28);
+  }
+
+  .cube-a {
+    width: 58px;
+    height: 58px;
+    left: 7%;
+    top: 15%;
+    background: linear-gradient(135deg, #ffe26d, var(--yellow));
+    transform: rotate(-14deg);
+    animation-delay: -1.2s;
+  }
+
+  .cube-b {
+    width: 40px;
+    height: 40px;
+    right: 9%;
+    top: 22%;
+    background: linear-gradient(135deg, #7cf3d5, var(--mint));
+    transform: rotate(18deg);
+    animation-delay: -3.4s;
+  }
+
+  .cube-c {
+    width: 48px;
+    height: 48px;
+    right: 14%;
+    bottom: 13%;
+    background: linear-gradient(135deg, #ff8c9b, var(--red));
+    transform: rotate(-8deg);
+    animation-delay: -5s;
+  }
+
+  @keyframes menuFloat {
+    0%, 100% { translate: 0 0; }
+    50% { translate: 0 -14px; }
+  }
+
+  .menu-kicker {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    padding: 7px 14px;
+    border-radius: 999px;
+    background: rgba(255,255,255,.12);
+    border: 1px solid rgba(255,255,255,.22);
+    color: #fff;
+    font-size: 10px;
+    font-weight: 900;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    box-shadow: 0 6px 18px rgba(0,0,0,.12);
+  }
+
+  .menu-kicker .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--mint);
+    box-shadow: 0 0 0 4px rgba(67,230,189,.18);
+  }
+
+  .menu-title {
+    margin: 18px 0 8px;
+    font-family: "Arial Black", "Trebuchet MS", sans-serif;
+    font-size: clamp(52px, 11vw, 106px);
+    line-height: .84;
+    letter-spacing: -.075em;
+    text-transform: uppercase;
+    color: var(--paper);
+    text-shadow: 0 4px 0 rgba(15,20,50,.35), 0 16px 34px rgba(8,12,35,.45);
+  }
+
+  .menu-title .word-rush { color: var(--yellow); }
+
+  .menu-title .word-3d {
+    display: inline-grid;
+    place-items: center;
+    margin-left: .04em;
+    padding: .14em .24em .17em;
+    font-size: .4em;
+    line-height: 1;
+    letter-spacing: -.04em;
+    color: #fff;
+    background: linear-gradient(180deg, #ff7685, var(--red));
+    border: 3px solid var(--ink);
+    border-radius: .26em;
+    box-shadow: 0 .14em 0 var(--ink);
+    transform: rotate(-6deg) translateY(-.12em);
+    vertical-align: middle;
+    text-shadow: none;
+  }
+
+  .menu-subtitle {
+    margin: 12px auto 0;
+    max-width: 520px;
+    color: rgba(255,255,255,.78);
+    font-size: 14px;
+    line-height: 1.45;
+    font-weight: 800;
+  }
+
+  .menu-actions {
+    width: min(390px, 100%);
+    margin: 28px auto 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .menu-btn {
+    position: relative;
+    pointer-events: auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 13px;
+    width: 100%;
+    min-height: 64px;
+    padding: 10px 20px;
+    border: 3px solid var(--ink);
+    border-radius: 18px;
+    background: var(--paper);
+    color: var(--ink);
+    font: inherit;
+    font-size: 18px;
+    font-weight: 900;
+    box-shadow: 0 7px 0 var(--ink), 0 18px 30px rgba(8,12,35,.24);
+    cursor: pointer;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    transition: transform .12s ease, box-shadow .12s ease, filter .12s ease;
+  }
+
+  .menu-btn.primary { background: linear-gradient(180deg, #ffe878, var(--yellow)); }
+  .menu-btn:hover { transform: translateY(-2px); filter: brightness(1.03); }
+  .menu-btn:active { transform: translateY(5px); box-shadow: 0 2px 0 var(--ink), 0 8px 16px rgba(8,12,35,.20); }
+
+  .menu-btn-icon {
+    display: grid;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 11px;
+    background: var(--ink);
+    color: var(--yellow);
+    font-size: 17px;
+    box-shadow: 0 3px 0 rgba(0,0,0,.18);
+    flex: none;
+  }
+
+  .menu-btn:not(.primary) .menu-btn-icon { color: #fff; }
+
+  .menu-btn-copy {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    text-align: left;
+    line-height: 1.05;
+  }
+
+  .menu-btn-copy b { font-size: 18px; letter-spacing: .01em; }
+
+  .menu-btn-copy small {
+    margin-top: 4px;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: .02em;
+    color: rgba(32,36,70,.62);
+  }
+
+  .menu-meta {
+    margin-top: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    color: rgba(255,255,255,.66);
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: .04em;
+  }
+
+  .menu-progress {
+    padding: 5px 10px;
+    border-radius: 999px;
+    background: rgba(255,255,255,.12);
+    border: 1px solid rgba(255,255,255,.18);
+    color: #fff;
+    font-weight: 900;
+  }
+
+  .levels-wrap {
+    position: relative;
+    z-index: 1;
+    width: min(900px, 100%);
+    min-height: 100%;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 0;
+  }
+
+  .levels-panel {
+    width: 100%;
+    padding: 22px 24px 18px;
+    background: rgba(255, 253, 245, .97);
+    border: 3px solid var(--ink);
+    border-radius: 26px;
+    box-shadow: 10px 10px 0 var(--ink), 0 30px 70px rgba(8,12,35,.35);
+  }
+
+  .levels-head {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+
+  .levels-back {
+    pointer-events: auto;
+    flex: none;
+    min-height: 42px;
+    padding: 0 14px;
+    border: 2px solid var(--ink);
+    border-radius: 12px;
+    background: #fff;
+    color: var(--ink);
+    font: inherit;
+    font-size: 12px;
+    font-weight: 900;
+    box-shadow: 0 4px 0 var(--ink);
+    cursor: pointer;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    transition: transform .12s ease, box-shadow .12s ease;
+  }
+
+  .levels-back:hover { transform: translateY(-1px); }
+  .levels-back:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--ink); }
+
+  .levels-heading { flex: 1; min-width: 0; text-align: center; }
+
+  .levels-heading span {
+    display: block;
+    font-size: 9px;
+    font-weight: 900;
+    letter-spacing: .15em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+  }
+
+  .levels-heading h2 {
+    margin: 2px 0 0;
+    font-family: "Arial Black", "Trebuchet MS", sans-serif;
+    font-size: clamp(24px, 4vw, 38px);
+    line-height: 1;
+    letter-spacing: -.04em;
+    text-transform: uppercase;
+  }
+
+  .levels-progress {
+    flex: none;
+    min-width: 64px;
+    padding: 6px 10px;
+    border-radius: 999px;
+    background: rgba(90,107,232,.10);
+    border: 1.5px solid rgba(90,107,232,.20);
+    color: var(--ink);
+    font-size: 11px;
+    font-weight: 900;
+    text-align: center;
+  }
+
+  .levels-grid {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 10px;
+    max-height: min(55vh, 530px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 4px 4px 8px;
+    touch-action: pan-y;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+  }
+
+  .level-tile {
+    position: relative;
+    pointer-events: auto;
+    min-height: 84px;
+    padding: 9px 6px 8px;
+    border: 2px solid rgba(32,36,70,.18);
+    border-radius: 14px;
+    background: linear-gradient(180deg, #fff, #f7f5ec);
+    color: var(--ink);
+    font: inherit;
+    cursor: pointer;
+    box-shadow: 0 4px 0 rgba(32,36,70,.16);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    transition: transform .1s ease, box-shadow .1s ease, border-color .1s ease, background .1s ease;
+  }
+
+  .level-tile:hover {
+    transform: translateY(-2px);
+    border-color: rgba(32,36,70,.4);
+    box-shadow: 0 6px 0 rgba(32,36,70,.16);
+  }
+
+  .level-tile:active { transform: translateY(3px); box-shadow: 0 1px 0 rgba(32,36,70,.16); }
+  .level-tile.done { border-color: #1bb98d; background: linear-gradient(180deg, #f0fff9, #fff); }
+
+  .level-tile.next {
+    border-color: var(--ink);
+    background: linear-gradient(180deg, #fff6c5, #fffdf5);
+    box-shadow: 0 4px 0 var(--ink), 0 0 0 3px rgba(255,212,71,.45);
+  }
+
+  .tile-num {
+    font-family: "Arial Black", "Trebuchet MS", sans-serif;
+    font-size: 22px;
+    line-height: 1;
+    letter-spacing: -.05em;
+  }
+
+  .tile-name {
+    width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 9px;
+    font-weight: 900;
+    letter-spacing: .035em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+  }
+
+  .tile-best {
+    font-size: 9px;
+    font-weight: 800;
+    color: rgba(32,36,70,.5);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .level-tile.done .tile-best { color: #0c9b73; }
+
+  .tile-check {
+    position: absolute;
+    top: 6px;
+    right: 7px;
+    font-size: 11px;
+    line-height: 1;
+  }
+
+  .levels-foot {
+    margin-top: 12px;
+    text-align: center;
+    font-size: 10px;
+    font-weight: 800;
+    color: var(--ink-soft);
+  }
+
+  @media (max-width: 780px) {
+    .menu-title { font-size: clamp(46px, 12vw, 84px); }
+    .menu-actions { margin-top: 22px; }
+    .levels-panel { padding: 18px 15px 15px; border-radius: 22px; box-shadow: 7px 7px 0 var(--ink), 0 24px 50px rgba(8,12,35,.32); }
+    .levels-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); max-height: min(52vh, 440px); }
+  }
+
+  @media (max-width: 540px) {
+    .menu-screen { padding: max(12px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left)); }
+    .menu-kicker { font-size: 8px; padding: 6px 10px; }
+    .menu-title { font-size: clamp(40px, 13.5vw, 66px); margin-top: 12px; }
+    .menu-subtitle { font-size: 12px; }
+    .menu-actions { width: 100%; gap: 10px; margin-top: 18px; }
+    .menu-btn { min-height: 57px; border-radius: 16px; font-size: 16px; }
+    .menu-btn-copy b { font-size: 16px; }
+    .menu-btn-copy small { font-size: 9px; }
+    .menu-meta { font-size: 9px; margin-top: 14px; }
+    .levels-head { gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+    .levels-heading { order: 3; flex-basis: 100%; text-align: left; }
+    .levels-progress { margin-left: auto; }
+    .levels-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; max-height: min(56vh, 460px); }
+    .level-tile { min-height: 74px; padding: 7px 4px 6px; }
+    .tile-num { font-size: 19px; }
+    .tile-name { font-size: 8px; }
+    .tile-best { font-size: 8px; }
+    .levels-foot { font-size: 9px; }
+  }
+
+  @media (max-width: 380px) {
+    .levels-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .tile-name { font-size: 9px; }
+  }
+
+  @media (max-height: 560px) {
+    .menu-shell { padding: 8px 0; }
+    .menu-title { font-size: clamp(38px, 8vh, 64px); }
+    .menu-subtitle { display: none; }
+    .menu-actions { margin-top: 14px; gap: 8px; }
+    .menu-btn { min-height: 52px; }
+    .menu-meta { margin-top: 10px; }
+    .levels-grid { max-height: 45vh; }
+    .levels-panel { padding: 14px 16px 12px; }
   }
 
   @media (max-width: 780px) {
@@ -715,6 +1216,9 @@
     </div>
 
     <div class="top-actions">
+      <button class="icon-btn" id="menuBtn" type="button" title="В главное меню" aria-label="В главное меню">
+        <span class="icon">🏠</span>
+      </button>
       <button class="icon-btn" id="pauseBtn" type="button" title="Пауза (Esc)" aria-label="Пауза">
         <span class="icon">⏸</span><span class="key">Esc</span>
       </button>
@@ -756,6 +1260,7 @@
     <div class="result-actions">
       <button class="btn primary" id="primaryBtn" type="button">Дальше →</button>
       <button class="btn secondary" id="secondaryBtn" type="button">Заново</button>
+      <button class="btn secondary hidden" id="menuOverlayBtn" type="button">🏠 В меню</button>
     </div>
     <div class="result-hint" id="resultHint">Нажми <kbd>R</kbd>, чтобы начать заново</div>
   </div>
@@ -778,6 +1283,48 @@
   <div class="touch-cluster">
     <button class="touch-btn" type="button" data-action="backward" aria-label="Тормоз и реверс">◀<small>тормоз</small></button>
     <button class="touch-btn" type="button" data-action="forward" aria-label="Газ">▶<small>газ</small></button>
+  </div>
+</div>
+
+<div class="menu-screen" id="mainMenu" aria-hidden="true">
+  <span class="menu-cube cube-a" aria-hidden="true"></span>
+  <span class="menu-cube cube-b" aria-hidden="true"></span>
+  <span class="menu-cube cube-c" aria-hidden="true"></span>
+  <div class="menu-shell">
+    <div class="menu-kicker"><span class="dot"></span>Воксельные гонки · 20 уровней</div>
+    <h1 class="menu-title"><span class="word-voxel">Voxel</span> <span class="word-rush">Rush</span> <span class="word-3d">3D</span></h1>
+    <p class="menu-subtitle">Держи газ, лови баланс на трамплинах и доведи малышку до финиша. Каждый уровень — новая трасса, новые пропасти и новые трюки.</p>
+    <div class="menu-actions">
+      <button class="menu-btn primary" id="playBtn" type="button">
+        <span class="menu-btn-icon" aria-hidden="true">▶</span>
+        <span class="menu-btn-copy"><b>Играть</b><small id="playHint">Продолжить с уровня 1</small></span>
+      </button>
+      <button class="menu-btn" id="levelsBtn" type="button">
+        <span class="menu-btn-icon" aria-hidden="true">▦</span>
+        <span class="menu-btn-copy"><b>Выбор уровня</b><small>Все 20 заездов</small></span>
+      </button>
+    </div>
+    <div class="menu-meta">
+      <span class="menu-progress" id="menuProgress">0 / 20</span>
+      <span>Лучшие результаты сохраняются</span>
+    </div>
+  </div>
+</div>
+
+<div class="menu-screen" id="levelScreen" aria-hidden="true">
+  <div class="levels-wrap">
+    <div class="levels-panel">
+      <div class="levels-head">
+        <button class="levels-back" id="levelsBackBtn" type="button">← Назад</button>
+        <div class="levels-heading">
+          <span>Выбери заезд</span>
+          <h2>Выбор уровня</h2>
+        </div>
+        <div class="levels-progress" id="levelsProgress">0 / 20</div>
+      </div>
+      <div class="levels-grid" id="levelsGrid"></div>
+      <div class="levels-foot">Нажми на уровень, чтобы сразу начать заезд</div>
+    </div>
   </div>
 </div>
 
@@ -850,6 +1397,7 @@ const dom = {
   timeText: $('#timeText'),
   restartBtn: $('#restartBtn'),
   pauseBtn: $('#pauseBtn'),
+  menuBtn: $('#menuBtn'),
   overlay: $('#overlay'),
   resultCard: $('#resultCard'),
   resultSticker: $('#resultSticker'),
@@ -859,11 +1407,21 @@ const dom = {
   resultStats: $('#resultStats'),
   primaryBtn: $('#primaryBtn'),
   secondaryBtn: $('#secondaryBtn'),
+  menuOverlayBtn: $('#menuOverlayBtn'),
   resultHint: $('#resultHint'),
   loading: $('#loading'),
   loadingMsg: $('#loadingMsg'),
   toasts: $('#toasts'),
-  touchControls: $('#touchControls')
+  touchControls: $('#touchControls'),
+  mainMenu: $('#mainMenu'),
+  levelScreen: $('#levelScreen'),
+  playBtn: $('#playBtn'),
+  playHint: $('#playHint'),
+  levelsBtn: $('#levelsBtn'),
+  levelsBackBtn: $('#levelsBackBtn'),
+  levelsGrid: $('#levelsGrid'),
+  levelsProgress: $('#levelsProgress'),
+  menuProgress: $('#menuProgress')
 };
 
 /* ---------- Global state ---------- */
@@ -878,6 +1436,7 @@ const GAME = {
   toastTimer: null,
   primaryAction: null,
   secondaryAction: null,
+  tertiaryAction: null,
   paused: false,
   input: {
     forward: false,
@@ -2755,6 +3314,143 @@ function nextLevel() {
   buildLevel(GAME.levelIndex + 1);
 }
 
+/* ---------- Main menu and level select ---------- */
+let controlsHintShown = false;
+
+function getCompletedCount() {
+  let completed = 0;
+  for (let i = 0; i < LEVELS.length; i++) {
+    if (getBestTime(i) !== null) completed++;
+  }
+  return completed;
+}
+
+function getContinueLevelIndex() {
+  for (let i = 0; i < LEVELS.length; i++) {
+    if (getBestTime(i) === null) return i;
+  }
+  return 0;
+}
+
+function updateMainMenu() {
+  const completed = getCompletedCount();
+  const next = getContinueLevelIndex();
+  const allDone = completed >= LEVELS.length;
+  dom.menuProgress.textContent = completed + ' / ' + LEVELS.length;
+  dom.playHint.textContent = allDone
+    ? 'Все уровни пройдены · начать с первого'
+    : 'Продолжить с уровня ' + (next + 1) + ' · ' + LEVELS[next].name;
+}
+
+function buildLevelGrid() {
+  const next = getContinueLevelIndex();
+  dom.levelsGrid.replaceChildren();
+
+  LEVELS.forEach((level, index) => {
+    const best = getBestTime(index);
+    const isDone = best !== null;
+    const tile = document.createElement('button');
+    tile.type = 'button';
+    tile.className = 'level-tile';
+    if (isDone) tile.classList.add('done');
+    if (!isDone && index === next) tile.classList.add('next');
+    tile.dataset.index = String(index);
+    tile.setAttribute(
+      'aria-label',
+      'Уровень ' + (index + 1) + ': ' + level.name + (isDone ? ', пройден' : '')
+    );
+
+    const number = document.createElement('span');
+    number.className = 'tile-num';
+    number.textContent = String(index + 1).padStart(2, '0');
+
+    const name = document.createElement('span');
+    name.className = 'tile-name';
+    name.textContent = level.name;
+
+    const bestLabel = document.createElement('span');
+    bestLabel.className = 'tile-best';
+    bestLabel.textContent = isDone ? formatTime(best) : 'не пройден';
+
+    tile.appendChild(number);
+    tile.appendChild(name);
+    tile.appendChild(bestLabel);
+
+    if (isDone) {
+      const check = document.createElement('span');
+      check.className = 'tile-check';
+      check.textContent = '✓';
+      tile.appendChild(check);
+    }
+
+    tile.addEventListener('click', () => startLevel(index));
+    dom.levelsGrid.appendChild(tile);
+  });
+
+  dom.levelsProgress.textContent = getCompletedCount() + ' / ' + LEVELS.length;
+}
+
+function showMainMenu(options) {
+  const opts = options || {};
+  heldKeys.clear();
+  releaseAllTouch();
+  GAME.paused = true;
+  GAME.phase = 'menu';
+  hideOverlay();
+  dom.levelScreen.classList.remove('show');
+  dom.levelScreen.setAttribute('aria-hidden', 'true');
+  dom.mainMenu.classList.add('show');
+  dom.mainMenu.setAttribute('aria-hidden', 'false');
+  document.body.classList.add('in-menu');
+  dom.toasts.replaceChildren();
+  updateMainMenu();
+  if (!opts.silent) {
+    lastFrameTime = performance.now();
+  }
+}
+
+function showLevelSelect() {
+  updateMainMenu();
+  buildLevelGrid();
+  dom.mainMenu.classList.remove('show');
+  dom.mainMenu.setAttribute('aria-hidden', 'true');
+  dom.levelScreen.classList.add('show');
+  dom.levelScreen.setAttribute('aria-hidden', 'false');
+}
+
+function hideLevelSelect() {
+  dom.levelScreen.classList.remove('show');
+  dom.levelScreen.setAttribute('aria-hidden', 'true');
+  dom.mainMenu.classList.add('show');
+  dom.mainMenu.setAttribute('aria-hidden', 'false');
+}
+
+function hideMenuScreens() {
+  dom.mainMenu.classList.remove('show');
+  dom.mainMenu.setAttribute('aria-hidden', 'true');
+  dom.levelScreen.classList.remove('show');
+  dom.levelScreen.setAttribute('aria-hidden', 'true');
+  document.body.classList.remove('in-menu');
+}
+
+function startLevel(index) {
+  const target = clamp(Number.isFinite(index) ? Math.round(index) : 0, 0, LEVELS.length - 1);
+  hideMenuScreens();
+  heldKeys.clear();
+  releaseAllTouch();
+  GAME.phase = 'loading';
+  buildLevel(target);
+  lastFrameTime = performance.now();
+  showToast('Уровень ' + (target + 1) + ' · ' + LEVELS[target].name, 'good');
+  if (!controlsHintShown) {
+    controlsHintShown = true;
+    window.setTimeout(() => {
+      const coarse = window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
+      showToast(coarse ? 'Внизу — газ и кнопки наклона' : 'D / → — газ · W / ↑ — наклон', 'warn');
+    }, 750);
+  }
+}
+
 /* ---------- Damage, debris and particles ---------- */
 let pendingImpacts = [];
 const debrisMaterialCache = new Map();
@@ -3237,6 +3933,8 @@ function hideOverlay() {
   dom.overlay.setAttribute('aria-hidden', 'true');
   GAME.primaryAction = null;
   GAME.secondaryAction = null;
+  GAME.tertiaryAction = null;
+  dom.menuOverlayBtn.classList.add('hidden');
 }
 
 function resumeGame() {
@@ -3268,6 +3966,8 @@ function pauseGame() {
       buildLevel(GAME.levelIndex);
       showToast('Заново!', 'warn');
     },
+    tertiaryText: '🏠 В меню',
+    tertiaryAction: () => showMainMenu(),
     hint: 'Нажми <kbd>Esc</kbd>, чтобы продолжить'
   });
 }
@@ -3312,6 +4012,15 @@ function showOverlay(config) {
   } else {
     dom.secondaryBtn.classList.add('hidden');
     GAME.secondaryAction = null;
+  }
+
+  if (config.tertiaryText) {
+    dom.menuOverlayBtn.textContent = config.tertiaryText;
+    dom.menuOverlayBtn.classList.remove('hidden');
+    GAME.tertiaryAction = config.tertiaryAction || null;
+  } else {
+    dom.menuOverlayBtn.classList.add('hidden');
+    GAME.tertiaryAction = null;
   }
 
   dom.resultHint.innerHTML = config.hint || 'Нажми <kbd>R</kbd>, чтобы начать заново';
@@ -3359,6 +4068,8 @@ function winLevel() {
     },
     secondaryText: finalLevel ? 'Повторить' : 'Заново',
     secondaryAction: () => buildLevel(GAME.levelIndex),
+    tertiaryText: '🏠 В меню',
+    tertiaryAction: () => showMainMenu(),
     hint: finalLevel
       ? '<kbd>Enter</kbd> — начать снова · <kbd>R</kbd> — повторить финал'
       : '<kbd>Enter</kbd> — дальше · <kbd>R</kbd> — заново'
@@ -3390,6 +4101,8 @@ function showFailOverlay(reason, title) {
     primaryText: 'Перезапустить',
     primaryAction: () => buildLevel(GAME.levelIndex),
     secondaryText: '',
+    tertiaryText: '🏠 В меню',
+    tertiaryAction: () => showMainMenu(),
     hint: 'Нажми <kbd>R</kbd>, чтобы попробовать ещё раз'
   });
 }
@@ -3417,6 +4130,14 @@ const controlledKeys = new Set([
 ]);
 
 window.addEventListener('keydown', (event) => {
+  if (GAME.phase === 'menu') {
+    if ((event.code === 'Escape' || event.key === 'Escape' || event.key === 'Esc') && !event.repeat) {
+      event.preventDefault();
+      if (dom.levelScreen.classList.contains('show')) hideLevelSelect();
+    }
+    return;
+  }
+
   if (controlledKeys.has(event.code)) event.preventDefault();
 
   if (event.code === 'KeyR' && !event.repeat) {
@@ -3458,14 +4179,80 @@ window.addEventListener('keyup', (event) => {
   refreshInput();
 });
 
+/* Touch buttons use raw touch events with preventDefault. Pointer events can be
+   swallowed by the browser on some phones (especially after scrolling or when
+   the page has its own gesture handling), while touchstart/touchend are
+   delivered reliably. Every finger is tracked by identifier so several
+   buttons can be held at once. */
+const touchActionMap = new Map();
+
+function syncTouchInput() {
+  const pressed = new Set(touchActionMap.values());
+  touchHeld.clear();
+  pressed.forEach((action) => touchHeld.add(action));
+  dom.touchControls.querySelectorAll('.touch-btn').forEach((button) => {
+    button.classList.toggle('active', touchHeld.has(button.dataset.action));
+  });
+  refreshInput();
+}
+
+function releaseAllTouch() {
+  touchActionMap.clear();
+  syncTouchInput();
+}
+
+function handleTouchEnd(event) {
+  let released = false;
+  for (const touch of event.changedTouches) {
+    if (touchActionMap.has(touch.identifier)) {
+      touchActionMap.delete(touch.identifier);
+      released = true;
+    }
+  }
+  if (released) {
+    event.preventDefault();
+    syncTouchInput();
+  }
+}
+
+dom.touchControls.querySelectorAll('.touch-btn').forEach((button) => {
+  const action = button.dataset.action;
+
+  button.addEventListener('touchstart', (event) => {
+    if (GAME.phase === 'loading' || GAME.phase === 'menu') return;
+    event.preventDefault();
+    event.stopPropagation();
+    for (const touch of event.changedTouches) {
+      touchActionMap.set(touch.identifier, action);
+    }
+    syncTouchInput();
+  }, { passive: false });
+
+  button.addEventListener('touchend', handleTouchEnd, { passive: false });
+  button.addEventListener('touchcancel', handleTouchEnd, { passive: false });
+  button.addEventListener('contextmenu', (event) => event.preventDefault());
+});
+
+window.addEventListener('touchend', handleTouchEnd, { passive: false });
+window.addEventListener('touchcancel', handleTouchEnd, { passive: false });
+window.addEventListener('touchmove', (event) => {
+  if (touchActionMap.size > 0) event.preventDefault();
+}, { passive: false });
+
 window.addEventListener('blur', () => {
   heldKeys.clear();
-  touchHeld.clear();
-  refreshInput();
+  releaseAllTouch();
+});
+
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) {
+    heldKeys.clear();
+    releaseAllTouch();
+  }
 });
 
 dom.restartBtn.addEventListener('click', () => {
-  if (GAME.phase === 'loading') return;
+  if (GAME.phase === 'loading' || GAME.phase === 'menu') return;
   if (GAME.paused) GAME.paused = false;
   hideOverlay();
   buildLevel(GAME.levelIndex);
@@ -3473,9 +4260,26 @@ dom.restartBtn.addEventListener('click', () => {
 });
 
 dom.pauseBtn.addEventListener('click', () => {
-  if (GAME.phase === 'loading') return;
+  if (GAME.phase === 'loading' || GAME.phase === 'menu') return;
   if (GAME.paused) resumeGame();
   else if (GAME.phase === 'running') pauseGame();
+});
+
+dom.menuBtn.addEventListener('click', () => {
+  if (GAME.phase === 'loading' || GAME.phase === 'menu') return;
+  showMainMenu();
+});
+
+dom.playBtn.addEventListener('click', () => {
+  startLevel(getContinueLevelIndex());
+});
+
+dom.levelsBtn.addEventListener('click', () => {
+  showLevelSelect();
+});
+
+dom.levelsBackBtn.addEventListener('click', () => {
+  hideLevelSelect();
 });
 
 dom.primaryBtn.addEventListener('click', () => {
@@ -3486,26 +4290,9 @@ dom.secondaryBtn.addEventListener('click', () => {
   if (typeof GAME.secondaryAction === 'function') GAME.secondaryAction();
 });
 
-dom.touchControls.querySelectorAll('.touch-btn').forEach((button) => {
-  const action = button.dataset.action;
-  const press = (event) => {
-    event.preventDefault();
-    touchHeld.add(action);
-    button.classList.add('active');
-    refreshInput();
-    try { button.setPointerCapture(event.pointerId); } catch (error) { /* no-op */ }
-  };
-  const release = (event) => {
-    if (event) event.preventDefault();
-    touchHeld.delete(action);
-    button.classList.remove('active');
-    refreshInput();
-  };
-  button.addEventListener('pointerdown', press);
-  button.addEventListener('pointerup', release);
-  button.addEventListener('pointercancel', release);
-  button.addEventListener('lostpointercapture', release);
-  button.addEventListener('contextmenu', (event) => event.preventDefault());
+dom.menuOverlayBtn.addEventListener('click', () => {
+  if (typeof GAME.tertiaryAction === 'function') GAME.tertiaryAction();
+  else showMainMenu();
 });
 
 /* ---------- Driving and physics ---------- */
@@ -3601,15 +4388,23 @@ function updateDriving(dt) {
 
   // W/S and Up/Down apply a real angular impulse + sustained torque to the
   // chassis. The one-shot impulse makes the response obvious even in a short
-  // airborne moment, while the torque allows holding a rotation.
+  // airborne moment, while the torque allows holding a rotation. Touch input
+  // gets a stronger boost because a finger is less precise than a keyboard.
   if (tilt !== 0) {
     car.body.wakeUp();
+    const touchTilt = touchHeld.has('tiltUp') || touchHeld.has('tiltDown');
+    const torque = car.grounded
+      ? (touchTilt ? 690 : 420)
+      : (touchTilt ? 155 : 62);
+    const kick = car.grounded
+      ? (touchTilt ? 1.2 : 0.6)
+      : (touchTilt ? 3.8 : 1.9);
     // On the ground the torque must beat the weight transfer across the
     // wheelbase, otherwise the contact solver simply eats it. In the air the
     // car is free, so a smaller torque is enough.
-    car.body.torque.z += tilt * (car.grounded ? 420 : 62);
+    car.body.torque.z += tilt * torque;
     if (tiltPressed) {
-      car.body.angularVelocity.z += tilt * (car.grounded ? 0.6 : 1.9);
+      car.body.angularVelocity.z += tilt * kick;
     }
   } else if (up.y > 0.2) {
     // Gentle self-levelling when the player is not actively tilting. It makes
@@ -3800,12 +4595,37 @@ function updateCamera(dt) {
 
 /* ---------- Main loop ---------- */
 let lastFrameTime = performance.now();
+let menuTime = 0;
+
+function updateMenuScene(dt) {
+  if (!car) return;
+  menuTime += dt;
+  const p = car.body.position;
+  const sway = Math.sin(menuTime * 0.22) * 2.4;
+  const rise = Math.sin(menuTime * 0.36) * 0.28;
+
+  camera.position.x = damp(camera.position.x, p.x - 4.5 + sway, 1.5, dt);
+  camera.position.y = damp(camera.position.y, p.y + 4.7 + rise, 1.5, dt);
+  camera.position.z = damp(camera.position.z, p.z * 0.6 + 13.4 - Math.abs(sway) * 0.18, 1.5, dt);
+  camLook.set(p.x + 2.2, p.y + 0.68, p.z * 0.45);
+  camera.lookAt(camLook);
+
+  sun.position.set(p.x - 14, p.y + 32, 20);
+  sun.target.position.set(p.x + 4, p.y, 0);
+  sun.target.updateMatrixWorld();
+
+  for (const cloud of clouds) {
+    cloud.position.x += cloud.userData.speed * dt * 0.35;
+  }
+}
 
 function animate(time) {
   const dt = clamp((time - lastFrameTime) / 1000, 0.001, 0.05);
   lastFrameTime = time;
 
-  if (GAME.phase !== 'loading' && !GAME.paused) {
+  if (GAME.phase === 'menu') {
+    updateMenuScene(dt);
+  } else if (GAME.phase !== 'loading' && !GAME.paused) {
     updateDriving(dt);
     if (GAME.phase === 'running' || GAME.phase === 'wrecked') {
       updateAfterStep(dt);
@@ -3831,9 +4651,10 @@ window.addEventListener('resize', () => {
 /* ---------- Boot ---------- */
 function boot() {
   try {
-    buildLevel(0);
+    buildLevel(getContinueLevelIndex());
     lastFrameTime = performance.now();
     renderer.setAnimationLoop(animate);
+    showMainMenu({ silent: true });
 
     window.setTimeout(() => {
       dom.loading.classList.add('hide');
@@ -3841,7 +4662,6 @@ function boot() {
 
     window.setTimeout(() => {
       dom.loading.style.display = 'none';
-      showToast('D / → — газ · A / ← — тормоз', 'warn');
     }, 1050);
   } catch (error) {
     console.error(error);
@@ -3866,6 +4686,10 @@ window.__driveMad = {
   updateDriving,
   updateAfterStep,
   updateGameState,
+  showMainMenu,
+  showLevelSelect,
+  startLevel,
+  getContinueLevelIndex,
   get car() { return car; },
   get level() { return levelDef; }
 };
