@@ -1178,6 +1178,57 @@
     font-variant-numeric: tabular-nums;
   }
 
+  .garage-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: -4px 0 13px;
+  }
+
+  .garage-tab {
+    pointer-events: auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    min-height: 38px;
+    padding: 6px 14px;
+    border: 2px solid rgba(32,36,70,.18);
+    border-radius: 999px;
+    background: #fff;
+    color: var(--ink);
+    font: inherit;
+    font-size: 12px;
+    font-weight: 900;
+    box-shadow: 0 3px 0 rgba(32,36,70,.13);
+    cursor: pointer;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    transition: transform .1s ease, box-shadow .1s ease, background .1s ease, border-color .1s ease, color .1s ease;
+  }
+
+  .garage-tab:hover { transform: translateY(-1px); border-color: rgba(32,36,70,.4); }
+  .garage-tab:active { transform: translateY(2px); box-shadow: 0 1px 0 rgba(32,36,70,.13); }
+  .garage-tab.active {
+    background: var(--ink);
+    border-color: var(--ink);
+    color: #fff;
+    box-shadow: 0 3px 0 rgba(0,0,0,.28);
+  }
+
+  .garage-tab .tab-badge {
+    padding: 2px 7px;
+    border-radius: 999px;
+    background: var(--yellow);
+    color: var(--ink);
+    font-size: 9px;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: .02em;
+  }
+
+  .garage-tab.special-tab:not(.active) .tab-badge {
+    background: linear-gradient(135deg, #ffe878, #ffbd3d);
+  }
+
   .skins-grid {
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -1189,6 +1240,10 @@
     touch-action: pan-y;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: thin;
+  }
+
+  .skins-grid[data-category="special"] {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
   .skin-card {
@@ -1236,6 +1291,40 @@
   .skin-card.unaffordable:hover { transform: none; box-shadow: 0 4px 0 rgba(32,36,70,.16); }
 
   .skin-card:disabled { pointer-events: none; }
+
+  .skin-card.special {
+    background: linear-gradient(180deg, #fffdf5, #f4f0ff);
+  }
+
+  .skin-card.special.owned:not(.selected) { border-color: rgba(179,107,255,.55); }
+
+  .skin-tag,
+  .skin-price {
+    position: absolute;
+    top: 7px;
+    z-index: 4;
+    padding: 3px 7px;
+    border-radius: 999px;
+    font-size: 8px;
+    font-weight: 900;
+    font-variant-numeric: tabular-nums;
+    box-shadow: 0 2px 0 rgba(0,0,0,.18);
+  }
+
+  .skin-tag {
+    left: 7px;
+    background: rgba(32,36,70,.9);
+    color: #ffe98a;
+    font-size: 7px;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+  }
+
+  .skin-price {
+    right: 7px;
+    background: linear-gradient(180deg, #ffe878, #ffcf3f);
+    color: var(--ink);
+  }
 
   .skin-preview {
     position: relative;
@@ -1327,6 +1416,169 @@
     opacity: .92;
   }
 
+  /* Per-skin preview details: light bars, roof lights, racing number, neon glow. */
+  .preview-lightbar,
+  .preview-roofrack,
+  .preview-number,
+  .preview-police-badge,
+  .preview-glow {
+    position: absolute;
+    display: none;
+    z-index: 3;
+  }
+
+  .skin-preview.style-racer .preview-body {
+    background:
+      linear-gradient(90deg, transparent 34%, #fff7e8 34% 42%, transparent 42% 58%, #fff7e8 58% 66%, transparent 66%),
+      var(--skin-body, #d92f43);
+  }
+
+  .skin-preview.style-racer .preview-cabin {
+    background:
+      linear-gradient(90deg, transparent 34%, #fff7e8 34% 42%, transparent 42% 58%, #fff7e8 58% 66%, transparent 66%),
+      var(--skin-cabin, #d92f43);
+  }
+
+  .skin-preview.style-racer .preview-number {
+    display: grid;
+    place-items: center;
+    right: 25px;
+    bottom: 20px;
+    width: 21px;
+    height: 17px;
+    border-radius: 3px;
+    background: #fff7e8;
+    color: #b91f34;
+    font-family: "Arial Black", "Trebuchet MS", sans-serif;
+    font-size: 10px;
+    font-weight: 900;
+    line-height: 1;
+    box-shadow: 0 1px 0 rgba(0,0,0,.2);
+  }
+
+  .skin-preview.style-police .preview-lightbar {
+    display: flex;
+    left: 41px;
+    bottom: 55px;
+    width: 38px;
+    height: 9px;
+    overflow: hidden;
+    border: 2px solid #111524;
+    border-radius: 4px;
+    background: #111524;
+    box-shadow: 0 2px 4px rgba(0,0,0,.3);
+  }
+
+  .skin-preview.style-police .preview-lightbar i {
+    width: 50%;
+    height: 100%;
+    background: #ff3b55;
+  }
+
+  .skin-preview.style-police .preview-lightbar i:last-child { background: #3b8cff; }
+  .skin-preview.style-police .preview-lightbar i:first-child { box-shadow: 0 0 7px #ff3b55; }
+  .skin-preview.style-police .preview-lightbar i:last-child { box-shadow: 0 0 7px #3b8cff; }
+
+  .skin-preview.style-police .preview-stripe {
+    left: 19px;
+    right: 19px;
+    bottom: 21px;
+    height: 9px;
+  }
+
+  .skin-preview.style-police .preview-stripe::after {
+    content: "POLICE";
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    color: #111524;
+    font-family: "Arial Black", "Trebuchet MS", sans-serif;
+    font-size: 5px;
+    font-weight: 900;
+    letter-spacing: .08em;
+  }
+
+  .skin-preview.style-buggy .preview-roofrack {
+    display: flex;
+    align-items: center;
+    justify-content: space-evenly;
+    left: 34px;
+    bottom: 57px;
+    width: 54px;
+    height: 10px;
+    padding: 0 3px;
+    border: 2px solid #24283d;
+    border-radius: 3px;
+    background: #343a50;
+    box-shadow: 0 2px 4px rgba(0,0,0,.28);
+  }
+
+  .skin-preview.style-buggy .preview-roofrack i {
+    width: 6px;
+    height: 5px;
+    border-radius: 50%;
+    background: #ffe89a;
+    box-shadow: 0 0 5px #ffcf3f;
+  }
+
+  .skin-preview.style-buggy .preview-wheel {
+    border-width: 6px;
+    border-color: #d8b34a;
+  }
+
+  .skin-preview.style-specnaz .preview-roofrack {
+    display: block;
+    left: 39px;
+    bottom: 57px;
+    width: 44px;
+    height: 7px;
+    border: 2px solid #343826;
+    border-radius: 2px;
+    background: #4b5034;
+  }
+
+  .skin-preview.style-specnaz .preview-roofrack::after {
+    content: "";
+    position: absolute;
+    right: 8px;
+    bottom: 5px;
+    width: 2px;
+    height: 12px;
+    background: #343826;
+  }
+
+  .skin-preview.style-neon {
+    background:
+      radial-gradient(circle at 50% 74%, rgba(35,245,255,.28), transparent 48%),
+      linear-gradient(155deg, #241a5c, #0b0b24);
+  }
+
+  .skin-preview.style-neon .preview-glow {
+    display: block;
+    left: 12px;
+    right: 12px;
+    bottom: 4px;
+    height: 18px;
+    border-radius: 50%;
+    background: radial-gradient(ellipse at center, rgba(35,245,255,.75), rgba(179,107,255,.25) 45%, transparent 72%);
+    filter: blur(4px);
+  }
+
+  .skin-preview.style-neon .preview-body,
+  .skin-preview.style-neon .preview-cabin {
+    box-shadow:
+      inset 0 6px 0 rgba(255,255,255,.18),
+      inset 0 -6px 0 rgba(35,245,255,.32),
+      0 0 14px rgba(179,107,255,.7),
+      0 0 26px rgba(35,245,255,.3);
+  }
+
+  .skin-preview.style-neon .preview-stripe {
+    background: #23f5ff;
+    box-shadow: 0 0 8px #23f5ff;
+  }
+
   .skin-name { font-size: 16px; font-weight: 900; letter-spacing: -.02em; }
 
   .skin-desc {
@@ -1362,6 +1614,7 @@
     .levels-panel { padding: 18px 15px 15px; border-radius: 22px; box-shadow: 7px 7px 0 var(--ink), 0 24px 50px rgba(8,12,35,.32); }
     .levels-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); max-height: min(58vh, 470px); }
     .skins-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); max-height: min(58vh, 470px); }
+    .skins-grid[data-category="special"] { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   }
 
   @media (max-width: 540px) {
@@ -1383,6 +1636,9 @@
     .tile-name { font-size: 8px; }
     .tile-best { font-size: 8px; }
     .levels-foot { font-size: 9px; }
+    .garage-tabs { gap: 6px; margin-bottom: 10px; }
+    .garage-tab { min-height: 34px; padding: 5px 10px; font-size: 10px; }
+    .garage-tab .tab-badge { font-size: 8px; }
     .skins-grid { gap: 8px; max-height: min(56vh, 460px); }
     .skin-card { padding: 9px 8px 10px; border-radius: 14px; }
     .skin-preview { height: 78px; }
@@ -1395,7 +1651,8 @@
   @media (max-width: 340px) {
     .levels-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .tile-name { font-size: 9px; }
-    .skins-grid { grid-template-columns: 1fr; }
+    .skins-grid,
+    .skins-grid[data-category="special"] { grid-template-columns: 1fr; }
   }
 
   @media (max-height: 560px) {
@@ -1492,8 +1749,9 @@
 
   <div class="bottom-hud">
     <div class="card controls-card">
-      <div class="control-item"><kbd>←</kbd><kbd>→</kbd><kbd>A</kbd><kbd>D</kbd><span>тормоз / газ</span></div>
-      <div class="control-item"><kbd>↑</kbd><kbd>↓</kbd><kbd>W</kbd><kbd>S</kbd><span>наклон</span></div>
+      <div class="control-item"><kbd>A</kbd><kbd>D</kbd><span>тормоз / газ · в воздухе тангаж</span></div>
+      <div class="control-item"><kbd>W</kbd><kbd>S</kbd><span>влево / вправо</span></div>
+      <div class="control-item"><kbd>↑</kbd><kbd>↓</kbd><span>тангаж</span></div>
       <div class="control-item"><kbd>R</kbd><span>заново</span></div>
     </div>
 
@@ -1539,12 +1797,12 @@
 
 <div class="touch-controls" id="touchControls">
   <div class="touch-cluster">
-    <button class="touch-btn" type="button" data-action="tiltUp" aria-label="Наклон назад">↥<small>назад</small></button>
-    <button class="touch-btn" type="button" data-action="tiltDown" aria-label="Наклон вперёд">↧<small>вперёд</small></button>
+    <button class="touch-btn" type="button" data-action="steerLeft" aria-label="Повернуть влево">↶<small>влево</small></button>
+    <button class="touch-btn" type="button" data-action="steerRight" aria-label="Повернуть вправо">↷<small>вправо</small></button>
   </div>
   <div class="touch-cluster">
-    <button class="touch-btn" type="button" data-action="backward" aria-label="Тормоз и реверс">◀<small>тормоз</small></button>
-    <button class="touch-btn" type="button" data-action="forward" aria-label="Газ">▶<small>газ</small></button>
+    <button class="touch-btn" type="button" data-action="backward" aria-label="Тормоз, реверс и тангаж вниз">◀<small>тормоз</small></button>
+    <button class="touch-btn" type="button" data-action="forward" aria-label="Газ и тангаж вверх">▶<small>газ</small></button>
   </div>
 </div>
 
@@ -1567,7 +1825,7 @@
       </button>
       <button class="menu-btn" id="skinsBtn" type="button">
         <span class="menu-btn-icon" aria-hidden="true">🎨</span>
-        <span class="menu-btn-copy"><b>Скины</b><small id="skinsHint">Гараж · 1 из 4 скинов</small></span>
+        <span class="menu-btn-copy"><b>Кастомизация</b><small id="skinsHint">Гараж · 1 из 9 скинов</small></span>
       </button>
     </div>
     <div class="menu-meta">
@@ -1602,11 +1860,19 @@
         <button class="levels-back" id="garageBackBtn" type="button">← Назад</button>
         <div class="levels-heading">
           <span>Гараж</span>
-          <h2>Скины</h2>
+          <h2>Кастомизация</h2>
         </div>
         <div class="levels-progress garage-coins" id="garageCoins">💰 0</div>
       </div>
-      <div class="skins-grid" id="skinsGrid"></div>
+      <div class="garage-tabs" id="garageTabs" role="tablist" aria-label="Категории скинов">
+        <button class="garage-tab active" id="standardTab" type="button" role="tab" aria-selected="true" aria-controls="skinsGrid" data-category="standard">
+          Стандарт <span class="tab-badge" id="standardTabCount">4</span>
+        </button>
+        <button class="garage-tab special-tab" id="specialTab" type="button" role="tab" aria-selected="false" aria-controls="skinsGrid" data-category="special">
+          Особое <span class="tab-badge">100 💰</span>
+        </button>
+      </div>
+      <div class="skins-grid" id="skinsGrid" data-category="standard"></div>
       <div class="levels-foot" id="garageHint">Собирай монеты на трассах и открывай новые цвета корпуса</div>
     </div>
   </div>
@@ -1717,6 +1983,10 @@ const dom = {
   garageBackBtn: $('#garageBackBtn'),
   garageCoins: $('#garageCoins'),
   garageHint: $('#garageHint'),
+  garageTabs: $('#garageTabs'),
+  standardTab: $('#standardTab'),
+  specialTab: $('#specialTab'),
+  standardTabCount: $('#standardTabCount'),
   skinsGrid: $('#skinsGrid')
 };
 
@@ -1738,7 +2008,9 @@ const GAME = {
     forward: false,
     backward: false,
     tiltUp: false,
-    tiltDown: false
+    tiltDown: false,
+    steerLeft: false,
+    steerRight: false
   }
 };
 
@@ -2517,9 +2789,11 @@ function writeStorage(key, value) {
 const SKINS = [
   {
     id: 'classic',
+    category: 'standard',
     name: 'Классика',
     price: 0,
     description: 'Заводской красный корпус',
+    previewStyle: 'classic',
     bodyColor: 0xff5667,
     darkColor: 0xd83a4d,
     accentColor: 0xfff3d1,
@@ -2531,9 +2805,11 @@ const SKINS = [
   },
   {
     id: 'blue',
+    category: 'standard',
     name: 'Синий',
     price: 20,
     description: 'Полностью синий корпус',
+    previewStyle: 'classic',
     bodyColor: 0x3d7bff,
     darkColor: 0x1f47c4,
     accentColor: 0x7aa8ff,
@@ -2545,9 +2821,11 @@ const SKINS = [
   },
   {
     id: 'yellow',
+    category: 'standard',
     name: 'Жёлтый',
     price: 50,
     description: 'Солнечный жёлтый корпус',
+    previewStyle: 'classic',
     bodyColor: 0xffd23f,
     darkColor: 0xc99800,
     accentColor: 0xffe983,
@@ -2559,9 +2837,11 @@ const SKINS = [
   },
   {
     id: 'gradient',
+    category: 'standard',
     name: 'Градиент',
     price: 100,
     description: 'Переливающийся корпус',
+    previewStyle: 'classic',
     bodyColor: 0xffffff,
     darkColor: 0x7f7aa8,
     accentColor: 0xffffff,
@@ -2570,8 +2850,108 @@ const SKINS = [
     previewDark: '#4b3f8f',
     previewCabin: 'linear-gradient(135deg, #43e6bd 0%, #5a6be8 28%, #b36bff 50%, #ff6b9a 72%, #ffd447 88%, #43e6bd 100%)',
     previewAccent: '#fff3d1'
+  },
+  {
+    id: 'racer',
+    category: 'special',
+    name: 'Гонщик',
+    price: 100,
+    description: 'Гоночные полосы и номер 88',
+    previewStyle: 'racer',
+    accessory: 'racer',
+    bodyColor: 0xd92f43,
+    darkColor: 0x861c2d,
+    accentColor: 0xfff7e8,
+    cabinColor: 0xd92f43,
+    previewBody: '#d92f43',
+    previewDark: '#861c2d',
+    previewCabin: '#d92f43',
+    previewAccent: '#fff7e8'
+  },
+  {
+    id: 'specnaz',
+    category: 'special',
+    name: 'Спецназ',
+    price: 100,
+    description: 'Матовый камуфляж и скрытая мощь',
+    previewStyle: 'specnaz',
+    accessory: 'specnaz',
+    texture: 'camo',
+    bodyColor: 0xffffff,
+    darkColor: 0x5d603c,
+    accentColor: 0xd8d2a8,
+    cabinColor: 0xffffff,
+    previewBody:
+      'radial-gradient(ellipse at 18% 28%, #6f7449 0 16%, transparent 17%),' +
+      'radial-gradient(ellipse at 70% 22%, #4f5634 0 13%, transparent 14%),' +
+      'radial-gradient(ellipse at 38% 72%, #8e8d5c 0 18%, transparent 19%),' +
+      'radial-gradient(ellipse at 84% 68%, #5c623a 0 15%, transparent 16%),' +
+      'linear-gradient(145deg, #a3a06b, #7d7f4f)',
+    previewDark: '#5d603c',
+    previewCabin:
+      'radial-gradient(ellipse at 24% 32%, #6f7449 0 20%, transparent 21%),' +
+      'radial-gradient(ellipse at 76% 64%, #4f5634 0 18%, transparent 19%),' +
+      'linear-gradient(145deg, #a3a06b, #7d7f4f)',
+    previewAccent: '#d8d2a8'
+  },
+  {
+    id: 'police',
+    category: 'special',
+    name: 'Полиция',
+    price: 100,
+    description: 'Чёрно-белый патруль с мигалкой',
+    previewStyle: 'police',
+    accessory: 'police',
+    bodyColor: 0x202538,
+    darkColor: 0x0d1019,
+    accentColor: 0xf4f7ff,
+    cabinColor: 0x202538,
+    previewBody: 'linear-gradient(180deg, #202538 0 58%, #f4f7ff 58%)',
+    previewDark: '#0d1019',
+    previewCabin: '#202538',
+    previewAccent: '#f4f7ff'
+  },
+  {
+    id: 'buggy',
+    category: 'special',
+    name: 'Багги',
+    price: 100,
+    description: 'Пустынный рейд с прожекторами',
+    previewStyle: 'buggy',
+    accessory: 'buggy',
+    bodyColor: 0xc0a56a,
+    darkColor: 0x77613a,
+    accentColor: 0xead8a5,
+    cabinColor: 0xb79b5e,
+    previewBody: 'linear-gradient(180deg, #c9b078, #a88b50)',
+    previewDark: '#77613a',
+    previewCabin: '#b79b5e',
+    previewAccent: '#ead8a5'
+  },
+  {
+    id: 'neon',
+    category: 'special',
+    name: 'Неон',
+    price: 100,
+    description: 'Киберпанк-подсветка и свечение',
+    previewStyle: 'neon',
+    accessory: 'neon',
+    glow: true,
+    bodyColor: 0x6a2cff,
+    darkColor: 0x180a42,
+    accentColor: 0x23f5ff,
+    cabinColor: 0x2b1475,
+    previewBody: 'linear-gradient(135deg, #7a34ff, #3a147d 55%, #19c9ff)',
+    previewDark: '#180a42',
+    previewCabin: 'linear-gradient(135deg, #22d8ff, #4a1da8)',
+    previewAccent: '#23f5ff'
   }
 ];
+
+const SKIN_CATEGORIES = {
+  standard: { label: 'Стандарт', hint: 'Собирай монеты на трассах и открывай новые цвета корпуса' },
+  special: { label: 'Особое', hint: 'Особые раскраски · 100 монет за каждый скин' }
+};
 
 function getSkinById(id) {
   return SKINS.find((skin) => skin.id === id) || SKINS[0];
@@ -2635,7 +3015,9 @@ function updateCoinBalanceDisplays() {
 }
 
 const skinMaterialCache = new Map();
+const skinDecalCache = new Map();
 let gradientSkinTexture = null;
+let camoSkinTexture = null;
 
 function makeGradientSkinTexture() {
   const canvas = document.createElement('canvas');
@@ -2668,6 +3050,87 @@ function makeGradientSkinTexture() {
   texture.colorSpace = THREE.SRGBColorSpace;
   texture.wrapS = THREE.RepeatWrapping;
   texture.wrapT = THREE.RepeatWrapping;
+  return texture;
+}
+
+function makeCamoSkinTexture() {
+  if (camoSkinTexture) return camoSkinTexture;
+
+  const canvas = document.createElement('canvas');
+  canvas.width = 256;
+  canvas.height = 256;
+  const ctx = canvas.getContext('2d');
+  const random = mulberry32(0x5eed1234);
+
+  ctx.fillStyle = '#8d8f5d';
+  ctx.fillRect(0, 0, 256, 256);
+
+  const blobs = ['#565b35', '#a8a472', '#6c7143', '#c2bb84', '#474c2d'];
+  for (let i = 0; i < 64; i++) {
+    ctx.fillStyle = blobs[i % blobs.length];
+    ctx.beginPath();
+    ctx.ellipse(
+      random() * 276 - 10,
+      random() * 276 - 10,
+      9 + random() * 28,
+      6 + random() * 17,
+      random() * Math.PI,
+      0,
+      Math.PI * 2
+    );
+    ctx.fill();
+  }
+
+  ctx.globalAlpha = 0.2;
+  ctx.strokeStyle = '#3f4328';
+  ctx.lineWidth = 2;
+  for (let i = 0; i < 12; i++) {
+    ctx.beginPath();
+    ctx.moveTo(random() * 256, random() * 256);
+    ctx.lineTo(random() * 256, random() * 256);
+    ctx.stroke();
+  }
+  ctx.globalAlpha = 1;
+
+  camoSkinTexture = new THREE.CanvasTexture(canvas);
+  camoSkinTexture.colorSpace = THREE.SRGBColorSpace;
+  camoSkinTexture.wrapS = THREE.RepeatWrapping;
+  camoSkinTexture.wrapT = THREE.RepeatWrapping;
+  return camoSkinTexture;
+}
+
+function makeSkinDecalTexture(text, foreground, background, stripe) {
+  const key = [text, foreground, background || '', stripe || ''].join('|');
+  if (skinDecalCache.has(key)) return skinDecalCache.get(key);
+
+  const canvas = document.createElement('canvas');
+  canvas.width = 256;
+  canvas.height = 128;
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, 256, 128);
+
+  if (background) {
+    ctx.fillStyle = background;
+    ctx.fillRect(0, 0, 256, 128);
+  }
+  if (stripe) {
+    ctx.fillStyle = stripe;
+    ctx.fillRect(0, 0, 256, 22);
+  }
+
+  ctx.fillStyle = foreground;
+  ctx.font = '900 66px "Arial Black", "Trebuchet MS", sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.lineWidth = 5;
+  ctx.strokeStyle = background ? background : 'rgba(10,12,26,.55)';
+  ctx.strokeText(text, 128, 72);
+  ctx.fillText(text, 128, 72);
+
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  texture.anisotropy = 4;
+  skinDecalCache.set(key, texture);
   return texture;
 }
 
@@ -2704,14 +3167,38 @@ function buildSkinMaterials(skin) {
     return { body, dark, accent: body, cabin: body };
   }
 
+  if (skin.texture === 'camo') {
+    const map = makeCamoSkinTexture();
+    const body = new THREE.MeshStandardMaterial({
+      map,
+      color: 0xffffff,
+      roughness: 0.78,
+      metalness: 0.02,
+      flatShading: true
+    });
+    const dark = std(skin.darkColor, { roughness: 0.82, metalness: 0.02 });
+    const accent = std(skin.accentColor, { roughness: 0.72, metalness: 0.06 });
+    return { body, dark, accent, cabin: body };
+  }
+
   const body = std(skin.bodyColor, {
-    roughness: 0.5,
-    metalness: 0.16,
+    roughness: skin.glow ? 0.28 : 0.5,
+    metalness: skin.glow ? 0.52 : 0.16,
     emissive: skin.bodyColor,
-    emissiveIntensity: 0.055
+    emissiveIntensity: skin.glow ? 0.72 : 0.055
   });
-  const dark = std(skin.darkColor, { roughness: 0.6, metalness: 0.1 });
-  const accent = std(skin.accentColor, { roughness: 0.5, metalness: 0.12 });
+  const dark = std(skin.darkColor, {
+    roughness: skin.glow ? 0.38 : 0.6,
+    metalness: skin.glow ? 0.34 : 0.1,
+    emissive: skin.glow ? skin.darkColor : 0x000000,
+    emissiveIntensity: skin.glow ? 0.34 : 0
+  });
+  const accent = std(skin.accentColor, {
+    roughness: skin.glow ? 0.24 : 0.5,
+    metalness: skin.glow ? 0.48 : 0.12,
+    emissive: skin.glow ? skin.accentColor : 0x000000,
+    emissiveIntensity: skin.glow ? 1.05 : 0
+  });
   return { body, dark, accent, cabin: body };
 }
 
@@ -2726,6 +3213,10 @@ function applySkinToCar() {
   if (!car || !car.visual) return;
   const materials = getSkinMaterials(getSkinById(PLAYER.skin));
   car.visual.traverse((object) => {
+    if (object.userData.accessorySkin) {
+      object.visible = object.userData.accessorySkin === PLAYER.skin;
+      return;
+    }
     if (!object.isMesh) return;
     const slot = object.userData.skinSlot;
     if (slot && materials[slot]) object.material = materials[slot];
@@ -2743,8 +3234,25 @@ function selectSkin(id) {
 }
 
 function updateSkinShimmer(dt) {
-  if (PLAYER.skin !== 'gradient' || !gradientSkinTexture) return;
-  gradientSkinTexture.offset.x = (gradientSkinTexture.offset.x + dt * 0.12) % 1;
+  if (PLAYER.skin === 'gradient' && gradientSkinTexture) {
+    gradientSkinTexture.offset.x = (gradientSkinTexture.offset.x + dt * 0.12) % 1;
+  }
+
+  if (PLAYER.skin === 'neon') {
+    const neon = getSkinMaterials(getSkinById('neon'));
+    const pulse = 0.5 + 0.5 * Math.sin(performance.now() * 0.0045);
+    if (neon.body) neon.body.emissiveIntensity = 0.58 + pulse * 0.3;
+    if (neon.accent) neon.accent.emissiveIntensity = 0.82 + pulse * 0.45;
+  }
+
+  if (car && car.visual) {
+    const blink = 1.2 + 1.8 * (0.5 + 0.5 * Math.sin(performance.now() * 0.008));
+    car.visual.traverse((object) => {
+      if (object.userData.policeLight) {
+        object.material.emissiveIntensity = blink;
+      }
+    });
+  }
 }
 
 /* ---------- Scene groups ---------- */
@@ -3479,6 +3987,116 @@ function makeWheelVisual() {
   return group;
 }
 
+function addSkinDecal(group, text, foreground, background, stripe, x, y, width, height) {
+  const material = new THREE.MeshBasicMaterial({
+    map: makeSkinDecalTexture(text, foreground, background, stripe),
+    transparent: !background,
+    depthWrite: false,
+    side: THREE.DoubleSide
+  });
+  material.userData.local = true;
+  for (const side of [-1, 1]) {
+    const decal = new THREE.Mesh(new THREE.PlaneGeometry(width || 1.0, height || 0.42), material);
+    decal.position.set(x, y, side * 0.792);
+    if (side < 0) decal.rotation.y = Math.PI;
+    group.add(decal);
+  }
+}
+
+function buildSkinAccessory(skin) {
+  const group = new THREE.Group();
+
+  if (skin.accessory === 'racer') {
+    addSkinDecal(group, '88', '#fff7e8', null, null, -0.08, 0.02, 0.82, 0.44);
+
+  } else if (skin.accessory === 'police') {
+    const rackMaterial = std(0x111524, { roughness: 0.55, metalness: 0.3 });
+    rackMaterial.userData.local = true;
+    addBoxPart(group, [0.34, 0.08, 1.16], rackMaterial, [-0.36, 1.06, 0]);
+
+    for (const side of [-1, 1]) {
+      const lightMaterial = std(side < 0 ? 0xff2848 : 0x2a7cff, {
+        emissive: side < 0 ? 0xff173d : 0x006cff,
+        emissiveIntensity: 2.4,
+        roughness: 0.25,
+        metalness: 0.2
+      });
+      lightMaterial.userData.local = true;
+      const light = addBoxPart(group, [0.3, 0.16, 0.5], lightMaterial, [-0.36, 1.16, side * 0.28]);
+      light.userData.policeLight = true;
+    }
+    addSkinDecal(group, 'POLICE', '#121726', '#f4f7ff', '#2a7cff', -0.05, 0.01, 1.08, 0.38);
+
+  } else if (skin.accessory === 'buggy') {
+    const rackMaterial = std(0x2b3044, { roughness: 0.66, metalness: 0.28 });
+    rackMaterial.userData.local = true;
+    addBoxPart(group, [0.9, 0.07, 1.46], rackMaterial, [-0.36, 1.04, 0]);
+
+    for (let i = 0; i < 4; i++) {
+      const lampMaterial = std(0xffe8a1, {
+        emissive: 0xffc93f,
+        emissiveIntensity: 1.8,
+        roughness: 0.3
+      });
+      lampMaterial.userData.local = true;
+      addBoxPart(group, [0.14, 0.15, 0.25], lampMaterial, [0.18, 1.12, -0.54 + i * 0.36]);
+    }
+
+  } else if (skin.accessory === 'specnaz') {
+    const rackMaterial = std(0x343826, { roughness: 0.9, metalness: 0.06 });
+    rackMaterial.userData.local = true;
+    addBoxPart(group, [0.86, 0.06, 1.32], rackMaterial, [-0.36, 1.03, 0]);
+    addBoxPart(group, [0.1, 0.1, 1.32], rackMaterial, [-0.79, 1.08, 0]);
+    addBoxPart(group, [0.1, 0.1, 1.32], rackMaterial, [0.07, 1.08, 0]);
+
+    const antenna = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.012, 0.025, 0.8, 5, 1),
+      rackMaterial
+    );
+    antenna.position.set(-0.86, 1.43, -0.47);
+    antenna.rotation.z = -0.18;
+    group.add(antenna);
+
+  } else if (skin.accessory === 'neon') {
+    const glowMaterial = new THREE.MeshBasicMaterial({
+      color: 0x23f5ff,
+      transparent: true,
+      opacity: 0.34,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+      side: THREE.DoubleSide
+    });
+    glowMaterial.userData.local = true;
+    const glow = new THREE.Mesh(new THREE.PlaneGeometry(5.0, 2.8), glowMaterial);
+    glow.rotation.x = -Math.PI * 0.5;
+    glow.position.set(0, -0.56, 0);
+    group.add(glow);
+
+    const stripMaterial = std(0x23f5ff, {
+      emissive: 0x23f5ff,
+      emissiveIntensity: 2.6,
+      roughness: 0.2,
+      metalness: 0.2
+    });
+    stripMaterial.userData.local = true;
+    for (const side of [-1, 1]) {
+      addBoxPart(group, [2.65, 0.055, 0.065], stripMaterial, [0, -0.43, side * 0.76]);
+    }
+
+    const light = new THREE.PointLight(0x23f5ff, 1.8, 7, 2);
+    light.position.set(0, -0.18, 0);
+    group.add(light);
+  }
+
+  group.traverse((object) => {
+    if (object.isMesh) {
+      object.castShadow = true;
+      object.receiveShadow = true;
+    }
+  });
+  return group;
+}
+
 function createCarVisual() {
   const root = new THREE.Group();
   const parts = [];
@@ -3592,6 +4210,15 @@ function createCarVisual() {
   sideStripeL.userData.part = 'stripe';
   sideStripeR.userData.part = 'stripe';
 
+  // Special liveries can add their own details (light bars, decals, underglow).
+  for (const skin of SKINS) {
+    if (!skin.accessory) continue;
+    const accessory = buildSkinAccessory(skin);
+    accessory.userData.accessorySkin = skin.id;
+    accessory.visible = skin.id === PLAYER.skin;
+    root.add(accessory);
+  }
+
   return { root, parts };
 }
 
@@ -3610,6 +4237,22 @@ const CAR = {
   brakeForce: 15
 };
 
+// Safety envelope for the rigid body. These limits are far above anything the
+// car needs during normal driving or a jump, so they do not change the handling;
+// they only stop a bad contact/solver impulse from launching or spinning the car.
+const CAR_LIMITS = {
+  maxSpeedX: 34,
+  maxSpeedYUp: 18,
+  maxSpeedYDown: 26,
+  maxSpeedZ: 12,
+  maxAngularSpeed: 8,
+  maxLinearAccel: 1000,
+  maxAngularAccel: 150,
+  maxForce: 1600,
+  maxTorque: 260,
+  wheelJointForce: 24000
+};
+
 function createCar(level) {
   const startY = level.startY + 0.73 - CAR.comDrop;
 
@@ -3626,7 +4269,7 @@ function createCar(level) {
     new CANNON.Vec3(0, CAR.bodyLift, 0)
   );
   body.linearDamping = 0.06;
-  body.angularDamping = 0.44;
+  body.angularDamping = 0.5;
   body.fixedRotation = false;
   body.velocity.setZero();
   body.angularVelocity.setZero();
@@ -3663,7 +4306,7 @@ function createCar(level) {
     // remains a proper 3D wheel visually. The hinge still spins the whole body.
     wheelBody.addShape(new CANNON.Sphere(wheelRadius));
     wheelBody.linearDamping = 0.07;
-    wheelBody.angularDamping = 0.24;
+    wheelBody.angularDamping = 0.3;
     wheelBody.velocity.setZero();
     wheelBody.angularVelocity.setZero();
     wheelBody.force.setZero();
@@ -3681,7 +4324,11 @@ function createCar(level) {
       pivotB: new CANNON.Vec3(0, 0, 0),
       axisB: new CANNON.Vec3(0, 0, 1),
       collideConnected: false,
-      maxForce: 1e6
+      // The wheel hinges are the car's "suspension": a huge default maxForce
+      // makes every contact impulse rigid. A finite force lets a hard landing
+      // or an abusive key combo compress the joint instead of throwing the
+      // whole chassis into the air.
+      maxForce: CAR_LIMITS.wheelJointForce
     });
     constraint.disableMotor();
     constraint.setMotorSpeed(0);
@@ -3725,7 +4372,9 @@ function createCar(level) {
     wheelieTimer: 0,
     airTime: 0,
     throttle: 0,
-    tiltInput: 0
+    tiltInput: 0,
+    lastVelocity: new CANNON.Vec3(),
+    lastAngularVelocity: new CANNON.Vec3()
   };
 
   syncCarVisuals();
@@ -4047,6 +4696,8 @@ function buildLevel(index) {
   GAME.input.backward = false;
   GAME.input.tiltUp = false;
   GAME.input.tiltDown = false;
+  GAME.input.steerLeft = false;
+  GAME.input.steerRight = false;
 
   for (const section of levelDef.sections) {
     if (section.type === 'flat') addFlatSection(section);
@@ -4092,6 +4743,7 @@ function nextLevel() {
 
 /* ---------- Main menu and level select ---------- */
 let controlsHintShown = false;
+let garageCategory = 'standard';
 
 function getCompletedCount() {
   let completed = 0;
@@ -4168,9 +4820,28 @@ function buildLevelGrid() {
 }
 
 function renderGarage() {
+  const standardSkins = SKINS.filter((skin) => skin.category === 'standard');
+  const specialSkins = SKINS.filter((skin) => skin.category === 'special');
+  if (!SKIN_CATEGORIES[garageCategory]) garageCategory = 'standard';
+
+  if (dom.standardTabCount) dom.standardTabCount.textContent = String(standardSkins.length);
+  if (dom.standardTab) {
+    const active = garageCategory === 'standard';
+    dom.standardTab.classList.toggle('active', active);
+    dom.standardTab.setAttribute('aria-selected', String(active));
+  }
+  if (dom.specialTab) {
+    const active = garageCategory === 'special';
+    dom.specialTab.classList.toggle('active', active);
+    dom.specialTab.setAttribute('aria-selected', String(active));
+  }
+
+  dom.skinsGrid.dataset.category = garageCategory;
   dom.skinsGrid.replaceChildren();
 
-  for (const skin of SKINS) {
+  const categorySkins = garageCategory === 'special' ? specialSkins : standardSkins;
+
+  for (const skin of categorySkins) {
     const owned = PLAYER.ownedSkins.has(skin.id);
     const selected = PLAYER.skin === skin.id;
     const affordable = PLAYER.coins >= skin.price;
@@ -4179,25 +4850,41 @@ function renderGarage() {
     card.type = 'button';
     card.className = 'skin-card';
     card.dataset.skin = skin.id;
+    card.dataset.category = skin.category;
+    if (skin.category === 'special') card.classList.add('special');
     if (selected) card.classList.add('selected');
     else if (owned) card.classList.add('owned');
-    if (!owned && !affordable) {
-      card.classList.add('unaffordable');
-      card.disabled = true;
-    }
+    // Keep unaffordable cards clickable: tapping them shows an explicit
+    // "not enough coins" message instead of silently doing nothing.
+    if (!owned && !affordable) card.classList.add('unaffordable');
     card.setAttribute(
       'aria-label',
       skin.name + (selected ? ', выбран' : owned ? ', куплен' : ', цена ' + skin.price + ' монет')
     );
 
     const preview = document.createElement('span');
-    preview.className = 'skin-preview';
+    preview.className = 'skin-preview style-' + (skin.previewStyle || 'classic');
     preview.style.setProperty('--skin-body', skin.previewBody);
     preview.style.setProperty('--skin-dark', skin.previewDark);
     preview.style.setProperty('--skin-cabin', skin.previewCabin);
     preview.style.setProperty('--skin-accent', skin.previewAccent);
+
+    let extras = '';
+    if (skin.previewStyle === 'racer') {
+      extras += '<span class="preview-number">88</span>';
+    } else if (skin.previewStyle === 'police') {
+      extras += '<span class="preview-lightbar"><i></i><i></i></span>';
+    } else if (skin.previewStyle === 'buggy') {
+      extras += '<span class="preview-roofrack"><i></i><i></i><i></i><i></i></span>';
+    } else if (skin.previewStyle === 'specnaz') {
+      extras += '<span class="preview-roofrack"></span>';
+    } else if (skin.previewStyle === 'neon') {
+      extras += '<span class="preview-glow"></span>';
+    }
+
     preview.innerHTML =
       '<span class="car-preview">' +
+        extras +
         '<span class="preview-cabin"></span>' +
         '<span class="preview-body"></span>' +
         '<span class="preview-stripe"></span>' +
@@ -4225,6 +4912,20 @@ function renderGarage() {
       action.textContent = 'Не хватает ' + (skin.price - PLAYER.coins) + ' 💰';
     }
 
+    if (skin.category === 'special') {
+      const tag = document.createElement('span');
+      tag.className = 'skin-tag';
+      tag.textContent = 'Особое';
+      card.appendChild(tag);
+    }
+
+    if (!owned) {
+      const price = document.createElement('span');
+      price.className = 'skin-price';
+      price.textContent = skin.price + ' 💰';
+      card.appendChild(price);
+    }
+
     card.appendChild(preview);
     card.appendChild(name);
     card.appendChild(description);
@@ -4233,16 +4934,29 @@ function renderGarage() {
     dom.skinsGrid.appendChild(card);
   }
 
-  const allOwned = PLAYER.ownedSkins.size >= SKINS.length;
+  const categoryOwned = categorySkins.filter((skin) => PLAYER.ownedSkins.has(skin.id)).length;
   if (dom.garageHint) {
-    dom.garageHint.textContent = allOwned
-      ? 'Все скины собраны. Выбирай любой и жми газ!'
-      : 'Собирай монеты на трассах и открывай новые цвета корпуса';
+    if (categoryOwned >= categorySkins.length) {
+      dom.garageHint.textContent =
+        garageCategory === 'special'
+          ? 'Все особые раскраски собраны. Выбирай любую и жми газ!'
+          : 'Все стандартные скины собраны. Загляни в категорию «Особое»!';
+    } else {
+      dom.garageHint.textContent = SKIN_CATEGORIES[garageCategory].hint;
+    }
   }
   updateCoinBalanceDisplays();
 }
 
+function setGarageCategory(category) {
+  if (!SKIN_CATEGORIES[category] || garageCategory === category) return;
+  garageCategory = category;
+  renderGarage();
+}
+
 function handleSkinClick(skin) {
+  if (!skin) return;
+
   if (PLAYER.ownedSkins.has(skin.id)) {
     if (PLAYER.skin === skin.id) return;
     selectSkin(skin.id);
@@ -4253,21 +4967,34 @@ function handleSkinClick(skin) {
   }
 
   if (PLAYER.coins < skin.price) {
-    showToast('Не хватает ' + (skin.price - PLAYER.coins) + ' монет', 'warn');
+    const missing = skin.price - PLAYER.coins;
+    showToast('Не хватает ' + missing + ' монет для скина «' + skin.name + '»', 'warn');
     return;
   }
 
-  PLAYER.coins -= skin.price;
+  // Re-check the balance right at the purchase so the shop can never go negative.
+  if (skin.price > 0) {
+    PLAYER.coins -= skin.price;
+  }
   PLAYER.ownedSkins.add(skin.id);
   PLAYER.skin = skin.id;
   persistPlayer();
   applySkinToCar();
   renderGarage();
   updateMainMenu();
-  showToast('Куплен скин «' + skin.name + '»!', 'good');
+  showToast(
+    skin.price > 0
+      ? 'Куплен скин «' + skin.name + '» · −' + skin.price + ' 💰'
+      : 'Скин «' + skin.name + '» открыт!',
+    'good'
+  );
 }
 
 function showGarage() {
+  const selectedSkin = getSkinById(PLAYER.skin);
+  if (selectedSkin.category && SKIN_CATEGORIES[selectedSkin.category]) {
+    garageCategory = selectedSkin.category;
+  }
   updateMainMenu();
   renderGarage();
   dom.mainMenu.classList.remove('show');
@@ -4348,7 +5075,12 @@ function startLevel(index) {
     controlsHintShown = true;
     window.setTimeout(() => {
       const coarse = window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
-      showToast(coarse ? 'Внизу — газ и кнопки наклона' : 'D / → — газ · W / ↑ — наклон', 'warn');
+      showToast(
+        coarse
+          ? 'Слева — руль, справа — газ и тормоз · в воздухе они же управляют тангажом'
+          : 'D — газ · A — тормоз · W/S — влево/вправо · в воздухе D/A — тангаж',
+        'warn'
+      );
     }, 750);
   }
 }
@@ -4938,6 +5670,8 @@ function winLevel() {
   GAME.input.backward = false;
   GAME.input.tiltUp = false;
   GAME.input.tiltDown = false;
+  GAME.input.steerLeft = false;
+  GAME.input.steerRight = false;
 
   const finalLevel = GAME.levelIndex === LEVELS.length - 1;
   const time = GAME.elapsed;
@@ -4987,6 +5721,8 @@ function showFailOverlay(reason, title) {
   GAME.input.backward = false;
   GAME.input.tiltUp = false;
   GAME.input.tiltDown = false;
+  GAME.input.steerLeft = false;
+  GAME.input.steerRight = false;
   car.alive = false;
   updateHUD(true);
 
@@ -5016,14 +5752,21 @@ function failLevel(reason, title) {
 
 /* ---------- Input ---------- */
 function refreshInput() {
+  // A/D — тормоз и газ. В воздухе эти же клавиши управляют тангажом.
   GAME.input.forward =
     heldKeys.has('ArrowRight') || heldKeys.has('KeyD') || touchHeld.has('forward');
   GAME.input.backward =
     heldKeys.has('ArrowLeft') || heldKeys.has('KeyA') || touchHeld.has('backward');
+  // Стрелки вверх/вниз остаются отдельным тангажом для клавиатуры.
   GAME.input.tiltUp =
-    heldKeys.has('ArrowUp') || heldKeys.has('KeyW') || touchHeld.has('tiltUp');
+    heldKeys.has('ArrowUp') || touchHeld.has('tiltUp');
   GAME.input.tiltDown =
-    heldKeys.has('ArrowDown') || heldKeys.has('KeyS') || touchHeld.has('tiltDown');
+    heldKeys.has('ArrowDown') || touchHeld.has('tiltDown');
+  // W/S — руль влево/вправо, как в раллийных аркадах.
+  GAME.input.steerLeft =
+    heldKeys.has('KeyW') || touchHeld.has('steerLeft');
+  GAME.input.steerRight =
+    heldKeys.has('KeyS') || touchHeld.has('steerRight');
 }
 
 const controlledKeys = new Set([
@@ -5189,6 +5932,12 @@ dom.skinsBtn.addEventListener('click', () => {
   showGarage();
 });
 
+dom.garageTabs.addEventListener('click', (event) => {
+  const tab = event.target.closest('.garage-tab');
+  if (!tab) return;
+  setGarageCategory(tab.dataset.category);
+});
+
 dom.garageBackBtn.addEventListener('click', () => {
   hideGarage();
 });
@@ -5245,33 +5994,93 @@ function updateDriving(dt) {
 
   if (!running) return;
 
+  const airborne = !car.grounded;
+
+  // A/D remain the throttle/brake pedals. Once the wheels leave the ground
+  // they also become pitch controls: D lifts the nose, A drops it. Up/Down
+  // stay available as dedicated pitch keys.
   let tilt = 0;
-  if (input.tiltUp) tilt += 1;
-  if (input.tiltDown) tilt -= 1;
+  if (input.tiltUp || (airborne && input.forward)) tilt += 1;
+  if (input.tiltDown || (airborne && input.backward)) tilt -= 1;
 
   const tiltPressed = tilt !== 0 && tilt !== car.tiltInput;
   car.tiltInput = tilt;
+
+  // W/S steer the car left/right: a lateral force moves it across the track
+  // while the chassis yaws into the turn, rally-arcade style.
+  let steer = 0;
+  if (input.steerLeft) steer -= 1;
+  if (input.steerRight) steer += 1;
 
   const forward = new CANNON.Vec3(1, 0, 0);
   const up = new CANNON.Vec3(0, 1, 0);
   car.body.quaternion.vmult(forward, forward);
   car.body.quaternion.vmult(up, up);
 
-  // Side-scroller assist: keep the car from rolling or yawing away from the track.
-  // Pitch remains free, so flips and wheelies are still part of the game.
-  const rollK = car.grounded ? 36 : 22;
-  const rollD = car.grounded ? 9 : 6;
-  const yawK = car.grounded ? 55 : 30;
-  const yawD = car.grounded ? 11 : 7;
+  // Side-view assists: keep the car from rolling over, but let W/S actively
+  // yaw and move it sideways. Without steering input the car straightens out.
+  const rollK = airborne ? 22 : 36;
+  const rollD = airborne ? 6 : 9;
+  const yawK = airborne ? 30 : 55;
+  const yawD = airborne ? 7 : 11;
   car.body.torque.x += -up.z * rollK - car.body.angularVelocity.x * rollD;
-  car.body.torque.y += forward.z * yawK - car.body.angularVelocity.y * yawD;
 
-  // Lateral damping keeps the side-scroller tracking straight. It is only a
-  // force along Z, so it never fights acceleration or pitch.
-  if (car.grounded) {
-    car.body.force.z += -car.body.velocity.z * 150 - car.body.position.z * 80;
+  // Ground steering is deliberately much sharper than the airborne version:
+  // a bigger steering angle and a much faster yaw response. The airborne
+  // branch keeps the original gentle values untouched.
+  const steerTargetYaw = airborne ? 0.3 : 1.05;
+  const steerYawGain = airborne ? 4.6 : 26;
+  const steerYawLimit = airborne ? 2.4 : 10;
+  const steerYawDamp = airborne ? 6 : 35;
+
+  if (steer !== 0) {
+    car.body.wakeUp();
+    // Aim for a visible steering angle instead of spinning the chassis
+    // forever while the key is held. Positive steer is screen-right (+Z).
+    const yaw = Math.atan2(-forward.z, forward.x);
+    const targetYaw = -steer * steerTargetYaw;
+    const desiredYawRate = clamp(
+      (targetYaw - yaw) * steerYawGain,
+      -steerYawLimit,
+      steerYawLimit
+    );
+    car.body.angularVelocity.y = damp(
+      car.body.angularVelocity.y,
+      desiredYawRate,
+      steerYawDamp,
+      dt
+    );
   } else {
-    car.body.force.z += -car.body.velocity.z * 60 - car.body.position.z * 25;
+    car.body.torque.y += forward.z * yawK - car.body.angularVelocity.y * yawD;
+  }
+
+  // Lateral movement. On the ground W/S directly drive the sideways velocity:
+  // this is an arcade lane-change, so it responds on the next frame instead of
+  // slowly building up through force. In the air the original gentle force is
+  // preserved. With no steering, damping pulls the car back to the centre lane.
+  if (airborne) {
+    const laneDamp = steer !== 0 ? 8 : 45;
+    const laneCenter = steer !== 0 ? 1.5 : 18;
+    car.body.force.z += -car.body.velocity.z * laneDamp - car.body.position.z * laneCenter;
+    if (steer !== 0) {
+      car.body.force.z += steer * 60;
+      const maxLateral = 7.5;
+      if (Math.abs(car.body.velocity.z) > maxLateral) {
+        car.body.velocity.z = Math.sign(car.body.velocity.z) * maxLateral;
+      }
+    }
+  } else if (steer !== 0) {
+    // Faster forward motion gives a stronger lane change, but even at low speed
+    // the initial bite is immediate.
+    const lateralSpeed = clamp(2.5 + Math.abs(speedX) * 0.6, 2.5, 10.5);
+    car.body.velocity.z = damp(
+      car.body.velocity.z,
+      steer * lateralSpeed,
+      30,
+      dt
+    );
+  } else {
+    car.body.force.z += -car.body.velocity.z * 150 - car.body.position.z * 80;
   }
 
   // Soft invisible side guides keep the car on the track without touching
@@ -5297,19 +6106,21 @@ function updateDriving(dt) {
     car.body.torque.z -= car.throttle * 22 * counterScale * fade;
   }
 
-  // W/S and Up/Down apply a real angular impulse + sustained torque to the
-  // chassis. The one-shot impulse makes the response obvious even in a short
-  // airborne moment, while the torque allows holding a rotation. Touch input
-  // gets a stronger boost because a finger is less precise than a keyboard.
+  // Pitch input: a one-shot angular impulse makes the response obvious even in
+  // a short airborne moment, while the sustained torque lets the player hold
+  // the rotation. Touch gets a stronger boost because a finger is less precise.
   if (tilt !== 0) {
     car.body.wakeUp();
-    const touchTilt = touchHeld.has('tiltUp') || touchHeld.has('tiltDown');
+    const touchTilt =
+      touchHeld.has('tiltUp') ||
+      touchHeld.has('tiltDown') ||
+      (airborne && (touchHeld.has('forward') || touchHeld.has('backward')));
     const torque = car.grounded
       ? (touchTilt ? 690 : 420)
-      : (touchTilt ? 155 : 62);
+      : (touchTilt ? 190 : 92);
     const kick = car.grounded
       ? (touchTilt ? 1.2 : 0.6)
-      : (touchTilt ? 3.8 : 1.9);
+      : (touchTilt ? 4.4 : 2.5);
     // On the ground the torque must beat the weight transfer across the
     // wheelbase, otherwise the contact solver simply eats it. In the air the
     // car is free, so a smaller torque is enough.
@@ -5319,7 +6130,7 @@ function updateDriving(dt) {
     }
   } else if (up.y > 0.2) {
     // Gentle self-levelling when the player is not actively tilting. It makes
-    // landings predictable while W/S still overrides it completely.
+    // landings predictable, while A/D or Up/Down override it in the air.
     const pitch = Math.atan2(forward.y, forward.x);
     const levelK = car.grounded ? 8.0 : 6.0;
     const levelD = car.grounded ? 2.4 : 1.8;
