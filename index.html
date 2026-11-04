@@ -1811,7 +1811,7 @@
   <span class="menu-cube cube-b" aria-hidden="true"></span>
   <span class="menu-cube cube-c" aria-hidden="true"></span>
   <div class="menu-shell">
-    <div class="menu-kicker"><span class="dot"></span>Воксельные гонки · 20 уровней</div>
+    <div class="menu-kicker"><span class="dot"></span>Воксельные гонки · 50 уровней</div>
     <h1 class="menu-title"><span class="word-voxel">Voxel</span> <span class="word-rush">Rush</span> <span class="word-3d">3D</span></h1>
     <p class="menu-subtitle">Держи газ, лови баланс на трамплинах и доведи малышку до финиша. Каждый уровень — новая трасса, новые пропасти и новые трюки.</p>
     <div class="menu-actions">
@@ -1821,7 +1821,7 @@
       </button>
       <button class="menu-btn" id="levelsBtn" type="button">
         <span class="menu-btn-icon" aria-hidden="true">▦</span>
-        <span class="menu-btn-copy"><b>Выбор уровня</b><small>Все 20 заездов</small></span>
+        <span class="menu-btn-copy"><b>Выбор уровня</b><small>Все 50 заездов</small></span>
       </button>
       <button class="menu-btn" id="skinsBtn" type="button">
         <span class="menu-btn-icon" aria-hidden="true">🎨</span>
@@ -1829,7 +1829,7 @@
       </button>
     </div>
     <div class="menu-meta">
-      <span class="menu-progress" id="menuProgress">0 / 20</span>
+      <span class="menu-progress" id="menuProgress">0 / 50</span>
       <span class="menu-coins">💰 <b id="menuCoins">0</b> <span id="menuCoinsWord">монет</span></span>
       <span>Лучшие результаты сохраняются</span>
     </div>
@@ -1845,7 +1845,7 @@
           <span>Выбери заезд</span>
           <h2>Выбор уровня</h2>
         </div>
-        <div class="levels-progress" id="levelsProgress">0 / 20</div>
+        <div class="levels-progress" id="levelsProgress">0 / 50</div>
       </div>
       <div class="levels-grid" id="levelsGrid"></div>
       <div class="levels-foot">Нажми на уровень, чтобы сразу начать заезд</div>
@@ -2764,6 +2764,267 @@ const LEVELS = [
   }
 ];
 
+/* ---------- Thirty extra levels ---------- */
+function buildExtraLevels() {
+  const F = (length, y, width) => ({ type: 'flat', length, y, width });
+  const R = (length, dy, width) => ({ type: 'ramp', length, dy, width });
+  const G = (length) => ({ type: 'gap', length });
+  const P = (length, y, depth) => ({ type: 'platform', length, y, depth });
+
+  const specs = [
+    {
+      name: 'Новый старт', kicker: 'Лёгкий разгон', seed: 1101,
+      signText: 'ПОЕХАЛИ!', signColor: '#43e6bd',
+      parts: [R(6, 1.8), F(6, 1.8), G(4.2), F(14, 0), R(5, 1.4), F(6, 1.4), G(3.6), F(16, 0)]
+    },
+    {
+      name: 'Лесенка', kicker: 'Выше и выше', seed: 1102,
+      signText: 'ШАГ ЗА ШАГОМ', signColor: '#ffd447',
+      parts: [F(8, 0), R(5, 1.2), F(6, 1.2), R(5, 1.2), F(6, 2.4), G(3.6), F(14, 0), R(4, 0.8), F(8, 0.8), G(3.2), F(16, 0)]
+    },
+    {
+      name: 'Волны', kicker: 'Плавные горки', seed: 1103,
+      signText: 'ДЕРЖИ РИТМ', signColor: '#5a6be8',
+      parts: [R(5, 1.4), F(4, 1.4), R(5, -1.4), F(5, 0), R(5, 1.4), F(4, 1.4), R(5, -1.4), F(6, 0), G(4), F(16, 0)]
+    },
+    {
+      name: 'Острова', kicker: 'Прыжки по площадкам', seed: 1104,
+      signText: 'ПО ОСТРОВАМ', signColor: '#ff9f1c',
+      parts: [R(6, 1.0), F(11, 1.0), G(1.5), P(6, 0.5, 6.0), G(1.5), P(6, 0.2, 6.0), R(3, -0.2), F(16, 0)]
+    },
+    {
+      name: 'Длинный полёт', kicker: 'Два больших прыжка', seed: 1105,
+      signText: 'ДАЛЬШЕ!', signColor: '#ff6b9a',
+      parts: [R(7, 2.2), F(4, 2.2), G(5.2), F(18, 0), F(8, 0), R(5, 1.6), G(4.2), F(18, 0)]
+    },
+    {
+      name: 'Узкий проход', kicker: 'Аккуратно по мосту', seed: 1106,
+      signText: 'НЕ СВЕРНИ', signColor: '#ffd447',
+      parts: [R(5, 1.6, 5.2), F(12, 1.6, 4.8), R(5, -1.6, 5.2), F(8, 0), G(3.5), F(16, 0)]
+    },
+    {
+      name: 'Перекаты', kicker: 'Три мягких трамплина', seed: 1107,
+      signText: 'МЯГЧЕ!', signColor: '#43e6bd',
+      parts: [R(4, 1.2), F(5, 1.2), G(3.6), F(4, 0), R(4, 1.2), F(5, 1.2), G(3.6), F(4, 0), R(4, 1.2), F(5, 1.2), G(3.4), F(16, 0)]
+    },
+    {
+      name: 'Три пролёта', kicker: 'Три коротких разрыва', seed: 1108,
+      signText: 'ПРЫЖОК ЗА ПРЫЖКОМ', signColor: '#5a6be8',
+      parts: [R(5, 1.6), F(4, 1.6), G(4.2), F(6, 0), G(3.8), F(6, 0), G(3.8), F(18, 0)]
+    },
+    {
+      name: 'Подъём', kicker: 'Наверх по ступеням', seed: 1109,
+      signText: 'ВВЕРХ!', signColor: '#ffd447',
+      parts: [R(6, 1.2), F(5, 1.2), R(6, 1.2), F(5, 2.4), G(3.6), F(14, 0), F(6, 0), R(4, 1.0), F(16, 1.0)]
+    },
+    {
+      name: 'Спуск', kicker: 'С горы и вперёд', seed: 1110,
+      signText: 'С ГОРЫ', signColor: '#ff9f1c',
+      parts: [R(6, 2.0), F(5, 2.0), R(8, -2.0), F(10, 0), G(3.6), F(18, 0)]
+    },
+    {
+      name: 'Каменный сад', kicker: 'Объезд ящиков', seed: 1111,
+      signText: 'ОБЪЕЗЖАЙ', signColor: '#ff6b9a',
+      parts: [F(12, 0), R(5, 1.2), F(6, 1.2), G(3.6), F(12, 0), G(3.4), F(16, 0)]
+    },
+    {
+      name: 'Висячая тропа', kicker: 'Цепочка платформ', seed: 1112,
+      signText: 'ПО ЦЕПОЧКЕ', signColor: '#43e6bd',
+      parts: [R(6, 0.9), F(10, 0.9), G(1.5), P(5, 0.55, 6.0), G(1.5), P(5, 0.25, 6.0), G(1.5), P(5, 0.1, 6.0), R(3, -0.1), F(16, 0)]
+    },
+    {
+      name: 'Разлом', kicker: 'Широкий ров', seed: 1113,
+      signText: 'ЧЕРЕЗ РОВ', signColor: '#ff9f1c',
+      parts: [R(6, 2.2), F(4, 2.2), G(5.4), P(6, 0.8, 5.2), G(3.6), F(18, 0)]
+    },
+    {
+      name: 'Гребень', kicker: 'Вверх, вниз и снова', seed: 1114,
+      signText: 'ГРЕБЕНЬ', signColor: '#5a6be8',
+      parts: [R(5, 1.4), F(6, 1.4), R(5, 1.2), F(5, 2.6), R(6, -2.6), F(8, 0), G(3.4), F(16, 0)]
+    },
+    {
+      name: 'Быстрый участок', kicker: 'Газ до упора', seed: 1115,
+      signText: 'БЫСТРЕЕ!', signColor: '#ffd447',
+      parts: [R(4, 0.8), F(8, 0.8), R(4, -0.8), F(10, 0), G(3.2), F(18, 0)]
+    },
+    {
+      name: 'Ступени вниз', kicker: 'Плавный спуск', seed: 1116,
+      signText: 'ВНИЗ ПО СТУПЕНЯМ', signColor: '#ff6b9a',
+      parts: [R(4, 1.5), F(5, 1.5), R(4, -0.5), F(5, 1.0), R(4, -0.5), F(5, 0.5), R(4, -0.5), F(18, 0)]
+    },
+    {
+      name: 'Двойной мост', kicker: 'Два узких пролёта', seed: 1117,
+      signText: 'ДВА МОСТА', signColor: '#43e6bd',
+      parts: [R(5, 1.4, 6.0), F(10, 1.4, 4.8), R(5, -1.4, 4.8), F(5, 0, 4.8), R(5, 1.4, 4.8), F(10, 1.4, 4.8), R(5, -1.4, 5.4), F(18, 0)]
+    },
+    {
+      name: 'Прыжки по островкам', kicker: 'Четыре площадки', seed: 1118,
+      signText: 'ОСТРОВКИ', signColor: '#5a6be8',
+      parts: [R(6, 1.1), F(12, 1.1), G(1.5), P(5, 0.7, 6.0), G(1.5), P(5, 0.45, 6.0), G(1.5), P(5, 0.25, 6.0), G(1.5), P(5, 0.1, 6.0), R(3, -0.1), F(16, 0)]
+    },
+    {
+      name: 'Волнорез', kicker: 'Узкие волны', seed: 1119,
+      signText: 'ВОЛНОРЕЗ', signColor: '#ffd447',
+      parts: [R(4, 1.0, 5.4), F(5, 1.0, 5.4), R(4, -1.0, 5.4), F(4, 0, 5.4), R(4, 1.0, 5.4), F(5, 1.0, 5.4), R(4, -1.0, 5.4), F(4, 0, 5.4), G(3.6), F(16, 0)]
+    },
+    {
+      name: 'Высокая тропа', kicker: 'Платформы в небе', seed: 1120,
+      signText: 'ВЫСОКО!', signColor: '#ff9f1c',
+      parts: [R(8, 2.4), F(16, 2.4), G(1.5), P(6, 1.85, 6.0), G(1.5), P(6, 1.35, 6.0), G(1.5), P(6, 0.9, 6.0), R(4, -0.9), F(14, 0)]
+    },
+    {
+      name: 'Низкий старт', kicker: 'Сначала вниз', seed: 1121,
+      signText: 'ВНИЗ И ВПЕРЁД', signColor: '#43e6bd',
+      parts: [R(6, -1.0), F(8, -1.0), G(3.6), F(10, -1.0), R(5, 1.0), F(6, 0), G(3.2), F(16, 0)]
+    },
+    {
+      name: 'Разноуровневый', kicker: 'Смена высот', seed: 1122,
+      signText: 'МЕНЯЙ ВЫСОТУ', signColor: '#ff6b9a',
+      parts: [F(8, 0), R(4, 1.0), F(6, 1.0), G(3.2), F(6, 0), R(4, 1.4), F(6, 1.4), G(3.4), F(6, 0), R(4, 0.8), F(8, 0.8), G(3.2), F(16, 0)]
+    },
+    {
+      name: 'Прыжок через ров', kicker: 'Один большой ров', seed: 1123,
+      signText: 'ЧЕРЕЗ РОВ!', signColor: '#ffd447',
+      parts: [R(6, 2.0), F(4, 2.0), G(5.6), F(20, 0), G(3.4), F(14, 0)]
+    },
+    {
+      name: 'Ломаная линия', kicker: 'Ритм холмов', seed: 1124,
+      signText: 'ДЕРЖИ ЛИНИЮ', signColor: '#5a6be8',
+      parts: [R(4, 1.2), F(5, 1.2), R(4, -1.2), F(4, 0), R(4, 1.2), F(5, 1.2), R(4, -1.2), F(4, 0), G(3.2), F(18, 0)]
+    },
+    {
+      name: 'Каскадный спуск', kicker: 'Три ступени вниз', seed: 1125,
+      signText: 'КАСКАД', signColor: '#ff9f1c',
+      parts: [R(5, 2.2), F(4, 2.2), R(5, -0.7), F(4, 1.5), R(5, -0.7), F(4, 0.8), R(5, -0.8), F(18, 0)]
+    },
+    {
+      name: 'Пологий спуск', kicker: 'Длинные горки', seed: 1126,
+      signText: 'ПЛАВНО', signColor: '#43e6bd',
+      parts: [R(10, 1.8), F(6, 1.8), R(10, -1.8), F(10, 0), G(3.2), F(18, 0)]
+    },
+    {
+      name: 'Короткие острова', kicker: 'Быстрые прыжки', seed: 1127,
+      signText: 'КОРОТКО И ТОЧНО', signColor: '#ffd447',
+      parts: [R(5, 0.8), F(10, 0.8), G(1.5), P(4, 0.5, 5.6), G(1.5), P(4, 0.25, 5.6), G(1.5), P(4, 0.1, 5.6), R(3, -0.1), F(16, 0)]
+    },
+    {
+      name: 'Финальный рывок', kicker: 'Разгон к финишу', seed: 1128,
+      signText: 'ФИНИШ БЛИЗКО', signColor: '#ff6b9a',
+      parts: [F(14, 0), G(3.4), F(10, 0), G(3.4), F(18, 0), R(4, 0.8), F(8, 0.8), G(3.0), F(16, 0)]
+    },
+    {
+      name: 'Дальняя переправа', kicker: 'Платформа за платформой', seed: 1129,
+      signText: 'ПЕРЕПРАВА', signColor: '#5a6be8',
+      parts: [R(6, 1.0), F(11, 1.0), G(1.5), P(5, 0.6, 5.8), G(1.5), P(5, 0.35, 5.8), G(1.5), P(5, 0.2, 5.8), G(1.5), P(5, 0.1, 5.8), R(3, -0.1), F(16, 0)]
+    },
+    {
+      name: 'Юбилейная', kicker: 'Всё лучшее сразу', seed: 1130,
+      signText: 'ЮБИЛЕЙ!', signColor: '#ffd447',
+      parts: [F(10, 0), R(5, 1.6), F(5, 1.6), G(3.4), F(6, 0), G(3.2), F(6, 0), R(5, 1.2), F(5, 1.2), G(3.2), F(6, 0), R(6, 2.0), F(4, 2.0), G(4.2), F(16, 0)]
+    }
+  ];
+
+  const crateColors = ['crateOrange', 'cratePink', 'crateMint', 'crateYellow'];
+
+  return specs.map((spec) => {
+    const sections = [{ type: 'flat', x1: -16, x2: 6, y: 0 }];
+    const platforms = [];
+    let cursor = 6;
+    let currentY = 0;
+
+    for (const part of spec.parts) {
+      if (part.type === 'flat') {
+        sections.push({
+          type: 'flat', x1: cursor, x2: cursor + part.length, y: part.y,
+          ...(part.width ? { width: part.width } : {})
+        });
+        cursor += part.length;
+        currentY = part.y;
+      } else if (part.type === 'ramp') {
+        const endY = currentY + part.dy;
+        sections.push({
+          type: 'ramp', x1: cursor, x2: cursor + part.length, y1: currentY, y2: endY,
+          ...(part.width ? { width: part.width } : {})
+        });
+        cursor += part.length;
+        currentY = endY;
+      } else if (part.type === 'gap') {
+        cursor += part.length;
+      } else if (part.type === 'platform') {
+        const platformY = part.y === undefined ? currentY : part.y;
+        platforms.push({
+          x: cursor + part.length * 0.5,
+          y: platformY,
+          width: part.length,
+          depth: part.depth || 5.0,
+          ropeTop: platformY + 6.8
+        });
+        cursor += part.length;
+        currentY = platformY;
+      }
+    }
+
+    const finishLength = 14;
+    sections.push({ type: 'flat', x1: cursor, x2: cursor + finishLength, y: currentY });
+    const finishX = cursor + finishLength - 7;
+
+    const localTopAt = (x) => {
+      for (const section of sections) {
+        if (x < section.x1 || x > section.x2) continue;
+        if (section.type === 'flat') return section.y;
+        const t = (x - section.x1) / Math.max(0.0001, section.x2 - section.x1);
+        return section.y1 + (section.y2 - section.y1) * t;
+      }
+      return null;
+    };
+
+    const random = mulberry32(spec.seed * 7919 + 13);
+    const flatSections = sections.filter(
+      (section) => section.type === 'flat' && section.x2 - section.x1 > 5 && section.x1 > 2
+    );
+    const crates = [];
+    const crateCount = 2 + Math.floor(random() * 2);
+    for (let i = 0; i < crateCount && flatSections.length; i++) {
+      const section = flatSections[Math.floor(random() * flatSections.length)];
+      const width = section.width || 7.6;
+      if (width < 5.4) continue;
+      const margin = 1.1;
+      const x = section.x1 + margin + random() * Math.max(0.1, section.x2 - section.x1 - margin * 2);
+      // Keep the centre lane clear. A crate that spawns directly in front of
+      // the car catches a front wheel and can throw the chassis off the track.
+      const maxZ = Math.min(2.6, width * 0.5 - 0.95);
+      const z = (random() < 0.5 ? -1 : 1) * (Math.min(1.7, maxZ) + random() * Math.max(0.05, maxZ - 1.7));
+      crates.push({
+        x: +x.toFixed(2),
+        z: +z.toFixed(2),
+        size: +(0.76 + random() * 0.16).toFixed(2),
+        count: random() > 0.78 ? 2 : 1,
+        color: crateColors[Math.floor(random() * crateColors.length)]
+      });
+    }
+
+    const signX = Math.min(11, finishX - 10);
+    const signTop = localTopAt(signX) ?? 0;
+    return {
+      name: spec.name,
+      kicker: spec.kicker,
+      startX: -8,
+      startY: 0,
+      finishX,
+      seed: spec.seed,
+      sections,
+      platforms,
+      crates,
+      signs: [
+        { x: signX, z: -4.9, y: signTop + 3.0, text: spec.signText, color: spec.signColor },
+        { x: finishX - 10, z: -4.9, y: (localTopAt(finishX - 10) ?? currentY) + 2.7, text: 'К ФИНИШУ →', color: '#43e6bd' }
+      ]
+    };
+  });
+}
+
+LEVELS.push(...buildExtraLevels());
+
 /* ---------- Player progress, coins and skins ---------- */
 const COIN_KEY = 'driveMad3D_coins';
 const SKIN_KEY = 'driveMad3D_skin';
@@ -3270,7 +3531,9 @@ const TRACK_THICKNESS = 1.5;
 const particleGeometry = new THREE.BoxGeometry(1, 1, 1);
 const tempVec = new THREE.Vector3();
 const tempVec2 = new THREE.Vector3();
+const tempAxis = new THREE.Vector3();
 const tempQuat = new THREE.Quaternion();
+const tempQuat2 = new THREE.Quaternion();
 const tempEuler = new THREE.Euler();
 
 function disposeMaterial(material) {
@@ -4250,7 +4513,8 @@ const CAR_LIMITS = {
   maxAngularAccel: 150,
   maxForce: 1600,
   maxTorque: 260,
-  wheelJointForce: 24000
+  wheelJointForce: 24000,
+  maxReverseSpeed: 35 / 3.6
 };
 
 function createCar(level) {
@@ -4373,6 +4637,7 @@ function createCar(level) {
     airTime: 0,
     throttle: 0,
     tiltInput: 0,
+    steerVisual: 0,
     lastVelocity: new CANNON.Vec3(),
     lastAngularVelocity: new CANNON.Vec3()
   };
@@ -4394,6 +4659,13 @@ function removeCar() {
 
 const carVisualLocalOffset = new CANNON.Vec3(0, CAR.bodyLift, 0);
 const carVisualWorldOffset = new CANNON.Vec3();
+
+function applyFrontWheelSteer(wheel) {
+  if (!car || !(wheel.localX > 0) || Math.abs(car.steerVisual) < 0.0001) return;
+  tempAxis.set(0, 1, 0).applyQuaternion(car.visual.quaternion);
+  tempQuat2.setFromAxisAngle(tempAxis, car.steerVisual);
+  wheel.visual.quaternion.premultiply(tempQuat2);
+}
 
 function syncCarVisuals(dt) {
   if (!car) return;
@@ -4427,6 +4699,7 @@ function syncCarVisuals(dt) {
       );
       wheel.visual.position.lerp(tempVec2, wheelBlend);
       wheel.visual.quaternion.slerp(tempQuat, wheelBlend);
+      applyFrontWheelSteer(wheel);
     }
   } else {
     car.visual.position.copy(tempVec);
@@ -4434,6 +4707,7 @@ function syncCarVisuals(dt) {
     for (const wheel of car.wheels) {
       wheel.visual.position.copy(wheel.body.position);
       wheel.visual.quaternion.copy(wheel.body.quaternion);
+      applyFrontWheelSteer(wheel);
     }
   }
 }
@@ -6019,19 +6293,26 @@ function updateDriving(dt) {
 
   // Side-view assists: keep the car from rolling over, but let W/S actively
   // yaw and move it sideways. Without steering input the car straightens out.
-  const rollK = airborne ? 22 : 36;
-  const rollD = airborne ? 6 : 9;
+  // A damaged car gets a stronger roll assist: with only two wheels left the
+  // chassis would otherwise tip onto its side after a hard landing.
+  const damageRoll = 1 + (1 - clamp(car.attachedWheels / 4, 0, 1)) * 2.2;
+  const rollK = (airborne ? 22 : 36) * damageRoll;
+  const rollD = (airborne ? 6 : 9) * damageRoll;
   const yawK = airborne ? 30 : 55;
   const yawD = airborne ? 7 : 11;
   car.body.torque.x += -up.z * rollK - car.body.angularVelocity.x * rollD;
 
   // Ground steering is deliberately much sharper than the airborne version:
-  // a bigger steering angle and a much faster yaw response. The airborne
-  // branch keeps the original gentle values untouched.
-  const steerTargetYaw = airborne ? 0.3 : 1.05;
+  // a bigger steering angle and a much faster yaw response. At a standstill the
+  // chassis does not turn or slide; only the front wheels visibly steer.
+  const wheelAuthority = clamp(0.35 + car.attachedWheels * 0.16, 0.35, 1);
+  const groundSteerFactor = clamp(Math.abs(speedX) / 3.5, 0, 1);
+  const steerTargetYaw = airborne ? 0.3 : 1.05 * groundSteerFactor * wheelAuthority;
   const steerYawGain = airborne ? 4.6 : 26;
   const steerYawLimit = airborne ? 2.4 : 10;
   const steerYawDamp = airborne ? 6 : 35;
+  const targetWheelAngle = steer * (airborne ? 0.16 : 0.55);
+  car.steerVisual = damp(car.steerVisual, targetWheelAngle, airborne ? 10 : 35, dt);
 
   if (steer !== 0) {
     car.body.wakeUp();
@@ -6070,9 +6351,9 @@ function updateDriving(dt) {
       }
     }
   } else if (steer !== 0) {
-    // Faster forward motion gives a stronger lane change, but even at low speed
-    // the initial bite is immediate.
-    const lateralSpeed = clamp(2.5 + Math.abs(speedX) * 0.6, 2.5, 10.5);
+    // Steering is speed-sensitive: at a standstill the car must not slide or
+    // drive itself sideways. Once it is rolling, the lane change bites hard.
+    const lateralSpeed = clamp((Math.abs(speedX) - 0.25) * 0.85, 0, 10.5) * wheelAuthority;
     car.body.velocity.z = damp(
       car.body.velocity.z,
       steer * lateralSpeed,
@@ -6083,21 +6364,8 @@ function updateDriving(dt) {
     car.body.force.z += -car.body.velocity.z * 150 - car.body.position.z * 80;
   }
 
-  // Soft invisible side guides keep the car on the track without touching
-  // pitch. The limit follows the current section width, which makes narrow
-  // bridges and hanging platforms much safer.
-  const side = car.body.position.z;
-  const halfTrack = trackWidthAt(car.body.position.x) * 0.5;
-  const sideLimit = Math.max(0.55, halfTrack - 1.05);
-  if (Math.abs(side) > sideLimit) {
-    const excess = Math.abs(side) - sideLimit;
-    car.body.force.z -= Math.sign(side) * excess * (car.grounded ? 520 : 300);
-    const outward = Math.sign(side) * car.body.velocity.z;
-    const maxOut = car.grounded ? 1.6 : 2.2;
-    if (outward > maxOut) {
-      car.body.velocity.z = Math.sign(side) * maxOut;
-    }
-  }
+  // No invisible side wall: leaving the deck is supposed to be dangerous.
+  // Gravity takes over as soon as the wheels lose the track surface.
 
   // Counter the axle reaction a little, like a real engine mount / suspension.
   if (car.grounded && car.throttle !== 0) {
@@ -6115,12 +6383,14 @@ function updateDriving(dt) {
       touchHeld.has('tiltUp') ||
       touchHeld.has('tiltDown') ||
       (airborne && (touchHeld.has('forward') || touchHeld.has('backward')));
+    // Airborne pitch is deliberately softer and more predictable: enough to
+    // level the car for a landing, not enough to flip it with one tap.
     const torque = car.grounded
       ? (touchTilt ? 690 : 420)
-      : (touchTilt ? 190 : 92);
+      : (touchTilt ? 100 : 48);
     const kick = car.grounded
       ? (touchTilt ? 1.2 : 0.6)
-      : (touchTilt ? 4.4 : 2.5);
+      : (touchTilt ? 1.5 : 0.7);
     // On the ground the torque must beat the weight transfer across the
     // wheelbase, otherwise the contact solver simply eats it. In the air the
     // car is free, so a smaller torque is enough.
@@ -6132,10 +6402,68 @@ function updateDriving(dt) {
     // Gentle self-levelling when the player is not actively tilting. It makes
     // landings predictable, while A/D or Up/Down override it in the air.
     const pitch = Math.atan2(forward.y, forward.x);
-    const levelK = car.grounded ? 8.0 : 6.0;
-    const levelD = car.grounded ? 2.4 : 1.8;
+    const levelK = car.grounded ? 8.0 : 8.5;
+    const levelD = car.grounded ? 2.4 : 2.6;
     car.body.torque.z += -pitch * levelK - car.body.angularVelocity.z * levelD;
   }
+
+  // Cap the forces/torques produced by the controls. The physics solver still
+  // handles collisions normally; this only prevents a key-mashing frame from
+  // feeding an absurd impulse into the chassis.
+  const chassis = car.body;
+  chassis.force.x = clamp(chassis.force.x, -CAR_LIMITS.maxForce, CAR_LIMITS.maxForce);
+  chassis.force.y = clamp(chassis.force.y, -CAR_LIMITS.maxForce, CAR_LIMITS.maxForce);
+  chassis.force.z = clamp(chassis.force.z, -CAR_LIMITS.maxForce, CAR_LIMITS.maxForce);
+  chassis.torque.x = clamp(chassis.torque.x, -CAR_LIMITS.maxTorque, CAR_LIMITS.maxTorque);
+  chassis.torque.y = clamp(chassis.torque.y, -CAR_LIMITS.maxTorque, CAR_LIMITS.maxTorque);
+  chassis.torque.z = clamp(chassis.torque.z, -CAR_LIMITS.maxTorque, CAR_LIMITS.maxTorque);
+}
+
+function limitCarDynamics(dt) {
+  if (!car) return;
+  const body = car.body;
+  const step = clamp(dt, 1 / 120, 1 / 30);
+  const maxDeltaV = CAR_LIMITS.maxLinearAccel * step;
+  const maxDeltaW = CAR_LIMITS.maxAngularAccel * step;
+
+  // Limit how much velocity can change in a single frame. This is the safety
+  // net against a one-frame solver impulse throwing the car or spinning it.
+  body.velocity.x = car.lastVelocity.x + clamp(body.velocity.x - car.lastVelocity.x, -maxDeltaV, maxDeltaV);
+  body.velocity.y = car.lastVelocity.y + clamp(body.velocity.y - car.lastVelocity.y, -maxDeltaV, maxDeltaV);
+  body.velocity.z = car.lastVelocity.z + clamp(body.velocity.z - car.lastVelocity.z, -maxDeltaV, maxDeltaV);
+  body.angularVelocity.x = car.lastAngularVelocity.x + clamp(body.angularVelocity.x - car.lastAngularVelocity.x, -maxDeltaW, maxDeltaW);
+  body.angularVelocity.y = car.lastAngularVelocity.y + clamp(body.angularVelocity.y - car.lastAngularVelocity.y, -maxDeltaW, maxDeltaW);
+  body.angularVelocity.z = car.lastAngularVelocity.z + clamp(body.angularVelocity.z - car.lastAngularVelocity.z, -maxDeltaW, maxDeltaW);
+
+  // Absolute caps. A missing wheel reduces the angular envelope further so a
+  // damaged car cannot turn into a spinning projectile.
+  const wheelFactor = clamp(car.attachedWheels / 4, 0, 1);
+  const maxAngular = Math.max(3.2, CAR_LIMITS.maxAngularSpeed * (0.4 + 0.4 * Math.pow(wheelFactor, 1.6)));
+  // A damaged car gets extra angular damping so a lost wheel cannot turn the
+  // chassis into a spinning top. Healthy handling keeps the original value.
+  body.angularDamping = 0.5 + (1 - wheelFactor) * 0.7;
+  body.velocity.x = clamp(body.velocity.x, -CAR_LIMITS.maxSpeedX, CAR_LIMITS.maxSpeedX);
+  body.velocity.y = clamp(body.velocity.y, -CAR_LIMITS.maxSpeedYDown, CAR_LIMITS.maxSpeedYUp);
+  body.velocity.z = clamp(body.velocity.z, -CAR_LIMITS.maxSpeedZ, CAR_LIMITS.maxSpeedZ);
+  body.velocity.x = Math.max(body.velocity.x, -CAR_LIMITS.maxReverseSpeed);
+  body.angularVelocity.x = clamp(body.angularVelocity.x, -maxAngular, maxAngular);
+  body.angularVelocity.y = clamp(body.angularVelocity.y, -maxAngular, maxAngular);
+  body.angularVelocity.z = clamp(body.angularVelocity.z, -maxAngular, maxAngular);
+  if (!car.grounded) {
+    body.angularVelocity.z = clamp(body.angularVelocity.z, -2.8, 2.8);
+  }
+  // The per-axis caps above still allow a diagonal spin whose total magnitude
+  // is sqrt(3) times larger. Cap the actual angular speed as well.
+  const angularSpeed = Math.hypot(body.angularVelocity.x, body.angularVelocity.y, body.angularVelocity.z);
+  if (angularSpeed > maxAngular) {
+    const angularScale = maxAngular / angularSpeed;
+    body.angularVelocity.x *= angularScale;
+    body.angularVelocity.y *= angularScale;
+    body.angularVelocity.z *= angularScale;
+  }
+
+  car.lastVelocity.set(body.velocity.x, body.velocity.y, body.velocity.z);
+  car.lastAngularVelocity.set(body.angularVelocity.x, body.angularVelocity.y, body.angularVelocity.z);
 }
 
 function updateAfterStep(dt) {
@@ -6158,6 +6486,7 @@ function updateAfterStep(dt) {
   }
 
   car.grounded = car.wheels.some((wheel) => wheel.attached && wheel.onGround);
+  limitCarDynamics(dt);
   syncCarVisuals(dt);
 
   for (const body of world.bodies) {
@@ -6252,7 +6581,7 @@ function updateGameState(dt) {
       GAME.flipTimer = Math.max(0, GAME.flipTimer - dt * 2.4);
     }
 
-    if (GAME.flipTimer > 2.25) {
+    if (GAME.flipTimer > 1.5) {
       failLevel('Машина перевернулась. Попробуй мягче приземлиться или выровняй её в воздухе.', 'Переворот!');
     }
   } else if (GAME.phase === 'wrecked' && GAME.pendingFail) {
