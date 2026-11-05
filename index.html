@@ -266,6 +266,9 @@
     box-shadow: 0 2px 0 rgba(0,0,0,.2);
   }
 
+  .icon-btn.muted { background: #e9e6dc; color: var(--ink-soft); }
+  .icon-btn.muted .icon { opacity: .68; }
+
   .bottom-hud {
     display: flex;
     align-items: end;
@@ -426,6 +429,62 @@
     opacity: 1;
     visibility: visible;
   }
+
+  .coin-overlay {
+    z-index: 65;
+    padding: 18px;
+    background: rgba(19, 25, 57, .5);
+  }
+
+  .coin-dialog {
+    width: min(370px, 100%);
+    padding: 22px 22px 20px;
+    text-align: center;
+    background: var(--paper);
+    border: 3px solid var(--ink);
+    border-radius: 22px;
+    box-shadow: 8px 8px 0 var(--ink), 0 24px 60px rgba(8, 12, 35, .34);
+    transform: translateY(12px) scale(.94);
+    opacity: 0;
+    transition: transform .24s cubic-bezier(.2,.9,.2,1.1), opacity .2s ease;
+  }
+
+  .coin-overlay.show .coin-dialog {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+
+  .coin-dialog-icon {
+    width: 50px;
+    height: 50px;
+    margin: 0 auto 10px;
+    display: grid;
+    place-items: center;
+    border-radius: 15px;
+    background: var(--yellow);
+    border: 2.5px solid var(--ink);
+    box-shadow: 0 4px 0 rgba(32,36,70,.16);
+    font-size: 25px;
+    transform: rotate(-5deg);
+  }
+
+  .coin-dialog p {
+    margin: 0 auto 16px;
+    max-width: 290px;
+    font-size: 15px;
+    line-height: 1.35;
+    font-weight: 900;
+    color: var(--ink);
+  }
+
+  .coin-dialog-actions {
+    display: flex;
+    justify-content: center;
+    gap: 9px;
+    flex-wrap: wrap;
+  }
+
+  .coin-dialog-actions .btn { min-height: 43px; padding: 0 18px; font-size: 13px; }
 
   .result-card {
     width: min(510px, 100%);
@@ -894,6 +953,43 @@
     flex-direction: column;
     gap: 12px;
   }
+
+  .lang-switch {
+    margin: 16px auto 0;
+    display: inline-flex;
+    gap: 4px;
+    padding: 4px;
+    border-radius: 999px;
+    background: rgba(255,255,255,.12);
+    border: 1px solid rgba(255,255,255,.24);
+    box-shadow: 0 7px 18px rgba(8,12,35,.16);
+  }
+
+  .lang-btn {
+    pointer-events: auto;
+    min-height: 32px;
+    padding: 0 17px;
+    border: 0;
+    border-radius: 999px;
+    background: transparent;
+    color: rgba(255,255,255,.76);
+    font: inherit;
+    font-size: 11px;
+    font-weight: 900;
+    letter-spacing: .04em;
+    cursor: pointer;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    transition: background .14s ease, color .14s ease, transform .1s ease;
+  }
+
+  .lang-btn:hover { color: #fff; }
+  .lang-btn.active {
+    background: var(--yellow);
+    color: var(--ink);
+    box-shadow: 0 3px 0 rgba(0,0,0,.22);
+  }
+  .lang-btn:active { transform: translateY(1px); }
 
   .menu-btn {
     position: relative;
@@ -1671,9 +1767,12 @@
     #ui { padding: 11px 12px max(11px, env(safe-area-inset-bottom)); }
     .topbar { grid-template-columns: 1fr auto; gap: 9px; }
     .damage-card { display: none; }
-    .level-card { padding: 8px 12px 9px; border-left-width: 5px; border-radius: 14px; }
+    .level-card { padding: 8px 12px 9px; border-left-width: 5px; border-radius: 14px; min-width: 0; }
     .level-name { font-size: 17px; }
-    .icon-btn { width: 50px; height: 50px; border-radius: 15px; }
+    .top-actions { gap: 7px; }
+    .icon-btn { width: 47px; height: 47px; border-radius: 14px; }
+    .icon-btn .icon { font-size: 23px; }
+    .icon-btn .key { width: 18px; height: 18px; font-size: 9px; }
     .controls-card { display: none; }
     .time-card { min-width: 84px; padding: 7px 11px 8px; }
     #timeText { font-size: 16px; }
@@ -1683,6 +1782,17 @@
   }
 
   @media (max-width: 540px) {
+    #ui { padding: 9px 9px max(9px, env(safe-area-inset-bottom)); }
+    .topbar { gap: 6px; }
+    .top-actions { gap: 5px; }
+    .icon-btn { width: 41px; height: 41px; border-radius: 12px; }
+    .icon-btn .icon { font-size: 20px; }
+    .icon-btn .key { width: 16px; height: 16px; font-size: 8px; right: -4px; bottom: -4px; }
+    .level-card { padding: 7px 9px 8px; }
+    .eyebrow { font-size: 8px; letter-spacing: .1em; }
+    .level-name { font-size: 15px; }
+    .level-coin { min-height: 25px; padding: 0 7px; font-size: 10px; }
+    .level-coin .coin-emoji { font-size: 11px; }
     .time-card { display: none; }
     .right-hud { gap: 7px; }
     .bottom-hud { align-items: end; }
@@ -1721,48 +1831,51 @@
 <div id="ui">
   <div class="topbar">
     <div class="card level-card">
-      <div class="eyebrow"><span class="dot"></span>Уровень <b id="levelNum">1</b> / <span id="levelTotal">3</span></div>
+      <div class="eyebrow"><span class="dot"></span><span data-i18n="hud.level">Уровень</span> <b id="levelNum">1</b> / <span id="levelTotal">3</span></div>
       <div class="level-headline">
         <div class="level-name" id="levelName">Разминка</div>
-        <div class="level-coin" id="levelCoin" title="Монеты, собранные на этом уровне"><span class="coin-emoji" aria-hidden="true">💰</span><b id="coinText">0</b><span class="coin-sep">/</span><span id="coinTotal">3</span></div>
+        <div class="level-coin" id="levelCoin" title="Монеты, собранные на этом уровне" data-i18n-title="hud.coinsTitle"><span class="coin-emoji" aria-hidden="true">💰</span><b id="coinText">0</b><span class="coin-sep">/</span><span id="coinTotal">3</span></div>
       </div>
       <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
     </div>
 
     <div class="card damage-card">
-      <div class="damage-row"><span>Прочность</span><b id="damageText">100%</b></div>
+      <div class="damage-row"><span data-i18n="hud.integrity">Прочность</span><b id="damageText">100%</b></div>
       <div class="damage-track"><div id="damageFill"></div></div>
     </div>
 
     <div class="top-actions">
-      <button class="icon-btn" id="menuBtn" type="button" title="В главное меню" aria-label="В главное меню">
+      <button class="icon-btn" id="menuBtn" type="button" title="В главное меню" aria-label="В главное меню" data-i18n-title="hud.menu">
         <span class="icon">🏠</span>
       </button>
-      <button class="icon-btn" id="pauseBtn" type="button" title="Пауза (Esc)" aria-label="Пауза">
+      <button class="icon-btn" id="pauseBtn" type="button" title="Пауза (Esc)" aria-label="Пауза" data-i18n-title="hud.pause">
         <span class="icon">⏸</span><span class="key">Esc</span>
       </button>
-      <button class="icon-btn" id="restartBtn" type="button" title="Перезапустить уровень (R)" aria-label="Перезапустить уровень">
+      <button class="icon-btn" id="restartBtn" type="button" title="Перезапустить уровень (R)" aria-label="Перезапустить уровень" data-i18n-title="hud.restartTitle">
         <span class="icon">↻</span><span class="key">R</span>
+      </button>
+      <button class="icon-btn" id="soundBtn" type="button" title="Звук включён" aria-label="Звук включён" aria-pressed="true">
+        <span class="icon" id="soundIcon">🔊</span>
       </button>
     </div>
   </div>
 
   <div class="bottom-hud">
     <div class="card controls-card">
-      <div class="control-item"><kbd>A</kbd><kbd>D</kbd><span>тормоз / газ · в воздухе тангаж</span></div>
-      <div class="control-item"><kbd>W</kbd><kbd>S</kbd><span>влево / вправо</span></div>
-      <div class="control-item"><kbd>↑</kbd><kbd>↓</kbd><span>тангаж</span></div>
-      <div class="control-item"><kbd>R</kbd><span>заново</span></div>
+      <div class="control-item"><kbd>A</kbd><kbd>D</kbd><span data-i18n="controls.throttle">тормоз / газ · в воздухе тангаж</span></div>
+      <div class="control-item"><kbd>W</kbd><kbd>S</kbd><span data-i18n="controls.steer">влево / вправо</span></div>
+      <div class="control-item"><kbd>↑</kbd><kbd>↓</kbd><span data-i18n="controls.pitch">тангаж</span></div>
+      <div class="control-item"><kbd>R</kbd><span data-i18n="controls.restart">заново</span></div>
     </div>
 
     <div class="right-hud">
       <div class="card time-card">
-        <span class="hud-label">Время</span>
+        <span class="hud-label" data-i18n="hud.time">Время</span>
         <b id="timeText">00:00.0</b>
       </div>
       <div class="card speed-card">
-        <span class="hud-label">Скорость</span>
-        <div class="speed-line"><b id="speedText">0</b><span class="speed-unit">км/ч</span></div>
+        <span class="hud-label" data-i18n="hud.speed">Скорость</span>
+        <div class="speed-line"><b id="speedText">0</b><span class="speed-unit" data-i18n="hud.kmh">км/ч</span></div>
       </div>
     </div>
   </div>
@@ -1786,23 +1899,34 @@
   </div>
 </div>
 
+<div class="overlay coin-overlay" id="coinOverlay" aria-hidden="true">
+  <div class="coin-dialog" role="dialog" aria-modal="true" aria-labelledby="coinModalText">
+    <div class="coin-dialog-icon" aria-hidden="true">💰</div>
+    <p id="coinModalText">Не хватает монет. Посмотреть рекламу за +50 монет?</p>
+    <div class="coin-dialog-actions">
+      <button class="btn primary" id="watchAdBtn" type="button">Посмотреть</button>
+      <button class="btn secondary" id="cancelAdBtn" type="button">Отмена</button>
+    </div>
+  </div>
+</div>
+
 <div class="loading" id="loading">
   <div class="loader-card">
     <div class="logo-mark">DM</div>
     <h1>Voxel Rush <span>3D</span></h1>
-    <p id="loadingMsg">Собираем машинку и трассу…</p>
+    <p id="loadingMsg" data-i18n="loading.text">Собираем машинку и трассу…</p>
     <div class="spinner"></div>
   </div>
 </div>
 
 <div class="touch-controls" id="touchControls">
   <div class="touch-cluster">
-    <button class="touch-btn" type="button" data-action="steerLeft" aria-label="Повернуть влево">↶<small>влево</small></button>
-    <button class="touch-btn" type="button" data-action="steerRight" aria-label="Повернуть вправо">↷<small>вправо</small></button>
+    <button class="touch-btn" type="button" data-action="steerLeft" aria-label="Повернуть влево" data-i18n-aria="touch.steerLeft">↶<small data-i18n="touch.left">влево</small></button>
+    <button class="touch-btn" type="button" data-action="steerRight" aria-label="Повернуть вправо" data-i18n-aria="touch.steerRight">↷<small data-i18n="touch.right">вправо</small></button>
   </div>
   <div class="touch-cluster">
-    <button class="touch-btn" type="button" data-action="backward" aria-label="Тормоз, реверс и тангаж вниз">◀<small>тормоз</small></button>
-    <button class="touch-btn" type="button" data-action="forward" aria-label="Газ и тангаж вверх">▶<small>газ</small></button>
+    <button class="touch-btn" type="button" data-action="backward" aria-label="Тормоз, реверс и тангаж вниз" data-i18n-aria="touch.backward">◀<small data-i18n="touch.brake">тормоз</small></button>
+    <button class="touch-btn" type="button" data-action="forward" aria-label="Газ и тангаж вверх" data-i18n-aria="touch.forward">▶<small data-i18n="touch.gas">газ</small></button>
   </div>
 </div>
 
@@ -1811,27 +1935,31 @@
   <span class="menu-cube cube-b" aria-hidden="true"></span>
   <span class="menu-cube cube-c" aria-hidden="true"></span>
   <div class="menu-shell">
-    <div class="menu-kicker"><span class="dot"></span>Воксельные гонки · 50 уровней</div>
+    <div class="menu-kicker"><span class="dot"></span><span data-i18n="menu.kicker">Воксельные гонки · 50 уровней</span></div>
     <h1 class="menu-title"><span class="word-voxel">Voxel</span> <span class="word-rush">Rush</span> <span class="word-3d">3D</span></h1>
-    <p class="menu-subtitle">Держи газ, лови баланс на трамплинах и доведи малышку до финиша. Каждый уровень — новая трасса, новые пропасти и новые трюки.</p>
+    <p class="menu-subtitle" data-i18n="menu.subtitle">Держи газ, лови баланс на трамплинах и доведи малышку до финиша. Каждый уровень — новая трасса, новые пропасти и новые трюки.</p>
     <div class="menu-actions">
       <button class="menu-btn primary" id="playBtn" type="button">
         <span class="menu-btn-icon" aria-hidden="true">▶</span>
-        <span class="menu-btn-copy"><b>Играть</b><small id="playHint">Продолжить с уровня 1</small></span>
+        <span class="menu-btn-copy"><b data-i18n="menu.play">Играть</b><small id="playHint">Продолжить с уровня 1</small></span>
       </button>
       <button class="menu-btn" id="levelsBtn" type="button">
         <span class="menu-btn-icon" aria-hidden="true">▦</span>
-        <span class="menu-btn-copy"><b>Выбор уровня</b><small>Все 50 заездов</small></span>
+        <span class="menu-btn-copy"><b data-i18n="menu.levels">Выбор уровня</b><small data-i18n="menu.levelsHint">Все 50 заездов</small></span>
       </button>
       <button class="menu-btn" id="skinsBtn" type="button">
         <span class="menu-btn-icon" aria-hidden="true">🎨</span>
-        <span class="menu-btn-copy"><b>Кастомизация</b><small id="skinsHint">Гараж · 1 из 9 скинов</small></span>
+        <span class="menu-btn-copy"><b data-i18n="menu.skins">Кастомизация</b><small id="skinsHint">Гараж · 1 из 9 скинов</small></span>
       </button>
+    </div>
+    <div class="lang-switch" id="langSwitch" role="group" aria-label="Язык / Language" data-i18n-aria="lang.aria">
+      <button class="lang-btn active" type="button" data-lang="ru" aria-pressed="true">Русский</button>
+      <button class="lang-btn" type="button" data-lang="en" aria-pressed="false">English</button>
     </div>
     <div class="menu-meta">
       <span class="menu-progress" id="menuProgress">0 / 50</span>
       <span class="menu-coins">💰 <b id="menuCoins">0</b> <span id="menuCoinsWord">монет</span></span>
-      <span>Лучшие результаты сохраняются</span>
+      <span data-i18n="menu.metaSaved">Лучшие результаты сохраняются</span>
     </div>
   </div>
 </div>
@@ -1840,15 +1968,15 @@
   <div class="levels-wrap">
     <div class="levels-panel">
       <div class="levels-head">
-        <button class="levels-back" id="levelsBackBtn" type="button">← Назад</button>
+        <button class="levels-back" id="levelsBackBtn" type="button" data-i18n="levels.back">← Назад</button>
         <div class="levels-heading">
-          <span>Выбери заезд</span>
-          <h2>Выбор уровня</h2>
+          <span data-i18n="levels.kicker">Выбери заезд</span>
+          <h2 data-i18n="levels.title">Выбор уровня</h2>
         </div>
         <div class="levels-progress" id="levelsProgress">0 / 50</div>
       </div>
       <div class="levels-grid" id="levelsGrid"></div>
-      <div class="levels-foot">Нажми на уровень, чтобы сразу начать заезд</div>
+      <div class="levels-foot" data-i18n="levels.foot">Нажми на уровень, чтобы сразу начать заезд</div>
     </div>
   </div>
 </div>
@@ -1857,19 +1985,19 @@
   <div class="levels-wrap">
     <div class="levels-panel garage-panel">
       <div class="levels-head">
-        <button class="levels-back" id="garageBackBtn" type="button">← Назад</button>
+        <button class="levels-back" id="garageBackBtn" type="button" data-i18n="levels.back">← Назад</button>
         <div class="levels-heading">
-          <span>Гараж</span>
-          <h2>Кастомизация</h2>
+          <span data-i18n="garage.kicker">Гараж</span>
+          <h2 data-i18n="garage.title">Кастомизация</h2>
         </div>
         <div class="levels-progress garage-coins" id="garageCoins">💰 0</div>
       </div>
-      <div class="garage-tabs" id="garageTabs" role="tablist" aria-label="Категории скинов">
+      <div class="garage-tabs" id="garageTabs" role="tablist" aria-label="Категории скинов" data-i18n-aria="garage.tabsAria">
         <button class="garage-tab active" id="standardTab" type="button" role="tab" aria-selected="true" aria-controls="skinsGrid" data-category="standard">
-          Стандарт <span class="tab-badge" id="standardTabCount">4</span>
+          <span data-i18n="garage.standard">Стандарт</span> <span class="tab-badge" id="standardTabCount">4</span>
         </button>
         <button class="garage-tab special-tab" id="specialTab" type="button" role="tab" aria-selected="false" aria-controls="skinsGrid" data-category="special">
-          Особое <span class="tab-badge">100 💰</span>
+          <span data-i18n="garage.special">Особое</span> <span class="tab-badge" id="specialTabPrice">500 💰</span>
         </button>
       </div>
       <div class="skins-grid" id="skinsGrid" data-category="standard"></div>
@@ -1953,7 +2081,13 @@ const dom = {
   restartBtn: $('#restartBtn'),
   pauseBtn: $('#pauseBtn'),
   menuBtn: $('#menuBtn'),
+  soundBtn: $('#soundBtn'),
+  soundIcon: $('#soundIcon'),
   overlay: $('#overlay'),
+  coinOverlay: $('#coinOverlay'),
+  coinModalText: $('#coinModalText'),
+  watchAdBtn: $('#watchAdBtn'),
+  cancelAdBtn: $('#cancelAdBtn'),
   resultCard: $('#resultCard'),
   resultSticker: $('#resultSticker'),
   resultKicker: $('#resultKicker'),
@@ -1987,7 +2121,9 @@ const dom = {
   standardTab: $('#standardTab'),
   specialTab: $('#specialTab'),
   standardTabCount: $('#standardTabCount'),
-  skinsGrid: $('#skinsGrid')
+  skinsGrid: $('#skinsGrid'),
+  langSwitch: $('#langSwitch'),
+  specialTabPrice: $('#specialTabPrice')
 };
 
 /* ---------- Global state ---------- */
@@ -2027,6 +2163,7 @@ let clouds = [];
 let particles = [];
 let debris = [];
 let coins = [];
+let hazards = [];
 let levelCoins = 0;
 let coinClock = 0;
 const heldKeys = new Set();
@@ -2835,7 +2972,7 @@ function buildExtraLevels() {
     {
       name: 'Разлом', kicker: 'Широкий ров', seed: 1113,
       signText: 'ЧЕРЕЗ РОВ', signColor: '#ff9f1c',
-      parts: [R(6, 2.2), F(4, 2.2), G(5.4), P(6, 0.8, 5.2), G(3.6), F(18, 0)]
+      parts: [R(6, 2.2), F(4, 2.2), G(2.6), P(6, 0.8, 5.2), G(3.6), F(18, 0)]
     },
     {
       name: 'Гребень', kicker: 'Вверх, вниз и снова', seed: 1114,
@@ -2926,13 +3063,61 @@ function buildExtraLevels() {
 
   const crateColors = ['crateOrange', 'cratePink', 'crateMint', 'crateYellow'];
 
-  return specs.map((spec) => {
+  // Every jump must have a real launch ramp, not just a flat edge. This also
+  // removes the dead-end feeling of a gap that starts at the same height as the
+  // approach: the ramp visibly throws the car toward the landing.
+  const ensureLaunchRamps = (parts) => {
+    const prepared = [];
+    const splitApproach = (flat, rampLength, rise) => {
+      const run = flat.length - rampLength;
+      if (run > 0.45) {
+        prepared.push({ ...flat, length: run });
+      }
+      prepared.push({
+        type: 'ramp',
+        length: rampLength,
+        dy: rise,
+        ...(flat.width ? { width: flat.width } : {})
+      });
+    };
+
+    for (const raw of parts) {
+      const part = { ...raw };
+      const previous = prepared[prepared.length - 1];
+
+      if (part.type === 'gap') {
+        if (previous && previous.type === 'flat' && previous.length >= 4.4) {
+          prepared.pop();
+          splitApproach(previous, 3.0, 0.9);
+        } else if (previous && previous.type === 'platform') {
+          prepared.push({
+            type: 'ramp',
+            length: 2.6,
+            dy: 0.85,
+            width: Math.min(6.2, previous.depth || 5.6)
+          });
+        } else if (previous && previous.type === 'ramp' && previous.dy < 0.55) {
+          previous.dy = 0.75;
+        }
+      } else if (part.type === 'platform') {
+        if (previous && previous.type === 'flat' && previous.length >= 5.2) {
+          prepared.pop();
+          splitApproach(previous, 2.8, 0.7);
+        }
+      }
+
+      prepared.push(part);
+    }
+    return prepared;
+  };
+
+  return specs.map((spec, specIndex) => {
     const sections = [{ type: 'flat', x1: -16, x2: 6, y: 0 }];
     const platforms = [];
     let cursor = 6;
     let currentY = 0;
 
-    for (const part of spec.parts) {
+    for (const part of ensureLaunchRamps(spec.parts)) {
       if (part.type === 'flat') {
         sections.push({
           type: 'flat', x1: cursor, x2: cursor + part.length, y: part.y,
@@ -2978,6 +3163,141 @@ function buildExtraLevels() {
       return null;
     };
 
+    // Static barriers and danger zones make the wide generated roads ask for
+    // actual W/S steering, not just throttle timing. They are placed on long
+    // flat sections with enough run-up and room to change lanes afterwards.
+    const obstacleRandom = mulberry32((spec.seed * 92821 + 17) >>> 0);
+    const barrierCandidates = sections.filter((section) => {
+      if (section.type !== 'flat') return false;
+      const width = section.width || 7.6;
+      return (
+        width >= 6.0 &&
+        section.x1 >= 6.5 &&
+        section.x2 <= finishX - 4 &&
+        section.x2 - section.x1 >= 7.0
+      );
+    });
+
+    const barriers = [];
+    const usedBarrierSections = new Set();
+    const barrierLimit = Math.min(3, 1 + Math.floor(specIndex / 10));
+    let barrierSide = obstacleRandom() < 0.5 ? -1 : 1;
+
+    for (let i = 0; i < barrierLimit && barriers.length < barrierCandidates.length; i++) {
+      let candidate = null;
+      for (let attempt = 0; attempt < barrierCandidates.length * 3; attempt++) {
+        const section = barrierCandidates[Math.floor(obstacleRandom() * barrierCandidates.length)];
+        if (usedBarrierSections.has(section)) continue;
+        const middle = (section.x1 + section.x2) * 0.5;
+        if (barriers.some((barrier) => Math.abs(barrier.x - middle) < 10)) continue;
+        candidate = section;
+        break;
+      }
+      if (!candidate) break;
+
+      usedBarrierSections.add(candidate);
+      const width = candidate.width || 7.6;
+      const span = candidate.x2 - candidate.x1;
+      const runUp = Math.min(4.6, Math.max(2.8, span * 0.34));
+      const maxX = candidate.x2 - 3.8;
+      const x = candidate.x1 + runUp +
+        obstacleRandom() * Math.max(0, maxX - candidate.x1 - runUp);
+      const depth = clamp(width - 4.8, 2.0, 2.8);
+      const z = barrierSide * (width * 0.5 - depth * 0.5 - 0.12);
+
+      barriers.push({
+        x: +x.toFixed(2),
+        y: candidate.y,
+        width: 1.15,
+        depth: +depth.toFixed(2),
+        height: 1.45,
+        z: +z.toFixed(2),
+        side: barrierSide
+      });
+      barrierSide *= -1;
+    }
+
+    const hazardCandidates = sections.filter((section) => {
+      if (section.type !== 'flat') return false;
+      const width = section.width || 7.6;
+      return (
+        width >= 6.0 &&
+        section.x1 >= 6.5 &&
+        section.x2 <= finishX - 4 &&
+        section.x2 - section.x1 >= 6.0 &&
+        !usedBarrierSections.has(section)
+      );
+    });
+
+    const hazardZones = [];
+    const usedHazardSections = new Set();
+    const hazardLimit = Math.min(2, 1 + Math.floor(specIndex / 8));
+
+    for (let i = 0; i < hazardLimit && usedHazardSections.size < hazardCandidates.length; i++) {
+      let chosen = null;
+      let chosenX = 0;
+      for (let attempt = 0; attempt < hazardCandidates.length * 4; attempt++) {
+        const section = hazardCandidates[Math.floor(obstacleRandom() * hazardCandidates.length)];
+        if (usedHazardSections.has(section)) continue;
+        const minX = section.x1 + 2.6;
+        const maxX = section.x2 - 3.0;
+        const x = minX + obstacleRandom() * Math.max(0.1, maxX - minX);
+        if (barriers.some((barrier) => Math.abs(barrier.x - x) < 7)) continue;
+        if (hazardZones.some((hazard) => Math.abs(hazard.x - x) < 7)) continue;
+        chosen = section;
+        chosenX = x;
+        break;
+      }
+      if (!chosen) break;
+
+      usedHazardSections.add(chosen);
+      const width = chosen.width || 7.6;
+      const zoneWidth = clamp((chosen.x2 - chosen.x1) * 0.32, 3.0, 4.2);
+      const zoneDepth = clamp(width - 3.6, 2.0, 2.6);
+      const zSide = (i + specIndex) % 2 === 0 ? 1 : -1;
+      const z = zSide * (width * 0.5 - zoneDepth * 0.5 - 0.6);
+
+      hazardZones.push({
+        x: +chosenX.toFixed(2),
+        y: chosen.y,
+        width: +zoneWidth.toFixed(2),
+        depth: +zoneDepth.toFixed(2),
+        z: +z.toFixed(2)
+      });
+    }
+
+    const warningSigns = [];
+    if (barriers.length) {
+      const warningX = barriers[0].x - 6.2;
+      const warningTop = localTopAt(warningX);
+      if (warningTop !== null && warningX > 5) {
+        warningSigns.push({
+          x: +warningX.toFixed(2),
+          z: -4.9,
+          y: +(warningTop + 2.8).toFixed(2),
+          text: 'ОБЪЕЗД',
+          color: '#ffd447'
+        });
+      }
+    }
+    if (hazardZones.length) {
+      const warningX = hazardZones[0].x - 6.2;
+      const warningTop = localTopAt(warningX);
+      if (
+        warningTop !== null &&
+        warningX > 5 &&
+        !warningSigns.some((sign) => Math.abs(sign.x - warningX) < 8)
+      ) {
+        warningSigns.push({
+          x: +warningX.toFixed(2),
+          z: -4.9,
+          y: +(warningTop + 2.8).toFixed(2),
+          text: 'ОПАСНО',
+          color: '#ff6b9a'
+        });
+      }
+    }
+
     const random = mulberry32(spec.seed * 7919 + 13);
     const flatSections = sections.filter(
       (section) => section.type === 'flat' && section.x2 - section.x1 > 5 && section.x1 > 2
@@ -3003,6 +3323,28 @@ function buildExtraLevels() {
       });
     }
 
+    const crateClashesWithObstacle = (crate) => {
+      const size = crate.size || 0.85;
+      for (const barrier of barriers) {
+        if (
+          Math.abs(crate.x - barrier.x) < barrier.width * 0.5 + size + 0.8 &&
+          Math.abs(crate.z - barrier.z) < barrier.depth * 0.5 + size + 0.6
+        ) {
+          return true;
+        }
+      }
+      for (const hazard of hazardZones) {
+        if (
+          Math.abs(crate.x - hazard.x) < hazard.width * 0.5 + size + 0.5 &&
+          Math.abs(crate.z - hazard.z) < hazard.depth * 0.5 + size + 0.6
+        ) {
+          return true;
+        }
+      }
+      return false;
+    };
+    const safeCrates = crates.filter((crate) => !crateClashesWithObstacle(crate));
+
     const signX = Math.min(11, finishX - 10);
     const signTop = localTopAt(signX) ?? 0;
     return {
@@ -3014,10 +3356,13 @@ function buildExtraLevels() {
       seed: spec.seed,
       sections,
       platforms,
-      crates,
+      crates: safeCrates,
+      barriers,
+      hazards: hazardZones,
       signs: [
         { x: signX, z: -4.9, y: signTop + 3.0, text: spec.signText, color: spec.signColor },
-        { x: finishX - 10, z: -4.9, y: (localTopAt(finishX - 10) ?? currentY) + 2.7, text: 'К ФИНИШУ →', color: '#43e6bd' }
+        { x: finishX - 10, z: -4.9, y: (localTopAt(finishX - 10) ?? currentY) + 2.7, text: 'К ФИНИШУ →', color: '#43e6bd' },
+        ...warningSigns
       ]
     };
   });
@@ -3029,7 +3374,12 @@ LEVELS.push(...buildExtraLevels());
 const COIN_KEY = 'driveMad3D_coins';
 const SKIN_KEY = 'driveMad3D_skin';
 const OWNED_SKINS_KEY = 'driveMad3D_owned_skins';
+const LANG_KEY = 'driveMad3D_lang';
+const SOUND_KEY = 'driveMad3D_sound';
 const COINS_PER_LEVEL = 3;
+
+let currentLang = readStorage(LANG_KEY) === 'en' ? 'en' : 'ru';
+let soundEnabled = readStorage(SOUND_KEY) !== '0';
 
 function readStorage(key) {
   try {
@@ -3116,7 +3466,7 @@ const SKINS = [
     id: 'racer',
     category: 'special',
     name: 'Гонщик',
-    price: 100,
+    price: 500,
     description: 'Гоночные полосы и номер 88',
     previewStyle: 'racer',
     accessory: 'racer',
@@ -3133,7 +3483,7 @@ const SKINS = [
     id: 'specnaz',
     category: 'special',
     name: 'Спецназ',
-    price: 100,
+    price: 500,
     description: 'Матовый камуфляж и скрытая мощь',
     previewStyle: 'specnaz',
     accessory: 'specnaz',
@@ -3159,7 +3509,7 @@ const SKINS = [
     id: 'police',
     category: 'special',
     name: 'Полиция',
-    price: 100,
+    price: 500,
     description: 'Чёрно-белый патруль с мигалкой',
     previewStyle: 'police',
     accessory: 'police',
@@ -3176,7 +3526,7 @@ const SKINS = [
     id: 'buggy',
     category: 'special',
     name: 'Багги',
-    price: 100,
+    price: 500,
     description: 'Пустынный рейд с прожекторами',
     previewStyle: 'buggy',
     accessory: 'buggy',
@@ -3193,7 +3543,7 @@ const SKINS = [
     id: 'neon',
     category: 'special',
     name: 'Неон',
-    price: 100,
+    price: 500,
     description: 'Киберпанк-подсветка и свечение',
     previewStyle: 'neon',
     accessory: 'neon',
@@ -3211,8 +3561,519 @@ const SKINS = [
 
 const SKIN_CATEGORIES = {
   standard: { label: 'Стандарт', hint: 'Собирай монеты на трассах и открывай новые цвета корпуса' },
-  special: { label: 'Особое', hint: 'Особые раскраски · 100 монет за каждый скин' }
+  special: { label: 'Особое', hint: 'Особые раскраски · 500 монет за каждый скин' }
 };
+
+/* ---------- Localization ---------- */
+const LEVEL_NAMES_EN = [
+  'Warm-up', 'Double Ramp', 'Chaos', 'Narrow Bridge', 'Hanging Platforms',
+  'Hills', 'Chasms', 'Suspension Path', 'Cascade', 'Finale',
+  'High Climb', 'Long Jump', 'Hill Serpentine', 'Narrow Zigzag', 'Hanging Chain',
+  'Deep Pits', 'Platform Cascade', 'Speed Rush', 'Height Maze', 'Absolute',
+  'New Start', 'Little Stairs', 'Waves', 'Islands', 'Long Flight',
+  'Narrow Passage', 'Rolls', 'Three Spans', 'Climb', 'Descent',
+  'Stone Garden', 'Hanging Trail', 'Rift', 'Crest', 'Fast Section',
+  'Steps Down', 'Double Bridge', 'Island Jumps', 'Breakwater', 'High Trail',
+  'Low Start', 'Multi-level', 'Jump over the Moat', 'Broken Line', 'Cascade Descent',
+  'Gentle Descent', 'Short Islands', 'Final Dash', 'Far Crossing', 'Anniversary'
+];
+
+const LEVEL_KICKERS_EN = [
+  'First jump', 'Keep your balance', 'Third race', 'Do not fall', 'Island hopping',
+  'Up and down', 'Three jumps', 'Four islands', 'Bridge and chasms', 'Final dash',
+  'Takeoff', 'Acceleration', 'Waves', 'Precise line', 'Five islands',
+  'Three abysses', 'Mixed', 'Speed', 'Many levels', 'Everything at once',
+  'Easy start', 'Higher and higher', 'Smooth hills', 'Platform jumps', 'Two big jumps',
+  'Careful on the bridge', 'Three soft ramps', 'Three short gaps', 'Up the steps', 'Down and onwards',
+  'Dodge the crates', 'Platform chain', 'Wide moat', 'Up, down and again', 'Full throttle',
+  'Smooth descent', 'Two narrow spans', 'Four platforms', 'Narrow waves', 'Platforms in the sky',
+  'Down first', 'Changing heights', 'One big moat', 'Rhythm of hills', 'Three steps down',
+  'Long hills', 'Quick jumps', 'Sprint to the finish', 'Platform after platform', 'All the best at once'
+];
+
+LEVELS.forEach((level, index) => {
+  level.nameEn = LEVEL_NAMES_EN[index] || level.name;
+  level.kickerEn = LEVEL_KICKERS_EN[index] || level.kicker;
+});
+
+const SIGN_TRANSLATIONS = {
+  'ПРЫЖОК →': 'JUMP →',
+  'ГАЗ! →': 'GAS! →',
+  'ЕЩЁ РАЗ!': 'AGAIN!',
+  'ОСТОРОЖНО!': 'CAREFUL!',
+  'ПОСЛЕДНИЙ РЫВОК': 'FINAL DASH',
+  'УЗКИЙ МОСТ': 'NARROW BRIDGE',
+  'СНОВА ШИРОКО': 'WIDE AGAIN',
+  'ПО ПЛАТФОРМАМ': 'PLATFORM HOP',
+  'ТВЁРДАЯ ЗЕМЛЯ': 'SOLID GROUND',
+  'ВВЕРХ!': 'UP!',
+  'ЕЩЁ ВЫШЕ': 'HIGHER!',
+  'ПРЫЖОК': 'JUMP',
+  'ЕЩЁ': 'MORE',
+  'ДАЛЬШЕ!': 'FURTHER!',
+  'ДЕРЖИ РИТМ': 'KEEP RHYTHM',
+  'ПОЧТИ ДОМА': 'ALMOST HOME',
+  'ВЫШЕ': 'HIGHER',
+  'МОСТ': 'BRIDGE',
+  'ФИНАЛ': 'FINALE',
+  'ПЛАТФОРМА': 'PLATFORM',
+  'ВВЕРХ': 'UP',
+  'ВНИЗ': 'DOWN',
+  'ФИНАЛЬНЫЙ ПРЫЖОК': 'FINAL JUMP',
+  'АБСОЛЮТ': 'ABSOLUTE',
+  'РАЗГОН!': 'ACCELERATE!',
+  'ПРИЗЕМЛЕНИЕ': 'LANDING',
+  'ВОЛНА 1': 'WAVE 1',
+  'ВОЛНА 2': 'WAVE 2',
+  'ВОЛНА 3': 'WAVE 3',
+  'УЗКО': 'NARROW',
+  'СНОВА УЗКО': 'NARROW AGAIN',
+  'ЗЕМЛЯ': 'GROUND',
+  'ПРЫЖОК 1': 'JUMP 1',
+  'ПРЫЖОК 2': 'JUMP 2',
+  'ПРЫЖОК 3': 'JUMP 3',
+  'КАСКАД': 'CASCADE',
+  'ФИНИШ БЛИЗКО': 'FINISH NEAR',
+  'ГАЗ ДО ПОЛА': 'FULL THROTTLE',
+  'НЕ ТОРМОЗИ': 'DO NOT BRAKE',
+  'ГРЕБЕНЬ': 'CREST',
+  'ПОЕХАЛИ!': 'LET’S GO!',
+  'ШАГ ЗА ШАГОМ': 'STEP BY STEP',
+  'ПО ОСТРОВАМ': 'ISLAND HOP',
+  'НЕ СВЕРНИ': 'STAY ON LINE',
+  'МЯГЧЕ!': 'SOFTER!',
+  'ПРЫЖОК ЗА ПРЫЖКОМ': 'JUMP AFTER JUMP',
+  'С ГОРЫ': 'DOWNHILL',
+  'ОБЪЕЗЖАЙ': 'GO AROUND',
+  'ПО ЦЕПОЧКЕ': 'FOLLOW THE CHAIN',
+  'ЧЕРЕЗ РОВ': 'OVER THE MOAT',
+  'БЫСТРЕЕ!': 'FASTER!',
+  'ВНИЗ ПО СТУПЕНЯМ': 'DOWN THE STEPS',
+  'ДВА МОСТА': 'TWO BRIDGES',
+  'ОСТРОВКИ': 'ISLANDS',
+  'ВОЛНОРЕЗ': 'BREAKWATER',
+  'ВЫСОКО!': 'HIGH!',
+  'ВНИЗ И ВПЕРЁД': 'DOWN AND FORWARD',
+  'МЕНЯЙ ВЫСОТУ': 'CHANGE HEIGHT',
+  'ЧЕРЕЗ РОВ!': 'OVER THE MOAT!',
+  'ДЕРЖИ ЛИНИЮ': 'HOLD THE LINE',
+  'ПЛАВНО': 'SMOOTH',
+  'КОРОТКО И ТОЧНО': 'SHORT AND PRECISE',
+  'ПЕРЕПРАВА': 'CROSSING',
+  'ЮБИЛЕЙ!': 'ANNIVERSARY!',
+  'К ФИНИШУ →': 'TO FINISH →',
+  'ОБЪЕЗД': 'DETOUR',
+  'ОПАСНО': 'DANGER'
+};
+
+const I18N = {
+  ru: {
+    'loading.text': 'Собираем машинку и трассу…',
+    'menu.kicker': 'Воксельные гонки · 50 уровней',
+    'menu.subtitle': 'Держи газ, лови баланс на трамплинах и доведи малышку до финиша. Каждый уровень — новая трасса, новые пропасти и новые трюки.',
+    'menu.play': 'Играть',
+    'menu.levels': 'Выбор уровня',
+    'menu.levelsHint': 'Все 50 заездов',
+    'menu.skins': 'Кастомизация',
+    'menu.metaSaved': 'Лучшие результаты сохраняются',
+    'menu.playContinue': 'Продолжить с уровня {level} · {name}',
+    'menu.playAllDone': 'Все уровни пройдены · начать с первого',
+    'menu.skinsHint': 'Гараж · {owned} из {total} скинов',
+    'menu.coinOne': 'монета',
+    'menu.coinFew': 'монеты',
+    'menu.coinMany': 'монет',
+    'hud.level': 'Уровень',
+    'hud.integrity': 'Прочность',
+    'hud.time': 'Время',
+    'hud.speed': 'Скорость',
+    'hud.kmh': 'км/ч',
+    'hud.coinsTitle': 'Монеты, собранные на этом уровне',
+    'hud.menu': 'В главное меню',
+    'hud.pause': 'Пауза (Esc)',
+    'hud.restartTitle': 'Перезапустить уровень (R)',
+    'controls.throttle': 'тормоз / газ · в воздухе тангаж',
+    'controls.steer': 'влево / вправо',
+    'controls.pitch': 'тангаж',
+    'controls.restart': 'заново',
+    'touch.steerLeft': 'Повернуть влево',
+    'touch.left': 'влево',
+    'touch.steerRight': 'Повернуть вправо',
+    'touch.right': 'вправо',
+    'touch.backward': 'Тормоз, реверс и тангаж вниз',
+    'touch.brake': 'тормоз',
+    'touch.forward': 'Газ и тангаж вверх',
+    'touch.gas': 'газ',
+    'levels.back': '← Назад',
+    'levels.kicker': 'Выбери заезд',
+    'levels.title': 'Выбор уровня',
+    'levels.foot': 'Нажми на уровень, чтобы сразу начать заезд',
+    'levels.aria': 'Уровень {num}: {name}{done}',
+    'levels.done': ', пройден',
+    'levels.notDone': 'не пройден',
+    'garage.kicker': 'Гараж',
+    'garage.title': 'Кастомизация',
+    'garage.standard': 'Стандарт',
+    'garage.special': 'Особое',
+    'garage.tabsAria': 'Категории скинов',
+    'garage.hintStandard': 'Собирай монеты на трассах и открывай новые цвета корпуса',
+    'garage.hintSpecial': 'Особые раскраски · 500 монет за каждый скин',
+    'garage.allSpecial': 'Все особые раскраски собраны. Выбирай любую и жми газ!',
+    'garage.allStandard': 'Все стандартные скины собраны. Загляни в категорию «Особое»!',
+    'skin.selected': 'Выбран',
+    'skin.select': 'Выбрать',
+    'skin.buy': 'Купить · {price} 💰',
+    'skin.missing': 'Не хватает {missing} 💰',
+    'skin.specialTag': 'Особое',
+    'skin.selectedState': ', выбран',
+    'skin.ownedState': ', куплен',
+    'skin.priceState': ', цена {price} монет',
+    'toast.coin': 'Монета +1 · {n}/{total}',
+    'toast.restart': 'Заново!',
+    'toast.level': 'Уровень {n} · {name}',
+    'toast.controlsDesktop': 'D — газ · A — тормоз · W/S — влево/вправо · в воздухе D/A — тангаж',
+    'toast.controlsTouch': 'Слева — руль, справа — газ и тормоз · в воздухе они же управляют тангажом',
+    'toast.skinSelected': 'Скин «{name}» выбран',
+    'toast.skinBought': 'Куплен скин «{name}» · −{price} 💰',
+    'toast.skinUnlocked': 'Скин «{name}» открыт!',
+    'toast.notEnough': 'Не хватает {missing} монет для скина «{name}»',
+    'toast.adUnavailable': 'Реклама пока недоступна',
+    'toast.hardHit': 'Жёсткий удар!',
+    'toast.hazard': 'Опасная зона!',
+    'toast.bodyBroken': 'Кузов разбит!',
+    'toast.wheelOff': 'Колесо оторвано!',
+    'toast.wrecked': 'Машина разбита!',
+    'pause.kicker': 'Пауза',
+    'pause.title': 'Пауза',
+    'pause.text': 'Заезд приостановлен. Нажми «Продолжить», чтобы ехать дальше.',
+    'pause.resume': 'Продолжить',
+    'pause.restart': 'Заново',
+    'pause.menu': '🏠 В меню',
+    'pause.hint': 'Нажми <kbd>Esc</kbd>, чтобы продолжить',
+    'stats.time': 'Время',
+    'stats.best': 'Лучшее',
+    'stats.integrity': 'Прочность',
+    'stats.level': 'Уровень',
+    'win.levelKicker': 'Уровень {n} пройден',
+    'win.allKicker': 'Все уровни позади',
+    'win.title': 'Финиш!',
+    'win.allTitle': 'Игра пройдена!',
+    'win.text': 'Чисто доехал до финиша. Следующий уровень уже ждёт.',
+    'win.allText': 'Ты довёл воксельную малышку до конца. Ещё разок?',
+    'win.primary': 'Дальше →',
+    'win.primaryAll': 'Сначала',
+    'win.secondary': 'Заново',
+    'win.secondaryAll': 'Повторить',
+    'win.menu': '🏠 В меню',
+    'win.hint': '<kbd>Enter</kbd> — дальше · <kbd>R</kbd> — заново',
+    'win.hintAll': '<kbd>Enter</kbd> — начать снова · <kbd>R</kbd> — повторить финал',
+    'fail.kicker': 'Заезд окончен',
+    'fail.title': 'Авария',
+    'fail.fall': 'Машина упала вниз!',
+    'fail.fallTitle': 'Падение!',
+    'fail.flip': 'Машина перевернулась. Попробуй мягче приземлиться или выровняй её в воздухе.',
+    'fail.flipTitle': 'Переворот!',
+    'fail.wreckAll': 'Все колёса оторваны',
+    'fail.restart': 'Перезапустить',
+    'fail.hint': 'Нажми <kbd>R</kbd>, чтобы попробовать ещё раз',
+    'ad.text': 'Не хватает монет. Посмотреть рекламу за +50 монет?',
+    'ad.watch': 'Посмотреть',
+    'ad.cancel': 'Отмена',
+    'sound.on': 'Звук включён',
+    'sound.off': 'Звук выключен',
+    'lang.aria': 'Язык / Language',
+    'sign.finish': 'ФИНИШ'
+  },
+  en: {
+    'loading.text': 'Building your car and track…',
+    'menu.kicker': 'Voxel racing · 50 levels',
+    'menu.subtitle': 'Hold the throttle, balance on ramps and get the little car to the finish. Every level is a new track, new chasms and new tricks.',
+    'menu.play': 'Play',
+    'menu.levels': 'Level select',
+    'menu.levelsHint': 'All 50 races',
+    'menu.skins': 'Customization',
+    'menu.metaSaved': 'Best results are saved',
+    'menu.playContinue': 'Continue from level {level} · {name}',
+    'menu.playAllDone': 'All levels complete · start from the first',
+    'menu.skinsHint': 'Garage · {owned} of {total} skins',
+    'menu.coinOne': 'coin',
+    'menu.coinFew': 'coins',
+    'menu.coinMany': 'coins',
+    'hud.level': 'Level',
+    'hud.integrity': 'Integrity',
+    'hud.time': 'Time',
+    'hud.speed': 'Speed',
+    'hud.kmh': 'km/h',
+    'hud.coinsTitle': 'Coins collected on this level',
+    'hud.menu': 'Main menu',
+    'hud.pause': 'Pause (Esc)',
+    'hud.restartTitle': 'Restart level (R)',
+    'controls.throttle': 'brake / gas · pitch in the air',
+    'controls.steer': 'left / right',
+    'controls.pitch': 'pitch',
+    'controls.restart': 'restart',
+    'touch.steerLeft': 'Steer left',
+    'touch.left': 'left',
+    'touch.steerRight': 'Steer right',
+    'touch.right': 'right',
+    'touch.backward': 'Brake, reverse and pitch down',
+    'touch.brake': 'brake',
+    'touch.forward': 'Gas and pitch up',
+    'touch.gas': 'gas',
+    'levels.back': '← Back',
+    'levels.kicker': 'Choose a race',
+    'levels.title': 'Level select',
+    'levels.foot': 'Tap a level to start racing immediately',
+    'levels.aria': 'Level {num}: {name}{done}',
+    'levels.done': ', completed',
+    'levels.notDone': 'not completed',
+    'garage.kicker': 'Garage',
+    'garage.title': 'Customization',
+    'garage.standard': 'Standard',
+    'garage.special': 'Special',
+    'garage.tabsAria': 'Skin categories',
+    'garage.hintStandard': 'Collect coins on the tracks and unlock new body colours',
+    'garage.hintSpecial': 'Special liveries · 500 coins each',
+    'garage.allSpecial': 'Every special livery collected. Pick one and hit the gas!',
+    'garage.allStandard': 'Every standard skin collected. Check the “Special” category!',
+    'skin.selected': 'Selected',
+    'skin.select': 'Select',
+    'skin.buy': 'Buy · {price} 💰',
+    'skin.missing': 'Need {missing} more 💰',
+    'skin.specialTag': 'Special',
+    'skin.selectedState': ', selected',
+    'skin.ownedState': ', owned',
+    'skin.priceState': ', price {price} coins',
+    'toast.coin': 'Coin +1 · {n}/{total}',
+    'toast.restart': 'Restart!',
+    'toast.level': 'Level {n} · {name}',
+    'toast.controlsDesktop': 'D — gas · A — brake · W/S — left/right · in the air D/A — pitch',
+    'toast.controlsTouch': 'Left side — steering, right side — gas and brake · in the air they control pitch',
+    'toast.skinSelected': 'Skin “{name}” selected',
+    'toast.skinBought': 'Skin “{name}” purchased · −{price} 💰',
+    'toast.skinUnlocked': 'Skin “{name}” unlocked!',
+    'toast.notEnough': 'You need {missing} more coins for “{name}”',
+    'toast.adUnavailable': 'Ads are not available yet',
+    'toast.hardHit': 'Hard impact!',
+    'toast.hazard': 'Danger zone!',
+    'toast.bodyBroken': 'Body destroyed!',
+    'toast.wheelOff': 'Wheel torn off!',
+    'toast.wrecked': 'Car wrecked!',
+    'pause.kicker': 'Pause',
+    'pause.title': 'Paused',
+    'pause.text': 'The race is paused. Press “Resume” to keep driving.',
+    'pause.resume': 'Resume',
+    'pause.restart': 'Restart',
+    'pause.menu': '🏠 Menu',
+    'pause.hint': 'Press <kbd>Esc</kbd> to resume',
+    'stats.time': 'Time',
+    'stats.best': 'Best',
+    'stats.integrity': 'Integrity',
+    'stats.level': 'Level',
+    'win.levelKicker': 'Level {n} complete',
+    'win.allKicker': 'All levels behind you',
+    'win.title': 'Finish!',
+    'win.allTitle': 'Game complete!',
+    'win.text': 'A clean run to the finish. The next level is waiting.',
+    'win.allText': 'You took the little voxel car all the way. One more run?',
+    'win.primary': 'Next →',
+    'win.primaryAll': 'From the start',
+    'win.secondary': 'Restart',
+    'win.secondaryAll': 'Replay',
+    'win.menu': '🏠 Menu',
+    'win.hint': '<kbd>Enter</kbd> — next · <kbd>R</kbd> — restart',
+    'win.hintAll': '<kbd>Enter</kbd> — start over · <kbd>R</kbd> — replay finale',
+    'fail.kicker': 'Race over',
+    'fail.title': 'Crash',
+    'fail.fall': 'The car fell down!',
+    'fail.fallTitle': 'Fall!',
+    'fail.flip': 'The car flipped. Try a softer landing or level it out in the air.',
+    'fail.flipTitle': 'Flipped!',
+    'fail.wreckAll': 'All wheels torn off',
+    'fail.restart': 'Restart',
+    'fail.hint': 'Press <kbd>R</kbd> to try again',
+    'ad.text': 'Not enough coins. Watch an ad for +50 coins?',
+    'ad.watch': 'Watch',
+    'ad.cancel': 'Cancel',
+    'sound.on': 'Sound on',
+    'sound.off': 'Sound off',
+    'lang.aria': 'Language / Язык',
+    'sign.finish': 'FINISH'
+  }
+};
+
+const SKIN_TRANSLATIONS = {
+  classic: { name: 'Classic', description: 'Factory red body' },
+  blue: { name: 'Blue', description: 'Fully blue body' },
+  yellow: { name: 'Yellow', description: 'Sunny yellow body' },
+  gradient: { name: 'Gradient', description: 'Shimmering body' },
+  racer: { name: 'Racer', description: 'Racing stripes and number 88' },
+  specnaz: { name: 'Spec Ops', description: 'Matte camo and hidden power' },
+  police: { name: 'Police', description: 'Black-and-white patrol with a light bar' },
+  buggy: { name: 'Buggy', description: 'Desert raid with spotlights' },
+  neon: { name: 'Neon', description: 'Cyberpunk underglow and shine' }
+};
+
+function t(key, vars) {
+  const dict = I18N[currentLang] || I18N.ru;
+  let value = dict[key];
+  if (value === undefined) value = I18N.ru[key];
+  if (value === undefined) value = key;
+  if (vars) {
+    value = value.replace(/\{(\w+)\}/g, (match, name) =>
+      vars[name] !== undefined ? String(vars[name]) : match
+    );
+  }
+  return value;
+}
+
+function levelDisplayName(index) {
+  const level = LEVELS[index];
+  if (!level) return '';
+  return currentLang === 'en' ? (level.nameEn || level.name) : level.name;
+}
+
+function levelDisplayKicker(index) {
+  const level = LEVELS[index];
+  if (!level) return '';
+  return currentLang === 'en' ? (level.kickerEn || level.kicker) : level.kicker;
+}
+
+function trSign(text) {
+  return currentLang === 'en' ? (SIGN_TRANSLATIONS[text] || text) : text;
+}
+
+function skinDisplayName(skin) {
+  if (currentLang === 'en' && SKIN_TRANSLATIONS[skin.id]) return SKIN_TRANSLATIONS[skin.id].name;
+  return skin.name;
+}
+
+function skinDisplayDescription(skin) {
+  if (currentLang === 'en' && SKIN_TRANSLATIONS[skin.id]) return SKIN_TRANSLATIONS[skin.id].description;
+  return skin.description;
+}
+
+/* ---------- Web Audio sound effects ---------- */
+const AudioFX = (() => {
+  let ctx = null;
+  let master = null;
+  let noiseBuffer = null;
+
+  function ensureContext() {
+    if (!soundEnabled) return null;
+    if (!ctx) {
+      const AudioCtor = window.AudioContext || window.webkitAudioContext;
+      if (!AudioCtor) return null;
+      try {
+        ctx = new AudioCtor();
+        master = ctx.createGain();
+        master.gain.value = 0.24;
+        master.connect(ctx.destination);
+      } catch (error) {
+        ctx = null;
+        master = null;
+        return null;
+      }
+    }
+    if (ctx.state === 'suspended') {
+      ctx.resume().catch(() => {});
+    }
+    return ctx;
+  }
+
+  function makeNoise() {
+    if (noiseBuffer || !ctx) return noiseBuffer;
+    const length = Math.floor(ctx.sampleRate * 0.5);
+    noiseBuffer = ctx.createBuffer(1, length, ctx.sampleRate);
+    const data = noiseBuffer.getChannelData(0);
+    for (let i = 0; i < length; i++) data[i] = Math.random() * 2 - 1;
+    return noiseBuffer;
+  }
+
+  function tone(from, to, duration, type, gain, delay) {
+    const audio = ensureContext();
+    if (!audio) return;
+    const start = audio.currentTime + (delay || 0);
+    const osc = audio.createOscillator();
+    const amp = audio.createGain();
+    osc.type = type || 'sine';
+    osc.frequency.setValueAtTime(Math.max(20, from), start);
+    if (to && to !== from) {
+      osc.frequency.exponentialRampToValueAtTime(Math.max(20, to), start + duration);
+    }
+    amp.gain.setValueAtTime(0.0001, start);
+    amp.gain.exponentialRampToValueAtTime(Math.max(0.0002, gain || 0.1), start + 0.012);
+    amp.gain.exponentialRampToValueAtTime(0.0001, start + duration);
+    osc.connect(amp).connect(master);
+    osc.start(start);
+    osc.stop(start + duration + 0.03);
+  }
+
+  function noise(duration, gain, cutoff, delay) {
+    const audio = ensureContext();
+    if (!audio) return;
+    const buffer = makeNoise();
+    if (!buffer) return;
+    const start = audio.currentTime + (delay || 0);
+    const source = audio.createBufferSource();
+    source.buffer = buffer;
+    const filter = audio.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.setValueAtTime(cutoff || 1200, start);
+    filter.frequency.exponentialRampToValueAtTime(Math.max(120, (cutoff || 1200) * 0.3), start + duration);
+    const amp = audio.createGain();
+    amp.gain.setValueAtTime(0.0001, start);
+    amp.gain.exponentialRampToValueAtTime(Math.max(0.0002, gain || 0.12), start + 0.008);
+    amp.gain.exponentialRampToValueAtTime(0.0001, start + duration);
+    source.connect(filter).connect(amp).connect(master);
+    source.start(start);
+    source.stop(start + duration + 0.02);
+  }
+
+  return {
+    unlock() {
+      ensureContext();
+    },
+    setEnabled(value) {
+      if (value) {
+        ensureContext();
+      }
+      if (master && ctx) {
+        master.gain.setTargetAtTime(value ? 0.24 : 0.0001, ctx.currentTime, 0.02);
+      }
+    },
+    coin() {
+      tone(988, 1318, 0.11, 'sine', 0.16, 0);
+      tone(1318, 1568, 0.13, 'triangle', 0.12, 0.075);
+    },
+    jump() {
+      tone(170, 520, 0.2, 'square', 0.08, 0);
+      noise(0.12, 0.035, 2200, 0);
+    },
+    impact(strength) {
+      const power = clamp((strength || 8) / 24, 0.25, 1.4);
+      noise(0.2 + power * 0.12, 0.12 * power, 900 + power * 700, 0);
+      tone(120, 45, 0.22, 'sine', 0.12 * power, 0);
+    },
+    victory() {
+      const notes = [523.25, 659.25, 783.99, 1046.5];
+      notes.forEach((note, index) => {
+        tone(note, note, 0.3, 'triangle', 0.13, index * 0.11);
+        tone(note * 2, note * 2, 0.18, 'sine', 0.035, index * 0.11);
+      });
+      noise(0.35, 0.03, 4200, 0.33);
+    }
+  };
+})();
+
+function updateSoundButton() {
+  if (!dom.soundBtn) return;
+  const label = t(soundEnabled ? 'sound.on' : 'sound.off');
+  dom.soundBtn.title = label;
+  dom.soundBtn.setAttribute('aria-label', label);
+  dom.soundBtn.setAttribute('aria-pressed', String(soundEnabled));
+  dom.soundBtn.classList.toggle('muted', !soundEnabled);
+  if (dom.soundIcon) dom.soundIcon.textContent = soundEnabled ? '🔊' : '🔇';
+}
 
 function getSkinById(id) {
   return SKINS.find((skin) => skin.id === id) || SKINS[0];
@@ -3260,17 +4121,24 @@ function persistPlayer() {
 function updateCoinBalanceDisplays() {
   if (dom.menuCoins) dom.menuCoins.textContent = String(PLAYER.coins);
   if (dom.menuCoinsWord) {
-    const mod10 = PLAYER.coins % 10;
-    const mod100 = PLAYER.coins % 100;
-    dom.menuCoinsWord.textContent =
-      mod10 === 1 && mod100 !== 11
-        ? 'монета'
-        : mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)
-          ? 'монеты'
-          : 'монет';
+    if (currentLang === 'en') {
+      dom.menuCoinsWord.textContent = t(PLAYER.coins === 1 ? 'menu.coinOne' : 'menu.coinMany');
+    } else {
+      const mod10 = PLAYER.coins % 10;
+      const mod100 = PLAYER.coins % 100;
+      dom.menuCoinsWord.textContent =
+        mod10 === 1 && mod100 !== 11
+          ? t('menu.coinOne')
+          : mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)
+            ? t('menu.coinFew')
+            : t('menu.coinMany');
+    }
   }
   if (dom.skinsHint) {
-    dom.skinsHint.textContent = 'Гараж · ' + PLAYER.ownedSkins.size + ' из ' + SKINS.length + ' скинов';
+    dom.skinsHint.textContent = t('menu.skinsHint', {
+      owned: PLAYER.ownedSkins.size,
+      total: SKINS.length
+    });
   }
   if (dom.garageCoins) dom.garageCoins.textContent = '💰 ' + PLAYER.coins;
 }
@@ -3834,7 +4702,7 @@ function addFinishGate(x, topY) {
   topBar.castShadow = true;
   levelGroup.add(topBar);
 
-  const bannerTexture = makeTextTexture('ФИНИШ', '#ffd447', '#202446', true);
+  const bannerTexture = makeTextTexture(t('sign.finish'), '#ffd447', '#202446', true);
   const bannerMaterial = new THREE.MeshBasicMaterial({
     map: bannerTexture,
     transparent: true,
@@ -3867,7 +4735,7 @@ function addSign(sign) {
   const ground = trackTopAt(sign.x);
   if (ground === null) return;
 
-  const texture = makeTextTexture(sign.text, sign.color || '#ffd447', '#202446', false);
+  const texture = makeTextTexture(trSign(sign.text), sign.color || '#ffd447', '#202446', false);
   const material = new THREE.MeshBasicMaterial({
     map: texture,
     transparent: true,
@@ -3972,6 +4840,229 @@ function addCrate(spec) {
       ));
       body.angularVelocity.set(rand(-8, 8), rand(-8, 8), rand(-8, 8));
     });
+  }
+}
+
+/* ---------- Static barriers and danger zones ---------- */
+function addBarrier(spec) {
+  const topY = spec.y !== undefined ? spec.y : trackTopAt(spec.x);
+  if (topY === null || topY === undefined) return;
+
+  const width = spec.width || 1.15;
+  const depth = spec.depth || 3.0;
+  const height = spec.height || 1.45;
+  const z = spec.z || 0;
+
+  const body = new CANNON.Body({
+    mass: 0,
+    material: PHYS.ground,
+    shape: new CANNON.Box(new CANNON.Vec3(width * 0.5, height * 0.5, depth * 0.5)),
+    position: new CANNON.Vec3(spec.x, topY + height * 0.5, z)
+  });
+  body.allowSleep = false;
+  body.userData = { kind: 'barrier' };
+  world.addBody(body);
+
+  const group = new THREE.Group();
+  group.position.set(spec.x, topY, z);
+
+  const redMaterial = new THREE.MeshStandardMaterial({
+    color: 0xe4464f,
+    roughness: 0.82,
+    flatShading: true
+  });
+  const creamMaterial = new THREE.MeshStandardMaterial({
+    color: 0xfff3d1,
+    roughness: 0.9,
+    flatShading: true
+  });
+  const darkMaterial = new THREE.MeshStandardMaterial({
+    color: 0x252a49,
+    roughness: 0.86,
+    flatShading: true
+  });
+  const lampMaterial = new THREE.MeshStandardMaterial({
+    color: 0xffd447,
+    emissive: 0xff9f1c,
+    emissiveIntensity: 0.7,
+    roughness: 0.35,
+    flatShading: true
+  });
+  for (const material of [redMaterial, creamMaterial, darkMaterial, lampMaterial]) {
+    material.userData.local = true;
+  }
+
+  const segmentCount = Math.max(4, Math.round(depth / 0.58));
+  const segmentDepth = depth / segmentCount;
+  for (let i = 0; i < segmentCount; i++) {
+    const panel = new THREE.Mesh(
+      new THREE.BoxGeometry(width, height, segmentDepth + 0.008),
+      i % 2 ? creamMaterial : redMaterial
+    );
+    panel.position.set(0, height * 0.5, -depth * 0.5 + segmentDepth * (i + 0.5));
+    panel.castShadow = true;
+    panel.receiveShadow = true;
+    group.add(panel);
+  }
+
+  const cap = new THREE.Mesh(
+    new THREE.BoxGeometry(width + 0.1, 0.17, depth + 0.08),
+    darkMaterial
+  );
+  cap.position.set(0, height + 0.06, 0);
+  cap.castShadow = true;
+  group.add(cap);
+
+  const lamp = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.16, 0.24), lampMaterial);
+  lamp.position.set(0, height + 0.25, 0);
+  lamp.castShadow = true;
+  group.add(lamp);
+
+  levelGroup.add(group);
+}
+
+function addHazard(spec) {
+  const topY = spec.y !== undefined ? spec.y : trackTopAt(spec.x);
+  if (topY === null || topY === undefined) return;
+
+  const width = spec.width || 3.6;
+  const depth = spec.depth || 2.4;
+  const z = spec.z || 0;
+
+  const group = new THREE.Group();
+  group.position.set(spec.x, topY, z);
+
+  const darkMaterial = new THREE.MeshStandardMaterial({
+    color: 0x2a2f4a,
+    roughness: 0.9,
+    flatShading: true
+  });
+  const yellowMaterial = new THREE.MeshStandardMaterial({
+    color: 0xffd447,
+    roughness: 0.8,
+    flatShading: true
+  });
+  darkMaterial.userData.local = true;
+  yellowMaterial.userData.local = true;
+
+  const base = new THREE.Mesh(
+    new THREE.BoxGeometry(width + 0.24, 0.08, depth + 0.24),
+    darkMaterial
+  );
+  base.position.y = 0.04;
+  base.receiveShadow = true;
+  group.add(base);
+
+  const stripeCount = Math.max(4, Math.round(width / 0.7));
+  const stripeWidth = width / stripeCount;
+  for (let i = 0; i < stripeCount; i++) {
+    const stripe = new THREE.Mesh(
+      new THREE.BoxGeometry(stripeWidth + 0.012, 0.11, depth),
+      i % 2 ? yellowMaterial : darkMaterial
+    );
+    stripe.position.set(-width * 0.5 + stripeWidth * (i + 0.5), 0.085, 0);
+    stripe.receiveShadow = true;
+    group.add(stripe);
+  }
+
+  const glowMaterial = new THREE.MeshBasicMaterial({
+    color: 0xff4d5e,
+    transparent: true,
+    opacity: 0.22,
+    depthWrite: false,
+    blending: THREE.AdditiveBlending
+  });
+  glowMaterial.userData.local = true;
+  const glow = new THREE.Mesh(new THREE.PlaneGeometry(width * 0.94, depth * 0.88), glowMaterial);
+  glow.rotation.x = -Math.PI * 0.5;
+  glow.position.y = 0.17;
+  group.add(glow);
+
+  const studMaterial = new THREE.MeshStandardMaterial({
+    color: 0xff4d5e,
+    emissive: 0xa31528,
+    emissiveIntensity: 0.55,
+    roughness: 0.45,
+    flatShading: true
+  });
+  studMaterial.userData.local = true;
+  for (const sx of [-1, 1]) {
+    for (const sz of [-1, 1]) {
+      const stud = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.1, 0.2), studMaterial);
+      stud.position.set(
+        sx * (width * 0.5 - 0.08),
+        0.14,
+        sz * (depth * 0.5 - 0.08)
+      );
+      group.add(stud);
+    }
+  }
+
+  levelGroup.add(group);
+  hazards.push({
+    x: spec.x,
+    y: topY,
+    z,
+    width,
+    depth,
+    group,
+    glowMaterial,
+    phase: Math.random() * Math.PI * 2,
+    hitTimer: 0,
+    sparksTimer: 0,
+    inside: false
+  });
+}
+
+function updateHazards(dt, canDamage) {
+  if (!hazards.length) return;
+  const running = canDamage && GAME.phase === 'running' && car && car.alive;
+  const position = car ? car.body.position : null;
+
+  for (const hazard of hazards) {
+    hazard.phase += dt * 3.4;
+    const pulse = 0.5 + 0.5 * Math.sin(hazard.phase);
+    if (hazard.glowMaterial) {
+      hazard.glowMaterial.opacity = 0.13 + pulse * 0.2;
+    }
+
+    if (!running || !position) {
+      hazard.inside = false;
+      continue;
+    }
+
+    const inside =
+      Math.abs(position.x - hazard.x) <= hazard.width * 0.5 + 0.5 &&
+      Math.abs(position.z - hazard.z) <= hazard.depth * 0.5 + 0.5 &&
+      position.y >= hazard.y - 0.8 &&
+      position.y <= hazard.y + 1.9;
+
+    if (inside) {
+      if (!hazard.inside) {
+        hazard.hitTimer = 0;
+        hazard.sparksTimer = 0;
+        showToast(t('toast.hazard'), 'warn');
+      }
+
+      hazard.hitTimer -= dt;
+      hazard.sparksTimer -= dt;
+      if (hazard.hitTimer <= 0) {
+        hazard.hitTimer = 0.22;
+        damageCar(3.1);
+        GAME.shake = Math.max(GAME.shake, 0.07);
+      }
+      if (hazard.sparksTimer <= 0) {
+        hazard.sparksTimer = 0.12;
+        spawnBurst(
+          new THREE.Vector3(position.x + rand(-0.4, 0.4), hazard.y + 0.18, position.z + rand(-0.5, 0.5)),
+          ['#ff4d5e', '#ffd447', '#fff3d1'],
+          3,
+          { speed: 2.1, up: 1.7, gravity: 12, size: 0.08, life: 0.4 }
+        );
+      }
+    }
+
+    hazard.inside = inside;
   }
 }
 
@@ -4768,6 +5859,12 @@ function coinBlockedAt(x) {
     const size = crate.size || 0.85;
     if (Math.abs(x - crate.x) < 1.4 + size) return true;
   }
+  for (const barrier of levelDef.barriers || []) {
+    if (Math.abs(x - barrier.x) < barrier.width * 0.5 + 1.4) return true;
+  }
+  for (const hazard of levelDef.hazards || []) {
+    if (Math.abs(x - hazard.x) < hazard.width * 0.5 + 1.2) return true;
+  }
   return false;
 }
 
@@ -4902,8 +5999,9 @@ function collectCoin(coin) {
     size: 0.115,
     life: 0.8
   });
+  AudioFX.coin();
   GAME.shake = Math.max(GAME.shake, 0.055);
-  showToast('Монета +1 · ' + levelCoins + '/' + COINS_PER_LEVEL, 'good');
+  showToast(t('toast.coin', { n: levelCoins, total: COINS_PER_LEVEL }), 'good');
 }
 
 function updateCoins(dt, canCollect) {
@@ -4954,6 +6052,7 @@ function buildLevel(index) {
   clearParticles();
   clearDebris();
   clearCoins();
+  hazards = [];
   clearWorldBodies();
   removeCar();
   clearGroup(levelGroup);
@@ -4984,6 +6083,8 @@ function buildLevel(index) {
   addFinishGate(levelDef.finishX, finishTop);
 
   for (const platform of levelDef.platforms || []) addPlatform(platform);
+  for (const barrier of levelDef.barriers || []) addBarrier(barrier);
+  for (const hazard of levelDef.hazards || []) addHazard(hazard);
   for (const crate of levelDef.crates) addCrate(crate);
   for (const sign of levelDef.signs) addSign(sign);
 
@@ -4994,7 +6095,7 @@ function buildLevel(index) {
 
   dom.levelNum.textContent = String(safeIndex + 1);
   dom.levelTotal.textContent = String(LEVELS.length);
-  dom.levelName.textContent = levelDef.name;
+  dom.levelName.textContent = levelDisplayName(safeIndex);
   dom.progressFill.style.width = '0%';
   dom.toasts.replaceChildren();
   hideOverlay();
@@ -5005,9 +6106,11 @@ function buildLevel(index) {
 }
 
 function restartLevel() {
-  if (GAME.phase === 'loading') return;
+  if (GAME.phase === 'loading' || GAME.phase === 'menu') return;
+  GAME.paused = false;
   buildLevel(GAME.levelIndex);
-  showToast('Заново!', 'warn');
+  lastFrameTime = performance.now();
+  showToast(t('toast.restart'), 'warn');
 }
 
 function nextLevel() {
@@ -5040,8 +6143,11 @@ function updateMainMenu() {
   const allDone = completed >= LEVELS.length;
   dom.menuProgress.textContent = completed + ' / ' + LEVELS.length;
   dom.playHint.textContent = allDone
-    ? 'Все уровни пройдены · начать с первого'
-    : 'Продолжить с уровня ' + (next + 1) + ' · ' + LEVELS[next].name;
+    ? t('menu.playAllDone')
+    : t('menu.playContinue', {
+        level: next + 1,
+        name: levelDisplayName(next)
+      });
   updateCoinBalanceDisplays();
 }
 
@@ -5060,7 +6166,11 @@ function buildLevelGrid() {
     tile.dataset.index = String(index);
     tile.setAttribute(
       'aria-label',
-      'Уровень ' + (index + 1) + ': ' + level.name + (isDone ? ', пройден' : '')
+      t('levels.aria', {
+        num: index + 1,
+        name: levelDisplayName(index),
+        done: isDone ? t('levels.done') : ''
+      })
     );
 
     const number = document.createElement('span');
@@ -5069,11 +6179,11 @@ function buildLevelGrid() {
 
     const name = document.createElement('span');
     name.className = 'tile-name';
-    name.textContent = level.name;
+    name.textContent = levelDisplayName(index);
 
     const bestLabel = document.createElement('span');
     bestLabel.className = 'tile-best';
-    bestLabel.textContent = isDone ? formatTime(best) : 'не пройден';
+    bestLabel.textContent = isDone ? formatTime(best) : t('levels.notDone');
 
     tile.appendChild(number);
     tile.appendChild(name);
@@ -5119,6 +6229,8 @@ function renderGarage() {
     const owned = PLAYER.ownedSkins.has(skin.id);
     const selected = PLAYER.skin === skin.id;
     const affordable = PLAYER.coins >= skin.price;
+    const displayName = skinDisplayName(skin);
+    const displayDescription = skinDisplayDescription(skin);
 
     const card = document.createElement('button');
     card.type = 'button';
@@ -5133,7 +6245,11 @@ function renderGarage() {
     if (!owned && !affordable) card.classList.add('unaffordable');
     card.setAttribute(
       'aria-label',
-      skin.name + (selected ? ', выбран' : owned ? ', куплен' : ', цена ' + skin.price + ' монет')
+      displayName + (selected
+        ? t('skin.selectedState')
+        : owned
+          ? t('skin.ownedState')
+          : t('skin.priceState', { price: skin.price }))
     );
 
     const preview = document.createElement('span');
@@ -5168,28 +6284,28 @@ function renderGarage() {
 
     const name = document.createElement('span');
     name.className = 'skin-name';
-    name.textContent = skin.name;
+    name.textContent = displayName;
 
     const description = document.createElement('span');
     description.className = 'skin-desc';
-    description.textContent = skin.description;
+    description.textContent = displayDescription;
 
     const action = document.createElement('span');
     action.className = 'skin-action';
     if (selected) {
-      action.textContent = 'Выбран';
+      action.textContent = t('skin.selected');
     } else if (owned) {
-      action.textContent = 'Выбрать';
+      action.textContent = t('skin.select');
     } else if (affordable) {
-      action.textContent = 'Купить · ' + skin.price + ' 💰';
+      action.textContent = t('skin.buy', { price: skin.price });
     } else {
-      action.textContent = 'Не хватает ' + (skin.price - PLAYER.coins) + ' 💰';
+      action.textContent = t('skin.missing', { missing: skin.price - PLAYER.coins });
     }
 
     if (skin.category === 'special') {
       const tag = document.createElement('span');
       tag.className = 'skin-tag';
-      tag.textContent = 'Особое';
+      tag.textContent = t('skin.specialTag');
       card.appendChild(tag);
     }
 
@@ -5211,14 +6327,16 @@ function renderGarage() {
   const categoryOwned = categorySkins.filter((skin) => PLAYER.ownedSkins.has(skin.id)).length;
   if (dom.garageHint) {
     if (categoryOwned >= categorySkins.length) {
-      dom.garageHint.textContent =
-        garageCategory === 'special'
-          ? 'Все особые раскраски собраны. Выбирай любую и жми газ!'
-          : 'Все стандартные скины собраны. Загляни в категорию «Особое»!';
+      dom.garageHint.textContent = t(
+        garageCategory === 'special' ? 'garage.allSpecial' : 'garage.allStandard'
+      );
     } else {
-      dom.garageHint.textContent = SKIN_CATEGORIES[garageCategory].hint;
+      dom.garageHint.textContent = t(
+        garageCategory === 'special' ? 'garage.hintSpecial' : 'garage.hintStandard'
+      );
     }
   }
+  if (dom.specialTabPrice) dom.specialTabPrice.textContent = '500 💰';
   updateCoinBalanceDisplays();
 }
 
@@ -5226,6 +6344,25 @@ function setGarageCategory(category) {
   if (!SKIN_CATEGORIES[category] || garageCategory === category) return;
   garageCategory = category;
   renderGarage();
+}
+
+let pendingAdSkin = null;
+
+function showCoinModal(skin) {
+  pendingAdSkin = skin || null;
+  if (dom.coinModalText) dom.coinModalText.textContent = t('ad.text');
+  if (dom.watchAdBtn) dom.watchAdBtn.textContent = t('ad.watch');
+  if (dom.cancelAdBtn) dom.cancelAdBtn.textContent = t('ad.cancel');
+  if (!dom.coinOverlay) return;
+  dom.coinOverlay.classList.add('show');
+  dom.coinOverlay.setAttribute('aria-hidden', 'false');
+}
+
+function hideCoinModal() {
+  pendingAdSkin = null;
+  if (!dom.coinOverlay) return;
+  dom.coinOverlay.classList.remove('show');
+  dom.coinOverlay.setAttribute('aria-hidden', 'true');
 }
 
 function handleSkinClick(skin) {
@@ -5236,13 +6373,12 @@ function handleSkinClick(skin) {
     selectSkin(skin.id);
     renderGarage();
     updateMainMenu();
-    showToast('Скин «' + skin.name + '» выбран', 'good');
+    showToast(t('toast.skinSelected', { name: skinDisplayName(skin) }), 'good');
     return;
   }
 
   if (PLAYER.coins < skin.price) {
-    const missing = skin.price - PLAYER.coins;
-    showToast('Не хватает ' + missing + ' монет для скина «' + skin.name + '»', 'warn');
+    showCoinModal(skin);
     return;
   }
 
@@ -5258,8 +6394,8 @@ function handleSkinClick(skin) {
   updateMainMenu();
   showToast(
     skin.price > 0
-      ? 'Куплен скин «' + skin.name + '» · −' + skin.price + ' 💰'
-      : 'Скин «' + skin.name + '» открыт!',
+      ? t('toast.skinBought', { name: skinDisplayName(skin), price: skin.price })
+      : t('toast.skinUnlocked', { name: skinDisplayName(skin) }),
     'good'
   );
 }
@@ -5291,6 +6427,7 @@ function showMainMenu(options) {
   const opts = options || {};
   heldKeys.clear();
   releaseAllTouch();
+  hideCoinModal();
   GAME.paused = true;
   GAME.phase = 'menu';
   hideOverlay();
@@ -5336,6 +6473,51 @@ function hideMenuScreens() {
   document.body.classList.remove('in-menu');
 }
 
+function applyLanguage() {
+  document.documentElement.lang = currentLang;
+
+  document.querySelectorAll('[data-i18n]').forEach((element) => {
+    element.textContent = t(element.dataset.i18n);
+  });
+  document.querySelectorAll('[data-i18n-title]').forEach((element) => {
+    const label = t(element.dataset.i18nTitle);
+    element.title = label;
+    element.setAttribute('aria-label', label);
+  });
+  document.querySelectorAll('[data-i18n-aria]').forEach((element) => {
+    element.setAttribute('aria-label', t(element.dataset.i18nAria));
+  });
+
+  if (dom.langSwitch) {
+    dom.langSwitch.querySelectorAll('[data-lang]').forEach((button) => {
+      const active = button.dataset.lang === currentLang;
+      button.classList.toggle('active', active);
+      button.setAttribute('aria-pressed', String(active));
+    });
+  }
+
+  if (dom.coinModalText) dom.coinModalText.textContent = t('ad.text');
+  if (dom.watchAdBtn) dom.watchAdBtn.textContent = t('ad.watch');
+  if (dom.cancelAdBtn) dom.cancelAdBtn.textContent = t('ad.cancel');
+  if (dom.specialTabPrice) dom.specialTabPrice.textContent = '500 💰';
+
+  if (levelDef) dom.levelName.textContent = levelDisplayName(GAME.levelIndex);
+  updateMainMenu();
+  updateCoinBalanceDisplays();
+  updateSoundButton();
+
+  if (dom.levelScreen.classList.contains('show')) buildLevelGrid();
+  if (dom.garageScreen.classList.contains('show')) renderGarage();
+}
+
+function setLanguage(language) {
+  const next = language === 'en' ? 'en' : 'ru';
+  if (next === currentLang) return;
+  currentLang = next;
+  writeStorage(LANG_KEY, currentLang);
+  applyLanguage();
+}
+
 function startLevel(index) {
   const target = clamp(Number.isFinite(index) ? Math.round(index) : 0, 0, LEVELS.length - 1);
   hideMenuScreens();
@@ -5344,17 +6526,12 @@ function startLevel(index) {
   GAME.phase = 'loading';
   buildLevel(target);
   lastFrameTime = performance.now();
-  showToast('Уровень ' + (target + 1) + ' · ' + LEVELS[target].name, 'good');
+  showToast(t('toast.level', { n: target + 1, name: levelDisplayName(target) }), 'good');
   if (!controlsHintShown) {
     controlsHintShown = true;
     window.setTimeout(() => {
       const coarse = window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
-      showToast(
-        coarse
-          ? 'Слева — руль, справа — газ и тормоз · в воздухе они же управляют тангажом'
-          : 'D — газ · A — тормоз · W/S — влево/вправо · в воздухе D/A — тангаж',
-        'warn'
-      );
+      showToast(t(coarse ? 'toast.controlsTouch' : 'toast.controlsDesktop'), 'warn');
     }, 750);
   }
 }
@@ -5441,8 +6618,9 @@ function processImpacts() {
         GAME.shake = Math.max(GAME.shake, Math.min(0.58, impact.impact * 0.035));
       }
       if (impact.impact > 17.5) {
-        showToast('Жёсткий удар!', 'warn');
+        showToast(t('toast.hardHit'), 'warn');
       }
+      AudioFX.impact(impact.impact);
       damageCar(impact.amount);
     } else if (impact.kind === 'wheel' && impact.wheel) {
       if (impact.impact > 13) {
@@ -5453,6 +6631,7 @@ function processImpacts() {
           size: 0.1,
           life: 0.5
         });
+        AudioFX.impact(impact.impact * 0.7);
       }
       if (impact.amount > 0.2) damageCar(impact.amount);
       if (impact.impact > 22 && impact.wheel.attached && Math.random() < 0.42) {
@@ -5535,7 +6714,7 @@ function breakPart(part, quiet) {
     life: 0.65
   });
   GAME.shake = Math.max(GAME.shake, 0.3);
-  if (!quiet) showToast('Кузов разбит!', 'warn');
+  if (!quiet) showToast(t('toast.bodyBroken'), 'warn');
 }
 
 function detachWheel(wheel, quiet) {
@@ -5562,10 +6741,10 @@ function detachWheel(wheel, quiet) {
     life: 0.65
   });
   GAME.shake = Math.max(GAME.shake, 0.48);
-  if (!quiet) showToast('Колесо оторвано!', 'bad');
+  if (!quiet) showToast(t('toast.wheelOff'), 'bad');
 
   if (car.attachedWheels === 0 && car.alive && GAME.phase === 'running') {
-    wreckCar('Все колёса оторваны');
+    wreckCar(t('fail.wreckAll'));
   }
 }
 
@@ -5590,7 +6769,7 @@ function damageCar(amount) {
     if (wheel) detachWheel(wheel, false);
   }
   if (car.damage >= 100 && car.alive) {
-    wreckCar('Машина разбита вдребезги');
+    wreckCar(t('toast.wrecked'));
   }
 }
 
@@ -5624,7 +6803,8 @@ function wreckCar(reason) {
   car.body.angularVelocity.set(rand(-4, 4), rand(-3, 3), rand(-6, 6));
   car.body.angularDamping = 0.4;
   updateHUD(true);
-  showToast('Машина разбита!', 'bad');
+  AudioFX.impact(24);
+  showToast(t('toast.wrecked'), 'bad');
 }
 
 function spawnParticle(position, color, velocity, size, life, gravity, opacity) {
@@ -5858,25 +7038,20 @@ function pauseGame() {
   showOverlay({
     kind: 'pause',
     sticker: '⏸',
-    kicker: 'Пауза',
-    title: 'Пауза',
-    text: 'Заезд приостановлен. Нажми «Продолжить», чтобы ехать дальше.',
+    kicker: t('pause.kicker'),
+    title: t('pause.title'),
+    text: t('pause.text'),
     stats: [
-      { label: 'Время', value: formatTime(GAME.elapsed) },
-      { label: 'Уровень', value: (GAME.levelIndex + 1) + ' / ' + LEVELS.length }
+      { label: t('stats.time'), value: formatTime(GAME.elapsed) },
+      { label: t('stats.level'), value: (GAME.levelIndex + 1) + ' / ' + LEVELS.length }
     ],
-    primaryText: 'Продолжить',
+    primaryText: t('pause.resume'),
     primaryAction: () => resumeGame(),
-    secondaryText: 'Заново',
-    secondaryAction: () => {
-      GAME.paused = false;
-      hideOverlay();
-      buildLevel(GAME.levelIndex);
-      showToast('Заново!', 'warn');
-    },
-    tertiaryText: '🏠 В меню',
+    secondaryText: t('pause.restart'),
+    secondaryAction: () => restartLevel(),
+    tertiaryText: t('pause.menu'),
     tertiaryAction: () => showMainMenu(),
-    hint: 'Нажми <kbd>Esc</kbd>, чтобы продолжить'
+    hint: t('pause.hint')
   });
 }
 
@@ -5956,33 +7131,30 @@ function winLevel() {
   const integrity = Math.round(clamp(100 - car.damage, 0, 100));
 
   spawnConfetti();
+  AudioFX.victory();
   GAME.shake = Math.max(GAME.shake, 0.18);
   updateHUD(true);
 
   showOverlay({
     kind: 'win',
     sticker: finalLevel ? '🏆' : '🏁',
-    kicker: finalLevel ? 'Все уровни позади' : 'Уровень ' + (GAME.levelIndex + 1) + ' пройден',
-    title: finalLevel ? 'Игра пройдена!' : 'Финиш!',
-    text: finalLevel
-      ? 'Ты довёл воксельную малышку до конца. Ещё разок?'
-      : 'Чисто доехал до финиша. Следующий уровень уже ждёт.',
+    kicker: finalLevel ? t('win.allKicker') : t('win.levelKicker', { n: GAME.levelIndex + 1 }),
+    title: finalLevel ? t('win.allTitle') : t('win.title'),
+    text: finalLevel ? t('win.allText') : t('win.text'),
     stats: [
-      { label: 'Время', value: formatTime(time) },
-      { label: 'Лучшее', value: formatTime(best) },
-      { label: 'Прочность', value: integrity + '%' }
+      { label: t('stats.time'), value: formatTime(time) },
+      { label: t('stats.best'), value: formatTime(best) },
+      { label: t('stats.integrity'), value: integrity + '%' }
     ],
-    primaryText: finalLevel ? 'Сначала' : 'Дальше →',
+    primaryText: finalLevel ? t('win.primaryAll') : t('win.primary'),
     primaryAction: () => {
       buildLevel(finalLevel ? 0 : GAME.levelIndex + 1);
     },
-    secondaryText: finalLevel ? 'Повторить' : 'Заново',
+    secondaryText: finalLevel ? t('win.secondaryAll') : t('win.secondary'),
     secondaryAction: () => buildLevel(GAME.levelIndex),
-    tertiaryText: '🏠 В меню',
+    tertiaryText: t('win.menu'),
     tertiaryAction: () => showMainMenu(),
-    hint: finalLevel
-      ? '<kbd>Enter</kbd> — начать снова · <kbd>R</kbd> — повторить финал'
-      : '<kbd>Enter</kbd> — дальше · <kbd>R</kbd> — заново'
+    hint: finalLevel ? t('win.hintAll') : t('win.hint')
   });
 }
 
@@ -6003,25 +7175,25 @@ function showFailOverlay(reason, title) {
   showOverlay({
     kind: 'lose',
     sticker: '💥',
-    kicker: 'Заезд окончен',
-    title: title || 'Авария',
+    kicker: t('fail.kicker'),
+    title: title || t('fail.title'),
     text: reason,
     stats: [
-      { label: 'Время', value: formatTime(GAME.elapsed) },
-      { label: 'Прочность', value: Math.round(clamp(100 - car.damage, 0, 100)) + '%' }
+      { label: t('stats.time'), value: formatTime(GAME.elapsed) },
+      { label: t('stats.integrity'), value: Math.round(clamp(100 - car.damage, 0, 100)) + '%' }
     ],
-    primaryText: 'Перезапустить',
+    primaryText: t('fail.restart'),
     primaryAction: () => buildLevel(GAME.levelIndex),
     secondaryText: '',
-    tertiaryText: '🏠 В меню',
+    tertiaryText: t('win.menu'),
     tertiaryAction: () => showMainMenu(),
-    hint: 'Нажми <kbd>R</kbd>, чтобы попробовать ещё раз'
+    hint: t('fail.hint')
   });
 }
 
 function failLevel(reason, title) {
   if (GAME.phase !== 'running' && GAME.phase !== 'wrecked') return;
-  showFailOverlay(reason, title || 'Авария');
+  showFailOverlay(reason, title || t('fail.title'));
 }
 
 /* ---------- Input ---------- */
@@ -6049,6 +7221,14 @@ const controlledKeys = new Set([
 ]);
 
 window.addEventListener('keydown', (event) => {
+  if (dom.coinOverlay && dom.coinOverlay.classList.contains('show')) {
+    if (event.code === 'Escape' || event.key === 'Escape' || event.key === 'Esc') {
+      event.preventDefault();
+      hideCoinModal();
+    }
+    return;
+  }
+
   if (GAME.phase === 'menu') {
     if ((event.code === 'Escape' || event.key === 'Escape' || event.key === 'Esc') && !event.repeat) {
       event.preventDefault();
@@ -6061,12 +7241,9 @@ window.addEventListener('keydown', (event) => {
   if (controlledKeys.has(event.code)) event.preventDefault();
 
   if (event.code === 'KeyR' && !event.repeat) {
-    if (GAME.phase !== 'loading') {
+    if (GAME.phase !== 'loading' && GAME.phase !== 'menu') {
       event.preventDefault();
-      if (GAME.paused) GAME.paused = false;
-      hideOverlay();
-      buildLevel(GAME.levelIndex);
-      showToast('Заново!', 'warn');
+      restartLevel();
     }
     return;
   }
@@ -6168,15 +7345,41 @@ document.addEventListener('visibilitychange', () => {
   if (document.hidden) {
     heldKeys.clear();
     releaseAllTouch();
+    if (GAME.phase === 'running' && !GAME.paused) pauseGame();
   }
 });
 
+// Browsers only allow Web Audio after a real user gesture.
+window.addEventListener('pointerdown', () => AudioFX.unlock(), { passive: true, capture: true });
+window.addEventListener('keydown', () => AudioFX.unlock(), { capture: true });
+
+dom.soundBtn.addEventListener('click', () => {
+  soundEnabled = !soundEnabled;
+  writeStorage(SOUND_KEY, soundEnabled ? '1' : '0');
+  AudioFX.setEnabled(soundEnabled);
+  updateSoundButton();
+  if (soundEnabled) AudioFX.coin();
+});
+
+dom.langSwitch.addEventListener('click', (event) => {
+  const button = event.target.closest('[data-lang]');
+  if (!button) return;
+  setLanguage(button.dataset.lang);
+});
+
+dom.watchAdBtn.addEventListener('click', () => {
+  hideCoinModal();
+  showToast(t('toast.adUnavailable'), 'warn');
+});
+
+dom.cancelAdBtn.addEventListener('click', hideCoinModal);
+
+dom.coinOverlay.addEventListener('click', (event) => {
+  if (event.target === dom.coinOverlay) hideCoinModal();
+});
+
 dom.restartBtn.addEventListener('click', () => {
-  if (GAME.phase === 'loading' || GAME.phase === 'menu') return;
-  if (GAME.paused) GAME.paused = false;
-  hideOverlay();
-  buildLevel(GAME.levelIndex);
-  showToast('Заново!', 'warn');
+  restartLevel();
 });
 
 dom.pauseBtn.addEventListener('click', () => {
@@ -6485,7 +7688,18 @@ function updateAfterStep(dt) {
     }
   }
 
+  const wasGrounded = car.grounded;
   car.grounded = car.wheels.some((wheel) => wheel.attached && wheel.onGround);
+  if (
+    wasGrounded && !car.grounded &&
+    GAME.phase === 'running' && car.body.velocity.y > 0.2
+  ) {
+    const jumpTime = nowMs();
+    if (jumpTime - (car.lastJumpSound || 0) > 260) {
+      car.lastJumpSound = jumpTime;
+      AudioFX.jump();
+    }
+  }
   limitCarDynamics(dt);
   syncCarVisuals(dt);
 
@@ -6561,7 +7775,7 @@ function updateGameState(dt) {
     GAME.elapsed += dt;
 
     if (car.body.position.y < -5) {
-      failLevel('Машина упала вниз!', 'Падение!');
+      failLevel(t('fail.fall'), t('fail.fallTitle'));
       return;
     }
 
@@ -6582,7 +7796,7 @@ function updateGameState(dt) {
     }
 
     if (GAME.flipTimer > 1.5) {
-      failLevel('Машина перевернулась. Попробуй мягче приземлиться или выровняй её в воздухе.', 'Переворот!');
+      failLevel(t('fail.flip'), t('fail.flipTitle'));
     }
   } else if (GAME.phase === 'wrecked' && GAME.pendingFail) {
     GAME.pendingFail.time -= dt;
@@ -6685,6 +7899,7 @@ function animate(time) {
     updateParticles(dt);
     updateDebris(dt);
     updateCoins(dt, GAME.phase === 'running');
+    updateHazards(dt, GAME.phase === 'running');
     updateGameState(dt);
     updateCamera(dt);
     updateHUD(false);
@@ -6709,6 +7924,7 @@ function boot() {
     lastFrameTime = performance.now();
     renderer.setAnimationLoop(animate);
     showMainMenu({ silent: true });
+    applyLanguage();
 
     window.setTimeout(() => {
       dom.loading.classList.add('hide');
@@ -6746,10 +7962,12 @@ window.__driveMad = {
   renderGarage,
   startLevel,
   getContinueLevelIndex,
+  LEVELS,
   PLAYER,
   SKINS,
   persistPlayer,
   get coins() { return coins; },
+  get hazards() { return hazards; },
   get car() { return car; },
   get level() { return levelDef; }
 };
