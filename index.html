@@ -2166,6 +2166,7 @@ let coins = [];
 let hazards = [];
 let crossbows = [];
 let arrows = [];
+let movingPlatforms = [];
 let levelCoins = 0;
 let coinClock = 0;
 const heldKeys = new Set();
@@ -2269,16 +2270,21 @@ const PROP_COLLISION_MASK =
 const DEBRIS_COLLISION_MASK = COLLISION_GROUP.world;
 
 function addContact(a, b, friction, restitution) {
-  world.addContactMaterial(new CANNON.ContactMaterial(a, b, {
+  const material = new CANNON.ContactMaterial(a, b, {
     friction,
     restitution,
     contactEquationStiffness: 2.6e6,
     contactEquationRelaxation: 7,
     frictionEquationStiffness: 2.2e6,
     frictionEquationRelaxation: 7
-  }));
+  });
+  world.addContactMaterial(material);
+  return material;
 }
-addContact(PHYS.wheel, PHYS.ground, 0.92, 0.0);
+// Kept as a reference because an arrow hit briefly makes the tyres lose
+// lateral grip (the arrow-knockback window). Everything else keeps the same
+// 0.92 grip, so normal driving and braking are untouched.
+const WHEEL_GROUND_CONTACT = addContact(PHYS.wheel, PHYS.ground, 0.92, 0.0);
 addContact(PHYS.car, PHYS.ground, 0.42, 0.01);
 addContact(PHYS.wheel, PHYS.prop, 0.32, 0.01);
 addContact(PHYS.car, PHYS.prop, 0.22, 0.01);
@@ -3499,9 +3505,19 @@ function buildRedesignedLevels() {
       state.flat(4);
       state.ramp(3, 0.7);
       state.gap(1.5);
-      state.platform(4.6, -0.25, 5.8);
+      state.platform(4.6, -0.25, 5.8, {
+        axis: 'y',
+        amplitude: 0.18,
+        period: 5.0,
+        phase: 2.4
+      });
       state.gap(1.5);
-      state.platform(4.6, -0.25, 5.8);
+      state.platform(4.6, -0.25, 5.8, {
+        axis: 'z',
+        amplitude: 0.95,
+        period: 4.2,
+        phase: 0.7
+      });
       state.gap(1.5);
       state.platform(4.6, -0.2, 5.8);
       state.flat(10);
@@ -3574,9 +3590,19 @@ function buildRedesignedLevels() {
       state.gap(1.5);
       state.platform(4.8, -0.3, 5.8);
       state.gap(1.5);
-      state.platform(4.8, -0.3, 5.8);
+      state.platform(4.8, -0.3, 5.8, {
+        axis: 'y',
+        amplitude: 0.22,
+        period: 5.4,
+        phase: 1.3
+      });
       state.gap(1.5);
-      state.platform(4.8, -0.3, 5.8);
+      state.platform(4.8, -0.3, 5.8, {
+        axis: 'z',
+        amplitude: 0.85,
+        period: 4.0,
+        phase: 0.5
+      });
       state.ramp(3, -0.4);
       state.flat(8);
     },
@@ -3614,12 +3640,97 @@ function buildRedesignedLevels() {
       state.flat(14);
       state.ramp(4, -0.9);
       state.flat(8);
+    },
+    movingChain(state) {
+      state.flat(4);
+      state.ramp(3.2, 0.75);
+      state.gap(1.4);
+      state.platform(4.8, -0.15, 6.2, {
+        axis: 'z',
+        amplitude: 1.0,
+        period: 4.4,
+        phase: 0.4
+      });
+      state.gap(1.4);
+      state.platform(4.8, -0.15, 6.2, {
+        axis: 'z',
+        amplitude: 0.85,
+        period: 3.8,
+        phase: 2.1
+      });
+      state.gap(1.4);
+      state.platform(4.8, -0.15, 6.2, {
+        axis: 'y',
+        amplitude: 0.18,
+        period: 5.2,
+        phase: 3.3
+      });
+      state.ramp(3.2, -0.3);
+      state.flat(9);
+    },
+    chicane(state) {
+      state.flat(4);
+      state.ramp(3.4, 0.55, 5.8);
+      state.flat(8, 4.9);
+      state.ramp(3.4, -0.55, 5.8);
+      state.flat(4);
+      state.ramp(3.4, 0.55, 5.8);
+      state.flat(8, 4.9);
+      state.ramp(3.4, -0.55, 5.8);
+      state.flat(7);
+    },
+    rampRun(state) {
+      state.flat(3);
+      state.ramp(4, 0.8);
+      state.flat(5);
+      state.ramp(4, -0.8);
+      state.flat(5);
+      state.ramp(4, 0.9);
+      state.gap(3.4);
+      state.flat(12);
+      state.ramp(5, -1.0);
+      state.flat(7);
+    },
+    steppedBridge(state) {
+      state.flat(3);
+      state.ramp(5, 0.5, 5.8);
+      state.flat(7, 5.2);
+      state.ramp(5, 0.5, 5.8);
+      state.flat(7, 5.2);
+      state.ramp(6, -1.0, 5.8);
+      state.flat(8);
+    },
+    crossfire(state) {
+      state.flat(5);
+      state.ramp(3, 0.55);
+      state.flat(26);
+      state.ramp(3, -0.55);
+      state.flat(8);
     }
   };
 
   const easyModules = ['hills', 'crossbowAlley', 'slalom', 'sCurve', 'valley'];
-  const mediumModules = ['gapJump', 'narrowBridge', 'stairsUp', 'stepDown', 'longBridge'];
-  const hardModules = ['platformChain', 'doubleGap', 'highTrail', 'zigzag', 'jumpRun'];
+  const mediumModules = [
+    'gapJump',
+    'narrowBridge',
+    'stairsUp',
+    'stepDown',
+    'longBridge',
+    'chicane',
+    'movingChain',
+    'steppedBridge',
+    'crossfire'
+  ];
+  const hardModules = [
+    'platformChain',
+    'doubleGap',
+    'highTrail',
+    'zigzag',
+    'jumpRun',
+    'rampRun',
+    'movingChain',
+    'chicane'
+  ];
 
   const crateColors = ['crateOrange', 'cratePink', 'crateMint', 'crateYellow'];
   const levels = [];
@@ -3660,14 +3771,15 @@ function buildRedesignedLevels() {
     state.gap = (length) => {
       state.cursor += length;
     };
-    state.platform = (length, dy, depth) => {
+    state.platform = (length, dy, depth, motion) => {
       const platformY = state.y + dy;
       state.platforms.push({
         x: state.cursor + length * 0.5,
         y: platformY,
         width: length,
         depth: depth || 5.6,
-        ropeTop: platformY + 31
+        ropeTop: platformY + 31,
+        ...(motion ? { motion } : {})
       });
       state.cursor += length;
       state.y = platformY;
@@ -3679,7 +3791,7 @@ function buildRedesignedLevels() {
 
     let lastModule = '';
     let moduleCount = 0;
-    while (state.cursor < 224 && moduleCount < 9) {
+    while (state.cursor < 252 && moduleCount < 11) {
       let name = pool[Math.floor(random() * pool.length)];
       let attempts = 0;
       while (name === lastModule && attempts < 6) {
@@ -3689,6 +3801,13 @@ function buildRedesignedLevels() {
       modules[name](state);
       lastModule = name;
       moduleCount++;
+    }
+
+    // Guarantee a moving platform on every generated level. The mechanic is
+    // too important to leave to the module lottery, especially on levels that
+    // happen to roll only hills and ramps.
+    if (!state.platforms.some((platform) => platform.motion)) {
+      modules.movingChain(state);
     }
 
     const finishX = state.cursor + 10;
@@ -3713,163 +3832,162 @@ function buildRedesignedLevels() {
       return null;
     };
 
-    const barriers = [];
-    const barrierCount = 1 + Math.min(4, Math.floor((levelNumber - 10) / 9));
-    let barrierSide = random() < 0.5 ? -1 : 1;
-    for (let i = 0; i < barrierCount && flatSections.length; i++) {
-      for (let attempt = 0; attempt < 20; attempt++) {
-        const section = flatSections[Math.floor(random() * flatSections.length)];
-        const width = section.width || 7.6;
+    const routeMinX = 16;
+    const routeMaxX = finishX - 10;
+
+    // Build a dense pool of legal positions across the whole route. The old
+    // retry loops sampled whole sections at random, so short flat pieces were
+    // almost never picked and high levels ended up with one lonely obstacle.
+    const makeFlatSlots = (minSpan, pad, step) => {
+      const slots = [];
+      for (const section of flatSections) {
         const span = section.x2 - section.x1;
-        if (span < 11) continue;
-        const x = section.x1 + 4.2 + random() * Math.max(0.1, span - 8.4);
-        if (barriers.some((barrier) => Math.abs(barrier.x - x) < 14)) continue;
-        // Leave a corridor at least 1.6 m wide on the opposite side of the
-        // centre line. The car's wheels reach ~1.2 m from the centre, so a
-        // barrier that touched the middle lane would be impossible to dodge
-        // without clipping a wheel.
-        const centerClearance = 1.6;
-        const depth = clamp(width * 0.5 - centerClearance - 0.14, 0.85, 2.8);
-        barriers.push({
-          x: +x.toFixed(2),
-          y: section.y,
-          width: 1.15,
-          depth: +depth.toFixed(2),
-          height: 1.45,
-          z: +(barrierSide * (width * 0.5 - depth * 0.5 - 0.14)).toFixed(2),
-          side: barrierSide
-        });
-        barrierSide *= -1;
-        break;
+        if (span < minSpan) continue;
+        const start = Math.max(section.x1 + pad, routeMinX);
+        const end = Math.min(section.x2 - pad, routeMaxX);
+        if (end < start) continue;
+        for (let x = start; x <= end + 0.01; x += step) {
+          slots.push({ x, y: section.y, width: section.width || 7.6 });
+        }
       }
-    }
-    if (!barriers.length && flatSections.length) {
-      const section = flatSections.reduce((best, current) =>
-        (current.x2 - current.x1) > (best.x2 - best.x1) ? current : best
-      );
-      const width = section.width || 7.6;
-      const depth = clamp(width * 0.5 - 1.6 - 0.14, 0.85, 2.8);
-      barriers.push({
-        x: +((section.x1 + section.x2) * 0.5).toFixed(2),
-        y: section.y,
+      return slots;
+    };
+
+    const shuffleSlots = (slots) => {
+      const shuffled = slots.slice();
+      for (let i = shuffled.length - 1; i > 0; i--) {
+        const j = Math.floor(random() * (i + 1));
+        const temp = shuffled[i];
+        shuffled[i] = shuffled[j];
+        shuffled[j] = temp;
+      }
+      return shuffled;
+    };
+
+    const pickSlots = (slots, count, spacing, avoid) => {
+      const chosen = [];
+      for (const slot of shuffleSlots(slots)) {
+        if (chosen.length >= count) break;
+        if (chosen.some((other) => Math.abs(other.x - slot.x) < spacing)) continue;
+        if (avoid.some((other) => Math.abs(other.x - slot.x) < spacing)) continue;
+        chosen.push(slot);
+      }
+      return chosen;
+    };
+
+    const barriers = [];
+    const barrierCount = 2 + Math.min(5, Math.floor((levelNumber - 10) / 7));
+    const barrierSlots = makeFlatSlots(7.0, 2.6, 2.0);
+    let barrierSide = random() < 0.5 ? -1 : 1;
+    const makeBarrier = (slot) => {
+      const width = slot.width;
+      // Leave a corridor on the opposite side of the centre line. The wheel
+      // bodies sit at ±1.0 m with a 0.48 m sphere, so the car needs a clean
+      // 1.48 m half-width. An inner edge closer than that let a centred car
+      // graze the barrier and even wedge its wheel into it on narrow bridges.
+      const centerClearance = 2.0;
+      const depth = clamp(width * 0.5 - centerClearance - 0.14, 0.55, 2.8);
+      const barrier = {
+        x: +slot.x.toFixed(2),
+        y: slot.y,
         width: 1.15,
         depth: +depth.toFixed(2),
         height: 1.45,
         z: +(barrierSide * (width * 0.5 - depth * 0.5 - 0.14)).toFixed(2),
         side: barrierSide
-      });
+      };
+      barrierSide *= -1;
+      return barrier;
+    };
+    for (const slot of pickSlots(barrierSlots, barrierCount, 11.5, [])) {
+      barriers.push(makeBarrier(slot));
+    }
+    if (!barriers.length && barrierSlots.length) {
+      barriers.push(makeBarrier(barrierSlots[0]));
     }
 
     const hazards = [];
-    const hazardCount = 1 + Math.min(3, Math.floor((levelNumber - 10) / 11));
-    for (let i = 0; i < hazardCount && flatSections.length; i++) {
-      for (let attempt = 0; attempt < 24; attempt++) {
-        const section = flatSections[Math.floor(random() * flatSections.length)];
-        const width = section.width || 7.6;
-        const span = section.x2 - section.x1;
-        if (span < 12) continue;
-        const x = section.x1 + 3.4 + random() * Math.max(0.1, span - 7.0);
-        if (barriers.some((barrier) => Math.abs(barrier.x - x) < 13)) continue;
-        if (hazards.some((hazard) => Math.abs(hazard.x - x) < 13)) continue;
-        const zoneWidth = clamp(span * 0.3, 3.0, 4.2);
-        const zoneDepth = clamp(width - 3.6, 2.0, 2.6);
-        const zSide = (i + index) % 2 === 0 ? 1 : -1;
-        hazards.push({
-          x: +x.toFixed(2),
-          y: section.y,
-          width: +zoneWidth.toFixed(2),
-          depth: +zoneDepth.toFixed(2),
-          z: +(zSide * (width * 0.5 - zoneDepth * 0.5 - 0.55)).toFixed(2)
-        });
-        break;
-      }
+    const hazardCount = 2 + Math.min(4, Math.floor((levelNumber - 10) / 9));
+    const hazardSlots = makeFlatSlots(6.0, 1.9, 2.0);
+    const makeHazard = (slot) => {
+      const width = slot.width;
+      const zoneWidth = clamp(width * 0.45, 2.6, 4.2);
+      // updateHazards inflates every zone by 0.5 m, and the car's wheels
+      // reach 1.48 m from the centre. Keep the inner edge at least 1.1 m out
+      // so a centred car can drive past without taking damage, on a narrow
+      // bridge as well as on the wide deck.
+      const zoneDepth = clamp(width * 0.5 - 1.3, 1.0, 2.5);
+      const zSide = (hazards.length + index) % 2 === 0 ? 1 : -1;
+      return {
+        x: +slot.x.toFixed(2),
+        y: slot.y,
+        width: +zoneWidth.toFixed(2),
+        depth: +zoneDepth.toFixed(2),
+        z: +(zSide * (width * 0.5 - zoneDepth * 0.5 - 0.2)).toFixed(2)
+      };
+    };
+    for (const slot of pickSlots(hazardSlots, hazardCount, 10, barriers)) {
+      hazards.push(makeHazard(slot));
     }
-    if (!hazards.length && flatSections.length) {
-      const freeSections = flatSections.filter((section) => {
-        const center = (section.x1 + section.x2) * 0.5;
-        return !barriers.some((barrier) => Math.abs(barrier.x - center) < 11);
-      });
-      const section = freeSections.length
-        ? freeSections.reduce((best, current) =>
-            (current.x2 - current.x1) > (best.x2 - best.x1) ? current : best
-          )
-        : null;
-      if (section) {
-        const width = section.width || 7.6;
-        const span = section.x2 - section.x1;
-        const zoneWidth = clamp(span * 0.3, 3.0, 4.2);
-        const zoneDepth = clamp(width - 3.6, 2.0, 2.6);
-        const zSide = index % 2 === 0 ? 1 : -1;
-        hazards.push({
-          x: +((section.x1 + section.x2) * 0.5).toFixed(2),
-          y: section.y,
-          width: +zoneWidth.toFixed(2),
-          depth: +zoneDepth.toFixed(2),
-          z: +(zSide * (width * 0.5 - zoneDepth * 0.5 - 0.55)).toFixed(2)
-        });
-      }
+    if (!hazards.length && hazardSlots.length) {
+      hazards.push(makeHazard(hazardSlots[0]));
     }
 
     const crossbows = [];
-    const crossbowCount = 1 + Math.min(4, Math.floor((levelNumber - 10) / 9));
-    const crossbowCandidates = [];
-    for (const section of flatSections) {
-      if (section.x1 < 18 || section.x2 > finishX - 10) continue;
-      const span = section.x2 - section.x1;
-      if (span >= 22) {
-        crossbowCandidates.push({ x: section.x1 + 5, y: section.y });
-        crossbowCandidates.push({ x: section.x2 - 5, y: section.y });
-      } else {
-        crossbowCandidates.push({ x: (section.x1 + section.x2) * 0.5, y: section.y });
-      }
+    const crossbowCount = 2 + Math.min(5, Math.floor((levelNumber - 10) / 7));
+    const crossbowSlots = [];
+    for (let x = routeMinX + 2; x <= routeMaxX - 2; x += 2.5) {
+      // Crossbow islands sit beside the deck, so ramps are valid firing
+      // positions as well. This keeps the sides busy even on narrow bridges.
+      const y = localTopAt(x);
+      if (y === null) continue;
+      crossbowSlots.push({ x, y });
     }
-    crossbowCandidates.sort((a, b) => a.x - b.x);
-    // An arrow that shoves the car straight into a barrier or a damage zone
-    // turns a fair dodge into a coin flip. Keep crossbows at least 11 m away
-    // from the other hazards along the route.
-    const safeCrossbowCandidates = crossbowCandidates.filter((candidate) =>
-      !barriers.some((barrier) => Math.abs(barrier.x - candidate.x) < 11) &&
-      !hazards.some((hazard) => Math.abs(hazard.x - candidate.x) < 11)
-    );
-    const usableCrossbowCandidates = safeCrossbowCandidates.length
-      ? safeCrossbowCandidates
-      : crossbowCandidates;
     let crossbowSide = random() < 0.5 ? -1 : 1;
-    for (const candidate of usableCrossbowCandidates) {
-      if (crossbows.length >= crossbowCount) break;
-      if (crossbows.some((crossbow) => Math.abs(crossbow.x - candidate.x) < 12)) continue;
-      crossbows.push({
-        x: +candidate.x.toFixed(2),
-        y: +(candidate.y + (crossbowSide > 0 ? -1.25 : -0.15)).toFixed(2),
+    const makeCrossbow = (slot) => {
+      const crossbow = {
+        x: +slot.x.toFixed(2),
+        y: +(slot.y + (crossbowSide > 0 ? -1.25 : -0.15)).toFixed(2),
         side: crossbowSide
-      });
+      };
       crossbowSide *= -1;
+      return crossbow;
+    };
+    // An arrow that shoves the car straight into a barrier or a damage zone
+    // turns a fair dodge into a coin flip. Prefer firing positions at least
+    // 10.5 m away from the other hazards; relax only when the route is packed.
+    const occupied = barriers.concat(hazards);
+    let crossbowPicks = pickSlots(crossbowSlots, crossbowCount, 10.5, occupied);
+    if (crossbowPicks.length < Math.min(2, crossbowCount)) {
+      crossbowPicks = pickSlots(crossbowSlots, crossbowCount, 8, occupied);
     }
-    if (!crossbows.length && crossbowCandidates.length) {
-      const candidate = crossbowCandidates[Math.floor(crossbowCandidates.length * 0.5)];
-      crossbows.push({
-        x: +candidate.x.toFixed(2),
-        y: +(candidate.y - 0.15).toFixed(2),
-        side: -1
-      });
+    if (crossbowPicks.length < Math.min(2, crossbowCount)) {
+      crossbowPicks = pickSlots(crossbowSlots, crossbowCount, 8, []);
+    }
+    for (const slot of crossbowPicks) {
+      crossbows.push(makeCrossbow(slot));
+    }
+    if (!crossbows.length && crossbowSlots.length) {
+      crossbows.push(makeCrossbow(crossbowSlots[Math.floor(crossbowSlots.length * 0.5)]));
     }
 
     const crates = [];
-    const crateCount = 3 + Math.min(3, Math.floor((levelNumber - 10) / 14));
+    const crateCount = 6 + Math.min(4, Math.floor((levelNumber - 10) / 10));
     for (let i = 0; i < crateCount && flatSections.length; i++) {
-      for (let attempt = 0; attempt < 20; attempt++) {
+      for (let attempt = 0; attempt < 80; attempt++) {
         const section = flatSections[Math.floor(random() * flatSections.length)];
         const width = section.width || 7.6;
-        if (width < 6.0) continue;
+        if (width < 5.2) continue;
         const span = section.x2 - section.x1;
         const x = section.x1 + 2.0 + random() * Math.max(0.1, span - 4.0);
         const size = +(0.76 + random() * 0.16).toFixed(2);
         const maxZ = Math.min(2.6, width * 0.5 - 1.0);
         const z = (random() < 0.5 ? -1 : 1) * (Math.min(1.7, maxZ) + random() * Math.max(0.05, maxZ - 1.7));
-        // Keep the corridor around a barrier or a damage zone free. A crate
-        // sitting in the only safe lane would undo the dodge.
-        if (barriers.some((barrier) => Math.abs(barrier.x - x) < 6)) continue;
-        if (hazards.some((hazard) => Math.abs(hazard.x - x) < 6)) continue;
+        // Keep the exact lane around a barrier or a damage zone free. Only a
+        // short x exclusion is needed: the z-overlap checks below already
+        // reject a crate that would physically block the safe corridor.
+        if (barriers.some((barrier) => Math.abs(barrier.x - x) < 3.2)) continue;
+        if (hazards.some((hazard) => Math.abs(hazard.x - x) < 3.2)) continue;
         if (barriers.some((barrier) =>
           Math.abs(barrier.x - x) < barrier.width * 0.5 + size + 0.8 &&
           Math.abs(barrier.z - z) < barrier.depth * 0.5 + size + 0.6
@@ -5012,6 +5130,9 @@ function trackWidthAt(x) {
     }
   }
   for (const platform of levelDef.platforms || []) {
+    // A moving deck is not a reliable surface for a coin or for a width
+    // reading, so only static platforms participate here.
+    if (platform.motion) continue;
     const platformWidth = platform.width || 5.0;
     if (x >= platform.x - platformWidth * 0.5 && x <= platform.x + platformWidth * 0.5) {
       width = Math.min(width, platform.depth || 4.2);
@@ -5639,6 +5760,10 @@ function addPlatform(spec) {
   const depth = spec.depth || 4.2;
   const topY = spec.y === undefined ? 0 : spec.y;
   const z = spec.z || 0;
+  const motion =
+    spec.motion && (spec.motion.axis === 'y' || spec.motion.axis === 'z')
+      ? spec.motion
+      : null;
 
   const body = new CANNON.Body({
     mass: 0,
@@ -5647,6 +5772,12 @@ function addPlatform(spec) {
     position: new CANNON.Vec3(spec.x, topY - PLATFORM_THICKNESS * 0.5, z)
   });
   body.allowSleep = false;
+  if (motion) {
+    // Kinematic bodies push the car through contact/friction while their
+    // position is driven by updateMovingPlatforms.
+    body.type = CANNON.Body.KINEMATIC;
+    body.updateMassProperties();
+  }
   world.addBody(body);
 
   const group = new THREE.Group();
@@ -5700,6 +5831,42 @@ function addPlatform(spec) {
   levelGroup.add(group);
 
   body.userData = { visual: group, kind: 'platform' };
+
+  if (motion) {
+    movingPlatforms.push({
+      body,
+      axis: motion.axis,
+      baseY: body.position.y,
+      baseZ: body.position.z,
+      amplitude: Math.max(0.05, motion.amplitude || 0.6),
+      period: Math.max(1.6, motion.period || 4.5),
+      phase: Number.isFinite(motion.phase) ? motion.phase : 0,
+      clock: 0
+    });
+  }
+}
+
+// Kinematic platforms must be moved before the physics step. Their velocity
+// is set as well so the contact solver carries the car along instead of
+// letting it slide off a slowly moving deck.
+function updateMovingPlatforms(dt) {
+  if (!movingPlatforms.length) return;
+  for (const platform of movingPlatforms) {
+    platform.clock += dt;
+    const omega = (Math.PI * 2) / platform.period;
+    const angle = platform.clock * omega + platform.phase;
+    const offset = Math.sin(angle) * platform.amplitude;
+    const speed = Math.cos(angle) * platform.amplitude * omega;
+    const body = platform.body;
+    if (platform.axis === 'y') {
+      body.position.y = platform.baseY + offset;
+      body.velocity.set(0, speed, 0);
+    } else {
+      body.position.z = platform.baseZ + offset;
+      body.velocity.set(0, 0, speed);
+    }
+    body.aabbNeedsUpdate = true;
+  }
 }
 
 /* ---------- Side crossbow islands ---------- */
@@ -5897,13 +6064,24 @@ function updateArrows(dt, canHit) {
       tempVec.applyQuaternion(tempQuat);
       if (Math.abs(tempVec.x) < 1.85 && Math.abs(tempVec.y) < 0.95 && Math.abs(tempVec.z) < 1.05) {
         const direction = arrow.velocity.clone().normalize();
-        // A light lateral shove in the direction the arrow was travelling.
-        // Keep the impulse sideways only: braking the car with the arrow's X
-        // component made a hit feel like a wall and could interrupt a jump.
+        // A real shove in the direction the arrow was travelling. Scaling the
+        // impulse by the chassis mass makes the lateral velocity change
+        // independent of the car's weight: ~5 m/s sideways, clamped by the
+        // safety envelope. The X component is ignored so a hit never acts
+        // like an invisible wall or interrupts a ramp jump.
+        const sidePush = clamp(direction.z * 1.4, -1, 1);
         car.body.wakeUp();
         car.body.applyImpulse(
-          new CANNON.Vec3(0, 1.1, clamp(direction.z * 16, -16, 16))
+          new CANNON.Vec3(
+            0,
+            car.body.mass * 0.35,
+            sidePush * car.body.mass * 5.4
+          )
         );
+        // Keep the centering assist out of the way for a moment, otherwise it
+        // cancels the knockback before the player can even see the car shift.
+        car.arrowPushTimer = 0.7;
+        car.arrowPushDir = sidePush;
         spawnBurst(arrow.group.position, ['#ff4d5e', '#ffd447', '#fff3d1'], 9, {
           speed: 2.2,
           up: 1.8,
@@ -6419,13 +6597,19 @@ const CAR_LIMITS = {
   maxSpeedX: 34,
   maxSpeedYUp: 14,
   maxSpeedYDown: 26,
-  maxSpeedZ: 8,
+  maxSpeedZ: 9,
   maxAngularSpeed: 4.6,
-  maxAngularSpeedGround: 4.0,
-  maxYawRateGround: 2.2,
+  maxAngularSpeedGround: 4.2,
+  // The yaw cap must leave room for the responsive ground steering target.
+  // 2.2 rad/s made the car feel glued to the centre line; 3.3 is still far
+  // below the 6+ rad/s spins that used to trip the chassis.
+  maxYawRateGround: 3.3,
   maxPitchRateGround: 3.2,
   maxRollRateGround: 3.0,
-  maxLinearAccel: 260,
+  // Lateral/forward changes get 5 m/s per 60 Hz frame. That is enough for a
+  // sharp lane change and a visible arrow shove, while the upward budget
+  // (maxLinearAccelUp) and the slope-aware clamp below still block launches.
+  maxLinearAccel: 300,
   // Vertical motion gets separate caps: a ramp launch builds up gradually, so
   // a few m/s per frame is plenty, while downward landing impulses must stay
   // free enough to avoid making the car float.
@@ -6568,6 +6752,11 @@ function createCar(level) {
     throttle: 0,
     tiltInput: 0,
     steerVisual: 0,
+    // While this timer is running the lane-centering force is weakened and a
+    // short lateral force keeps the knockback alive against tyre grip. The
+    // direction is +1/-1 depending on which side the arrow came from.
+    arrowPushTimer: 0,
+    arrowPushDir: 0,
     lastVelocity: new CANNON.Vec3(),
     lastAngularVelocity: new CANNON.Vec3(),
     safePosition: new CANNON.Vec3(level.startX, startY, 0),
@@ -6669,14 +6858,14 @@ function clearDebris() {
 
 /* ---------- Level coins ---------- */
 function collectedCoinsStorageKey(levelIndex) {
-  const level = LEVELS[levelIndex];
-  const seed = level && Number.isFinite(level.seed) ? level.seed : 0;
-  return 'driveMad3D_level_coins_' + levelIndex + '_' + seed;
+  // The level index is stable across seed changes, level regeneration and
+  // content updates. The old key embedded the seed, so rebuilding the level
+  // made every coin look uncollected again.
+  return 'driveMad3D_level_coins_' + levelIndex;
 }
 
-function readCollectedCoinIndices(levelIndex) {
+function parseCollectedCoinList(raw) {
   try {
-    const raw = window.localStorage.getItem(collectedCoinsStorageKey(levelIndex));
     const parsed = JSON.parse(raw || '[]');
     if (!Array.isArray(parsed)) return [];
     const seen = new Set();
@@ -6687,6 +6876,38 @@ function readCollectedCoinIndices(levelIndex) {
       }
     }
     return Array.from(seen).sort((a, b) => a - b);
+  } catch (error) {
+    return [];
+  }
+}
+
+function readCollectedCoinIndices(levelIndex) {
+  const stableKey = collectedCoinsStorageKey(levelIndex);
+  const legacyPrefix = stableKey + '_';
+  try {
+    // Read the stable key and every seed-based legacy key for this level.
+    // Merging them makes the progress survive old builds, profile restarts
+    // and any future level regeneration that changes the seed.
+    const keys = [];
+    for (let i = 0; i < window.localStorage.length; i++) {
+      const key = window.localStorage.key(i);
+      if (!key) continue;
+      if (key === stableKey || key.startsWith(legacyPrefix)) keys.push(key);
+    }
+    const seen = new Set();
+    for (const key of keys) {
+      for (const index of parseCollectedCoinList(window.localStorage.getItem(key))) {
+        seen.add(index);
+      }
+    }
+    const collected = Array.from(seen).sort((a, b) => a - b);
+    if (collected.length) {
+      const stableList = parseCollectedCoinList(window.localStorage.getItem(stableKey));
+      if (stableList.length !== collected.length) {
+        writeStorage(stableKey, JSON.stringify(collected));
+      }
+    }
+    return collected;
   } catch (error) {
     return [];
   }
@@ -6717,6 +6938,9 @@ function coinSurfaceY(x) {
   if (trackY !== null && trackY !== undefined) return trackY;
 
   for (const platform of levelDef.platforms || []) {
+    // Coins must not hover over an oscillating deck: their world position is
+    // static while the platform moves out from under them.
+    if (platform.motion) continue;
     const width = platform.width || 5;
     const margin = Math.max(0.7, width * 0.5 - 0.9);
     if (Math.abs(x - platform.x) <= margin) {
@@ -6937,6 +7161,9 @@ function buildLevel(index) {
   hazards = [];
   crossbows = [];
   arrows = [];
+  movingPlatforms = [];
+  // The arrow-knockback grip drop must never leak into a fresh level.
+  WHEEL_GROUND_CONTACT.friction = 0.92;
   clearWorldBodies();
   removeCar();
   clearGroup(levelGroup);
@@ -8326,6 +8553,7 @@ function updateDriving(dt) {
   const input = GAME.input;
   const targetThrottle = running ? (input.forward ? 1 : input.backward ? -1 : 0) : 0;
   const speedX = car.body.velocity.x;
+  car.arrowPushTimer = Math.max(0, (car.arrowPushTimer || 0) - dt);
 
   // Smooth pedal input instead of an instant 100% torque kick.
   car.throttle = damp(car.throttle, targetThrottle, targetThrottle === 0 ? 9 : 4.8, dt);
@@ -8413,15 +8641,16 @@ function updateDriving(dt) {
   // chassis does not turn or slide; only the front wheels visibly steer.
   const wheelAuthority = clamp(0.35 + car.attachedWheels * 0.16, 0.35, 1);
   const groundSteerFactor = clamp(Math.abs(speedX) / 3.5, 0, 1);
-  // The old ground target allowed 10 rad/s of yaw (the global clamp cut it to
-  // 6.4). That is a full spin per second: the wheels scrubbed sideways and
-  // tripped the chassis. A lane change needs no more than ~2 rad/s.
+  // Arcade ground steering: the nose bites into the turn quickly, but the
+  // absolute yaw rate stays capped well below the old 6.4 rad/s spin that
+  // used to launch the chassis. The slope-aware vertical clamp in
+  // limitCarDynamics keeps a sharp lane change from turning into a hop.
   const steerTargetYaw = airborne
     ? 0.3
-    : 0.7 * groundSteerFactor * wheelAuthority * (loadedSteer ? 0.8 : 1);
-  const steerYawGain = airborne ? 4.6 : 18;
-  const steerYawLimit = airborne ? 2.4 : (loadedSteer ? 1.6 : 2.2);
-  const steerYawDamp = airborne ? 6 : 24;
+    : (loadedSteer ? 0.85 : 1.0) * groundSteerFactor * wheelAuthority;
+  const steerYawGain = airborne ? 4.6 : 28;
+  const steerYawLimit = airborne ? 2.4 : (loadedSteer ? 2.6 : 3.2);
+  const steerYawDamp = airborne ? 6 : 26;
   const targetWheelAngle = steer * (airborne ? 0.16 : 0.55);
   car.steerVisual = damp(car.steerVisual, targetWheelAngle, airborne ? 10 : 35, dt);
 
@@ -8450,9 +8679,14 @@ function updateDriving(dt) {
   // this is an arcade lane-change, so it responds on the next frame instead of
   // slowly building up through force. In the air the original gentle force is
   // preserved. With no steering, damping pulls the car back to the centre lane.
+  // An arrow hit sets this flag for a short time. During that window the
+  // centering assist is deliberately weak, otherwise its 150 N damping kills
+  // the whole lateral impulse within a couple of frames and the hit reads as
+  // if nothing happened.
+  const arrowPush = car.arrowPushTimer > 0;
   if (airborne) {
-    const laneDamp = steer !== 0 ? 8 : 45;
-    const laneCenter = steer !== 0 ? 1.5 : 18;
+    const laneDamp = steer !== 0 ? 8 : (arrowPush ? 12 : 45);
+    const laneCenter = steer !== 0 ? 1.5 : (arrowPush ? 2 : 18);
     car.body.force.z += -car.body.velocity.z * laneDamp - car.body.position.z * laneCenter;
     if (steer !== 0) {
       car.body.force.z += steer * 60;
@@ -8463,21 +8697,38 @@ function updateDriving(dt) {
     }
   } else if (steer !== 0) {
     // Steering is speed-sensitive: at a standstill the car must not slide or
-    // drive itself sideways. The old target reached 10.5 m/s sideways, which
-    // combined with a hard yaw made the tyres trip the chassis. A ~5 m/s
-    // lane change is still snappy but keeps the contact patches loaded.
-    const lateralFactor = loadedSteer ? 0.4 : 0.55;
-    const lateralMax = loadedSteer ? 4.6 : 6.0;
+    // drive itself sideways. The target is a genuine arcade lane change again;
+    // a hard cap and the softened loaded hinges keep the tyres from tripping
+    // the chassis the way the old 10.5 m/s target did.
+    const lateralFactor = loadedSteer ? 0.7 : 0.85;
+    const lateralMax = loadedSteer ? 6.2 : 7.8;
     const lateralSpeed =
       clamp((Math.abs(speedX) - 0.25) * lateralFactor, 0, lateralMax) * wheelAuthority;
     car.body.velocity.z = damp(
       car.body.velocity.z,
       steer * lateralSpeed,
-      loadedSteer ? 14 : 22,
+      arrowPush ? 9 : (loadedSteer ? 20 : 28),
       dt
     );
   } else {
-    car.body.force.z += -car.body.velocity.z * 150 - car.body.position.z * 80;
+    car.body.force.z += arrowPush
+      ? -car.body.velocity.z * 14 - car.body.position.z * 10
+      : -car.body.velocity.z * 150 - car.body.position.z * 80;
+  }
+
+  // A single impulse is mostly eaten by the grippy tyres within two frames:
+  // the four wheel contacts absorb the lateral momentum through the hinges.
+  // While the hit window is active, keep pushing the chassis sideways and let
+  // the tyres lose lateral grip for a moment. That turns the hit into a real
+  // skid (~1.4 m, measured) without rolling the car; 800 N with full grip
+  // already tipped it over, this combination stays flat. In the air the
+  // initial impulse already carries the car, so no extra force is used.
+  if (car.grounded && arrowPush && car.arrowPushDir) {
+    car.body.force.z += car.arrowPushDir * 480;
+  }
+  const grip = arrowPush ? 0.10 : 0.92;
+  if (WHEEL_GROUND_CONTACT.friction !== grip) {
+    WHEEL_GROUND_CONTACT.friction = grip;
   }
 
   // No invisible side wall: leaving the deck is supposed to be dangerous.
@@ -8574,6 +8825,18 @@ function limitCarDynamics(dt) {
   body.velocity.x = clamp(body.velocity.x, -CAR_LIMITS.maxReverseSpeed, CAR_LIMITS.maxSpeedX);
   body.velocity.y = clamp(body.velocity.y, -CAR_LIMITS.maxSpeedYDown, CAR_LIMITS.maxSpeedYUp);
   body.velocity.z = clamp(body.velocity.z, -CAR_LIMITS.maxSpeedZ, CAR_LIMITS.maxSpeedZ);
+
+  if (car.grounded) {
+    // A flat deck or a platform seam must never throw the car upwards. Sample
+    // the slope slightly behind the chassis as well: that preserves a real
+    // ramp launch for the last contact frames, when the nose is already past
+    // the lip but the rear wheels are still on the incline.
+    const slopeHere = trackSlopeAt(body.position.x);
+    const slopeBehind = trackSlopeAt(body.position.x - 1.2);
+    const launchSlope = Math.max(slopeHere, slopeBehind);
+    const maxRise = Math.max(1.15, launchSlope * Math.abs(body.velocity.x) * 1.45 + 0.9);
+    if (body.velocity.y > maxRise) body.velocity.y = maxRise;
+  }
 
   if (car.grounded) {
     // On the ground the chassis only needs enough rotation to follow the road,
@@ -8695,6 +8958,7 @@ function updateAfterStep(dt) {
   }
 
   rememberSafeTransforms();
+  updateMovingPlatforms(dt);
 
   let stepFailed = false;
   try {
@@ -9007,8 +9271,11 @@ window.__driveMad = {
   updateDriving,
   updateAfterStep,
   updateGameState,
+  updateHazards,
   updateCrossbows,
+  updateArrows,
   updateCoins,
+  updateMovingPlatforms,
   collectCoin,
   trackTopAt,
   showMainMenu,
@@ -9025,6 +9292,7 @@ window.__driveMad = {
   get hazards() { return hazards; },
   get crossbows() { return crossbows; },
   get arrows() { return arrows; },
+  get movingPlatforms() { return movingPlatforms; },
   get car() { return car; },
   get level() { return levelDef; }
 };
