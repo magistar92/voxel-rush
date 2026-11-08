@@ -3504,29 +3504,37 @@ function buildRedesignedLevels() {
     platformChain(state) {
       state.flat(4);
       state.ramp(3, 0.7);
-      state.gap(1.5);
-      state.platform(4.6, -0.25, 5.8, {
+      // The old 1.5 m gaps were wider than a wheel and caught the chassis
+      // between two platforms: the car high-centred and could not drive on.
+      // Wider platforms with 0.4 m seams keep the module length identical,
+      // still read as a chain of separate pads and stay drivable at speed.
+      state.gap(0.4);
+      state.platform(5.7, -0.25, 5.8, {
         axis: 'y',
         amplitude: 0.18,
         period: 5.0,
         phase: 2.4
       });
-      state.gap(1.5);
-      state.platform(4.6, -0.25, 5.8, {
+      state.gap(0.4);
+      state.platform(5.7, -0.25, 5.8, {
         axis: 'z',
         amplitude: 0.95,
         period: 4.2,
         phase: 0.7
       });
-      state.gap(1.5);
-      state.platform(4.6, -0.2, 5.8);
+      state.gap(0.4);
+      state.platform(5.7, -0.2, 5.8);
       state.flat(10);
     },
     narrowBridge(state) {
       state.flat(4);
-      state.ramp(4, 0.7, 5.8);
-      state.flat(15, 5.2);
-      state.ramp(4, -0.7, 5.8);
+      // 5.2 m of deck left only ~1.4 m beside the outer wheels: a glancing
+      // arrow hit at the transition could put a wheel over the edge and
+      // high-centre the car. 6.0 m still reads as a narrow bridge but keeps
+      // the outside wheels on the deck through a normal recovery.
+      state.ramp(4, 0.7, 6.2);
+      state.flat(15, 6.0);
+      state.ramp(4, -0.7, 6.2);
       state.flat(8);
     },
     crossbowAlley(state) {
@@ -3587,17 +3595,18 @@ function buildRedesignedLevels() {
       state.flat(3);
       state.ramp(5, 1.3);
       state.flat(8);
-      state.gap(1.5);
-      state.platform(4.8, -0.3, 5.8);
-      state.gap(1.5);
-      state.platform(4.8, -0.3, 5.8, {
+      // Same rule as platformChain: 0.4 m seams, same module length.
+      state.gap(0.4);
+      state.platform(5.9, -0.3, 5.8);
+      state.gap(0.4);
+      state.platform(5.9, -0.3, 5.8, {
         axis: 'y',
         amplitude: 0.22,
         period: 5.4,
         phase: 1.3
       });
-      state.gap(1.5);
-      state.platform(4.8, -0.3, 5.8, {
+      state.gap(0.4);
+      state.platform(5.9, -0.3, 5.8, {
         axis: 'z',
         amplitude: 0.85,
         period: 4.0,
@@ -3616,14 +3625,18 @@ function buildRedesignedLevels() {
       state.flat(8);
     },
     zigzag(state) {
+      // Same width treatment as the other bridge modules. At 5.0 m the outer
+      // wheels were only 0.9 m from the edge once a hit had nudged the car
+      // off-centre; 6.0 m keeps the zigzag challenge without the instant
+      // high-centre.
       state.flat(4);
-      state.ramp(4, 0.6, 5.6);
-      state.flat(10, 5.0);
-      state.ramp(4, -0.6, 5.6);
+      state.ramp(4, 0.6, 6.2);
+      state.flat(10, 6.0);
+      state.ramp(4, -0.6, 6.2);
       state.flat(4);
-      state.ramp(4, 0.6, 5.6);
-      state.flat(10, 5.0);
-      state.ramp(4, -0.6, 5.6);
+      state.ramp(4, 0.6, 6.2);
+      state.flat(10, 6.0);
+      state.ramp(4, -0.6, 6.2);
       state.flat(8);
     },
     longBridge(state) {
@@ -3644,22 +3657,24 @@ function buildRedesignedLevels() {
     movingChain(state) {
       state.flat(4);
       state.ramp(3.2, 0.75);
-      state.gap(1.4);
-      state.platform(4.8, -0.15, 6.2, {
+      // 1.4 m gaps stopped the car dead on the first pad, right under a
+      // crossbow. Wider pads with 0.4 m seams are still visibly separate.
+      state.gap(0.4);
+      state.platform(5.8, -0.15, 6.8, {
         axis: 'z',
         amplitude: 1.0,
         period: 4.4,
         phase: 0.4
       });
-      state.gap(1.4);
-      state.platform(4.8, -0.15, 6.2, {
+      state.gap(0.4);
+      state.platform(5.8, -0.15, 6.8, {
         axis: 'z',
         amplitude: 0.85,
         period: 3.8,
         phase: 2.1
       });
-      state.gap(1.4);
-      state.platform(4.8, -0.15, 6.2, {
+      state.gap(0.4);
+      state.platform(5.8, -0.15, 6.8, {
         axis: 'y',
         amplitude: 0.18,
         period: 5.2,
@@ -3693,11 +3708,14 @@ function buildRedesignedLevels() {
     },
     steppedBridge(state) {
       state.flat(3);
-      state.ramp(5, 0.5, 5.8);
-      state.flat(7, 5.2);
-      state.ramp(5, 0.5, 5.8);
-      state.flat(7, 5.2);
-      state.ramp(6, -1.0, 5.8);
+      // Same reason as narrowBridge: the old 5.8/5.2 m steps clipped the
+      // outer wheel when the car entered slightly off-centre. Still a
+      // stepped bridge, just wide enough to recover from a hit.
+      state.ramp(5, 0.5, 6.2);
+      state.flat(7, 6.0);
+      state.ramp(5, 0.5, 6.2);
+      state.flat(7, 6.0);
+      state.ramp(6, -1.0, 6.2);
       state.flat(8);
     },
     crossfire(state) {
@@ -6070,18 +6088,48 @@ function updateArrows(dt, canHit) {
         // safety envelope. The X component is ignored so a hit never acts
         // like an invisible wall or interrupts a ramp jump.
         const sidePush = clamp(direction.z * 1.4, -1, 1);
+        // Scale the shove to the road under the car. A full 5.4 m/s hit is
+        // perfect on a wide deck, but on a 4.9 m bridge it would throw a
+        // centred car straight off the edge. The minimum keeps the hit
+        // readable even on the narrowest crossing.
+        // Look a little way ahead: a hit three metres before a narrow bridge
+        // used to count as a wide-deck hit, and the car was still sliding
+        // sideways when it entered the 5 m deck. The shove should already
+        // respect the tightest deck the car is committed to.
+        let knockWidth = trackWidthAt(car.body.position.x);
+        const widthLookAhead = 12;
+        for (const section of levelDef?.sections || []) {
+          if (section.x1 > car.body.position.x && section.x1 <= car.body.position.x + widthLookAhead) {
+            knockWidth = Math.min(knockWidth, section.width || TRACK_WIDTH);
+          }
+        }
+        const roadHalf = knockWidth * 0.5;
+        const room = Math.max(0.35, roadHalf - 1.55);
+        // A hit on a slope or in the air already sets the car moving toward a
+        // drop-off, and there is no tyre grip to stop the slide before the
+        // landing. Keep the flat-ground shove full strength, but soften these
+        // edge cases so the arrow cannot launch the car off an elevated ramp.
+        const hitSlope = Math.abs(trackSlopeAt(car.body.position.x));
+        const hitStability = !car.grounded ? 0.6 : (hitSlope > 0.06 ? 0.7 : 1);
+        const knockScale = clamp(room / 2.15, 0.42, 1) * hitStability;
         car.body.wakeUp();
         car.body.applyImpulse(
           new CANNON.Vec3(
             0,
             car.body.mass * 0.35,
-            sidePush * car.body.mass * 5.4
+            sidePush * car.body.mass * 5.4 * knockScale
           )
         );
         // Keep the centering assist out of the way for a moment, otherwise it
         // cancels the knockback before the player can even see the car shift.
-        car.arrowPushTimer = 0.7;
+        car.arrowPushTimer = 0.6;
         car.arrowPushDir = sidePush;
+        car.arrowPushScale = knockScale;
+        // The hit itself is only half of the story: when the tyres get their
+        // grip back, a held counter-steer can still trip the sliding chassis.
+        // Keep a short recovery window with softened lane changes and extra
+        // roll stability, so the knockback reads as a shove, not a flip.
+        car.arrowRecoverTimer = 1.5;
         spawnBurst(arrow.group.position, ['#ff4d5e', '#ffd447', '#fff3d1'], 9, {
           speed: 2.2,
           up: 1.8,
@@ -6757,6 +6805,8 @@ function createCar(level) {
     // direction is +1/-1 depending on which side the arrow came from.
     arrowPushTimer: 0,
     arrowPushDir: 0,
+    arrowPushScale: 1,
+    arrowRecoverTimer: 0,
     lastVelocity: new CANNON.Vec3(),
     lastAngularVelocity: new CANNON.Vec3(),
     safePosition: new CANNON.Vec3(level.startX, startY, 0),
@@ -8554,6 +8604,7 @@ function updateDriving(dt) {
   const targetThrottle = running ? (input.forward ? 1 : input.backward ? -1 : 0) : 0;
   const speedX = car.body.velocity.x;
   car.arrowPushTimer = Math.max(0, (car.arrowPushTimer || 0) - dt);
+  car.arrowRecoverTimer = Math.max(0, (car.arrowRecoverTimer || 0) - dt);
 
   // Smooth pedal input instead of an instant 100% torque kick.
   car.throttle = damp(car.throttle, targetThrottle, targetThrottle === 0 ? 9 : 4.8, dt);
@@ -8624,6 +8675,8 @@ function updateDriving(dt) {
   const up = new CANNON.Vec3(0, 1, 0);
   car.body.quaternion.vmult(forward, forward);
   car.body.quaternion.vmult(up, up);
+  const arrowPush = car.arrowPushTimer > 0;
+  const arrowRecover = car.arrowRecoverTimer > 0;
 
   // Side-view assists: keep the car from rolling over, but let W/S actively
   // yaw and move it sideways. Without steering input the car straightens out.
@@ -8635,6 +8688,17 @@ function updateDriving(dt) {
   const yawK = airborne ? 30 : 55;
   const yawD = airborne ? 7 : 11;
   car.body.torque.x += -up.z * rollK - car.body.angularVelocity.x * rollD;
+  // During an arrow hit the tyres are unloaded and the car is sliding
+  // sideways. Extra roll stiffness keeps that skid from tripping the chassis
+  // onto its side before the grip comes back.
+  if (arrowPush || arrowRecover) {
+    // Strong anti-roll during the hit and the following recovery. The extra
+    // damping matters most when the tyres regain grip: that is the moment a
+    // sideways-sliding car used to trip onto two wheels.
+    car.body.torque.x +=
+      -up.z * (arrowPush ? 120 : 80) -
+      car.body.angularVelocity.x * (arrowPush ? 14 : 18);
+  }
 
   // Ground steering is deliberately much sharper than the airborne version:
   // a bigger steering angle and a much faster yaw response. At a standstill the
@@ -8648,11 +8712,14 @@ function updateDriving(dt) {
   const steerTargetYaw = airborne
     ? 0.3
     : (loadedSteer ? 0.85 : 1.0) * groundSteerFactor * wheelAuthority;
-  const steerYawGain = airborne ? 4.6 : 28;
-  const steerYawLimit = airborne ? 2.4 : (loadedSteer ? 2.6 : 3.2);
-  const steerYawDamp = airborne ? 6 : 26;
-  const targetWheelAngle = steer * (airborne ? 0.16 : 0.55);
-  car.steerVisual = damp(car.steerVisual, targetWheelAngle, airborne ? 10 : 35, dt);
+  const steerYawGain = airborne ? 4.6 : 32;
+  // A much larger command limit gives the nose an almost instant bite on the
+  // ground. The solver still caps the actual yaw rate at maxYawRateGround, so
+  // the extra headroom sharpens turn-in without allowing an uncontrolled spin.
+  const steerYawLimit = airborne ? 2.4 : (loadedSteer ? 5.0 : 6.0);
+  const steerYawDamp = airborne ? 6 : 50;
+  const targetWheelAngle = steer * (airborne ? 0.16 : 0.7);
+  car.steerVisual = damp(car.steerVisual, targetWheelAngle, airborne ? 10 : 90, dt);
 
   if (steer !== 0) {
     car.body.wakeUp();
@@ -8665,14 +8732,26 @@ function updateDriving(dt) {
       -steerYawLimit,
       steerYawLimit
     );
-    car.body.angularVelocity.y = damp(
-      car.body.angularVelocity.y,
-      desiredYawRate,
-      steerYawDamp,
-      dt
-    );
+    if (airborne) {
+      car.body.angularVelocity.y = damp(
+        car.body.angularVelocity.y,
+        desiredYawRate,
+        steerYawDamp,
+        dt
+      );
+    } else {
+      // On the ground the command is applied directly: combined with the
+      // solver's maxYawRateGround cap this gives an immediate turn-in instead
+      // of letting the wheel contacts bleed the command away every frame.
+      car.body.angularVelocity.y = desiredYawRate;
+    }
   } else {
     car.body.torque.y += forward.z * yawK - car.body.angularVelocity.y * yawD;
+    // On the ground, releasing the steering key should settle the nose instead
+    // of letting the chassis keep rotating. Airborne behaviour is unchanged.
+    if (car.grounded) {
+      car.body.angularVelocity.y = damp(car.body.angularVelocity.y, 0, 12, dt);
+    }
   }
 
   // Lateral movement. On the ground W/S directly drive the sideways velocity:
@@ -8683,7 +8762,6 @@ function updateDriving(dt) {
   // centering assist is deliberately weak, otherwise its 150 N damping kills
   // the whole lateral impulse within a couple of frames and the hit reads as
   // if nothing happened.
-  const arrowPush = car.arrowPushTimer > 0;
   if (airborne) {
     const laneDamp = steer !== 0 ? 8 : (arrowPush ? 12 : 45);
     const laneCenter = steer !== 0 ? 1.5 : (arrowPush ? 2 : 18);
@@ -8695,25 +8773,62 @@ function updateDriving(dt) {
         car.body.velocity.z = Math.sign(car.body.velocity.z) * maxLateral;
       }
     }
-  } else if (steer !== 0) {
+  } else if (steer !== 0 && !arrowPush) {
     // Steering is speed-sensitive: at a standstill the car must not slide or
     // drive itself sideways. The target is a genuine arcade lane change again;
     // a hard cap and the softened loaded hinges keep the tyres from tripping
     // the chassis the way the old 10.5 m/s target did.
-    const lateralFactor = loadedSteer ? 0.7 : 0.85;
-    const lateralMax = loadedSteer ? 6.2 : 7.8;
+    // Inside the post-hit recovery window the lane change is deliberately
+    // gentle: the tyres have just regained grip, and a full-strength
+    // counter-steer on that grip was what rolled the sliding chassis over.
+    const lateralFactor = (loadedSteer ? 0.7 : 0.85) * (arrowRecover ? 0.45 : 1);
+    const lateralMax = arrowRecover ? 2.6 : (loadedSteer ? 6.2 : 7.8);
     const lateralSpeed =
       clamp((Math.abs(speedX) - 0.25) * lateralFactor, 0, lateralMax) * wheelAuthority;
+    // The cap above limits how fast the car can slide; the damping must still be
+    // firm enough to actually stop the residual hit velocity. At lambda 10 the
+    // car kept drifting past the centre line and reached the deck edge before
+    // the counter-steer could bite (levels 22/24).
     car.body.velocity.z = damp(
       car.body.velocity.z,
       steer * lateralSpeed,
-      arrowPush ? 9 : (loadedSteer ? 20 : 28),
+      arrowRecover ? 20 : (loadedSteer ? 20 : 28),
       dt
     );
   } else {
+    // Also used while an arrow hit is active, even if a steer key is held:
+    // the hit owns the sideways motion for this short window. Letting the
+    // lane-change assist run with the tyres unloaded stacked an extra 7.8 m/s
+    // on the knockback and slid the car clean off the deck. The yaw assist
+    // above still lets the player point the car.
     car.body.force.z += arrowPush
       ? -car.body.velocity.z * 14 - car.body.position.z * 10
       : -car.body.velocity.z * 150 - car.body.position.z * 80;
+  }
+
+  if (arrowPush) {
+    // Hard ceiling on the total sideways speed while a hit is active. The
+    // impulse plus a held steer key (or a ramp launch) could previously reach
+    // 8-9 m/s and carry a centred car clean off a 7.6 m deck. 4.8 m/s is still
+    // a clearly visible shove, but the tyres and the centering assist get a
+    // chance to bring the car back before it reaches the edge.
+    // Scale the ceiling with the hit itself. Without this, a hit softened to
+    // 0.42 for a narrow deck still got the full 4.8 m/s slide during the
+    // 0.6 s push, which carried the car off the very bridge the scaling was
+    // meant to protect (level 46).
+    const maxKnockVz = 4.8 * clamp(car.arrowPushScale || 1, 0.42, 1);
+    if (Math.abs(car.body.velocity.z) > maxKnockVz) {
+      car.body.velocity.z = Math.sign(car.body.velocity.z) * maxKnockVz;
+    }
+  } else if (arrowRecover) {
+    // As the push ends, keep the remaining slide under control. The car is
+    // still off-centre and the tyres are biting again; without this ceiling a
+    // bounce or a held steer could carry the residual 4.8 m/s into the edge of
+    // a narrow deck (levels 22/24 did exactly that).
+    const maxRecoverVz = 3.6;
+    if (Math.abs(car.body.velocity.z) > maxRecoverVz) {
+      car.body.velocity.z = Math.sign(car.body.velocity.z) * maxRecoverVz;
+    }
   }
 
   // A single impulse is mostly eaten by the grippy tyres within two frames:
@@ -8724,10 +8839,17 @@ function updateDriving(dt) {
   // already tipped it over, this combination stays flat. In the air the
   // initial impulse already carries the car, so no extra force is used.
   if (car.grounded && arrowPush && car.arrowPushDir) {
-    car.body.force.z += car.arrowPushDir * 480;
+    car.body.force.z += car.arrowPushDir * 420 * (car.arrowPushScale || 1);
   }
-  const grip = arrowPush ? 0.10 : 0.92;
-  if (WHEEL_GROUND_CONTACT.friction !== grip) {
+  // Drop the lateral grip quickly for the hit, then let it grow back over a
+  // few frames instead of snapping from 0.10 to 0.92 in one step. The snap
+  // was what occasionally tripped a sliding car into a roll.
+  const gripTarget = arrowPush ? 0.10 : 0.92;
+  // Grip returns slower during the recovery window: snapping from 0.10 back to
+  // 0.92 in a couple of frames was the other half of the post-hit roll.
+  const gripLambda = arrowPush ? 55 : (arrowRecover ? 6 : 12);
+  const grip = damp(WHEEL_GROUND_CONTACT.friction, gripTarget, gripLambda, dt);
+  if (Math.abs(WHEEL_GROUND_CONTACT.friction - grip) > 1e-4) {
     WHEEL_GROUND_CONTACT.friction = grip;
   }
 
